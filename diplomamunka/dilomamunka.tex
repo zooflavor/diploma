@@ -1,0 +1,185 @@
+\documentclass[12pt]{report}
+\usepackage[a4paper,
+			inner = 35mm,
+			outer = 25mm,
+			top = 25mm,
+			bottom = 25mm]{geometry}
+\usepackage{lmodern}
+\usepackage[magyar]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[unicode]{hyperref}
+\usepackage{graphicx}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{epstopdf}
+\usepackage{setspace}
+\usepackage[nottoc,numbib]{tocbibind}
+\usepackage{color}
+\setcounter{secnumdepth}{3}
+\usepackage[chapter]{algorithm}
+\usepackage{algorithm}
+\usepackage{algorithmicx}
+\usepackage{algpseudocode}
+\usepackage{cellspace}
+\usepackage{float}
+\usepackage{listings}
+\usepackage{moresize}
+\usepackage{multirow}
+\usepackage{pgfplots}
+\usepackage{siunitx}
+\usepackage{tikz}
+\usepackage{titlesec}
+\pgfplotsset{compat=1.9}
+\onehalfspacing
+\lstset{basicstyle=\ssmall\tt}
+\lstset{literate=
+  {á}{{\'a}}1 {é}{{\'e}}1 {í}{{\'i}}1 {ó}{{\'o}}1 {ú}{{\'u}}1
+  {Á}{{\'A}}1 {É}{{\'E}}1 {Í}{{\'I}}1 {Ó}{{\'O}}1 {Ú}{{\'U}}1
+  {à}{{\`a}}1 {è}{{\`e}}1 {ì}{{\`i}}1 {ò}{{\`o}}1 {ù}{{\`u}}1
+  {À}{{\`A}}1 {È}{{\'E}}1 {Ì}{{\`I}}1 {Ò}{{\`O}}1 {Ù}{{\`U}}1
+  {ä}{{\"a}}1 {ë}{{\"e}}1 {ï}{{\"i}}1 {ö}{{\"o}}1 {ü}{{\"u}}1
+  {Ä}{{\"A}}1 {Ë}{{\"E}}1 {Ï}{{\"I}}1 {Ö}{{\"O}}1 {Ü}{{\"U}}1
+  {â}{{\^a}}1 {ê}{{\^e}}1 {î}{{\^i}}1 {ô}{{\^o}}1 {û}{{\^u}}1
+  {Â}{{\^A}}1 {Ê}{{\^E}}1 {Î}{{\^I}}1 {Ô}{{\^O}}1 {Û}{{\^U}}1
+  {œ}{{\oe}}1 {Œ}{{\OE}}1 {æ}{{\ae}}1 {Æ}{{\AE}}1 {ß}{{\ss}}1
+  {ű}{{\H{u}}}1 {Ű}{{\H{U}}}1 {ő}{{\H{o}}}1 {Ő}{{\H{O}}}1
+  {ç}{{\c c}}1 {Ç}{{\c C}}1 {ø}{{\o}}1 {å}{{\r a}}1 {Å}{{\r A}}1
+  {€}{{\euro}}1 {£}{{\pounds}}1 {«}{{\guillemotleft}}1
+  {»}{{\guillemotright}}1 {ñ}{{\~n}}1 {Ñ}{{\~N}}1 {¿}{{?`}}1
+}
+\babelhyphenation[magyar]{pszeudo-prím}
+\babelhyphenation[magyar]{prím-eket}
+\begin{document}
+\begin{titlepage}
+\vspace*{0cm}
+\centering
+\begin{tabular}{cp{2cm}c}
+\begin{minipage}{4cm}
+\vspace{0pt}
+\includegraphics[width=1\textwidth]{eltecimerszines}
+\end{minipage} & &
+\begin{minipage}{7cm}
+\vspace{0pt}Eötvös Loránd Tudományegyetem \vspace{10pt} \newline
+Informatikai Kar \vspace{10pt} \newline
+Algoritmusok és Alkalmazásaik Tanszék
+\end{minipage}
+\end{tabular}
+
+\vspace*{0.2cm}
+\rule{\textwidth}{1pt}
+
+\vspace*{6cm}
+{\Huge Cache-optimális algoritmusok elemzése}
+
+\vspace*{5cm}
+\begin{tabular}{lp{3cm}l}
+Szabó László Ferenc & & Nagy Péter\\
+Habilitált egyetemi docens & & Programtervező Informatikus MSc
+\end{tabular}
+
+\vfill
+
+\vspace*{1cm}
+Budapest, 2022
+\end{titlepage}
+
+\tableofcontents
+
+\chapter{Bevezetés}
+
+Yada-yada, ma már kenyérpirítókba is olyan számítógépet tesznek, aminek több memóriaszintje van. Valamint kíváncsi vagyok, hogy a szakdolgozathoz megálmodott szita mennyire cache-oblivious.
+
+\chapter{Cache modellje}
+
+\begin{itemize}
+\item external memory model
+\item két féle műveletigény: lépések száma vs memóriaműveletek száma
+\item cache aware algoritmus
+\item cache replacement policy, MIN, LRU, FIFO
+\item cache oblivious algoritmus
+\item cache miss okai
+\end{itemize}
+
+\section{MIN}
+
+MIN avagy OPT policy-t ismerjük off-line esetben. MIN és LRU is rendelkezik azzal a tulajdonsággal, hogy egy nagyobb cache minden elemet tartalmaz, amit egy kisebb cache tartalmazna, egy adott műveletsorozaton.
+
+\section{LRU lemma}
+
+Nem túl szigorú feltételek mellett LRU aszimptotikusan ugyanolyan jó, mint a MIN. Elemzésnél választhatunk, hogy melyiket használjuk.
+
+\chapter{Cache oblivious agoritmusok}
+
+\section{Lista}
+
+Ha a memóriában nem túl sok egybefűggő részen vannak sorban a lista elemei, akkor az cache-oblivious végigolvasni.
+
+\section{Rendezés}
+
+Oszd meg és uralkodj. 2 algoritmus is van. Az alsó korlát elérhető, de a papír nem az igazi erről. Tall cache assumption. A tall cache assumption lényegesen befolyásolja a műveletigényt.
+
+\section{Mátrix szorzás}
+
+Oszd meg és uralkodj.
+
+\section{FFT}
+
+Oszd meg és uralkodj. Alsó korlát is van, amit elér, de túl erős feltevésekkel.
+
+\section{Diff.egyenlet közelítés}
+
+Oszd meg és uralkodj. Több dimenzióban.
+
+\section{Statikus keresőfa}
+
+Van Emde Boas fák. Dinamikus eset szuperbonyolult, asszem.
+
+\section{Szakdolgozat-szita, aminek nincs rendes neve}
+
+A műveletigénynél kicsit majd erőszakoskodni kell tételekkel, amik a végtelenben igazak.
+
+\section{Párhuzamos algoritmusok (nem lesz)}
+
+Végül nem akarok velük foglalkozni. Van egy mendemonda, hogy cache oblivious algoritmusok aránylag jól tűrik, hogy más programokkal együtt futnak. Valamint a work stealing scheduler jól működik együtt a cache-sel, szintén csak mese.
+
+\chapter{Szimulátor}
+
+\section{Igazi cache}
+
+Asszociativitás. Több szint. Több mag osztozik. Léteznek egészen speciális cache-ek, TLB, decoded microcode, trace cache, ...
+
+\section{Megoldás}
+
+C egy nagyon szűk része, csak annyi, hogy nagy int és float tömböket rekurzív függyvényekkel módosít. Nincs dinamikus allokáció. Nincs párhuzamosság. Nincs I/O. Nincs semmi op.rendszer.
+
+Igazi gépen a kedvenc C fordítóval futtatható, és lehet méricskélni cache-grind-dal, vagy hardver számlálókkal.
+
+Szimulálásnál valami saját belső gép utasításaira fordítja, ezt a gépet szimulálja, és minden memóriaműveletet naplóz. Utólag valamilyen cache-hierarchián meg lehet határozni a futási sebességet. (Ha csinálnék párhuzamos programokat, akkor nem lehet utólag sebességet rendelni a futáshoz, mert az utasítások sorrendjét befolyásolhatja a cache-re várakozás.)
+A programot is memóriában kell tárolni.
+
+\section{Választható cache-ek}
+
+\begin{itemize}
+\item utasítás/adat/mindkettő
+\item MIN
+\item LRU
+\item FIFO, LIFO, LFU, ..., kevésbé izgalmasak
+\item teljes/1-2-3...-n asszociativitás
+\item mindenféle méretben
+\item egymás után akár több is
+\end{itemize}
+
+\begin{thebibliography}{9}
+
+\bibitem{atkin}
+A. O. L. Atkin, D. J. Bernstein: Prime sieves using binary quadratic forms, Mathematics of Computation, Volume 73 (2004) 1023–1030
+
+\end{thebibliography}
+
+\end{document}
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: t
+%%% End:
