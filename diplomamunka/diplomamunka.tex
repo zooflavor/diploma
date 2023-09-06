@@ -27,8 +27,9 @@
 \usepackage{moresize}
 \usepackage{multirow}
 \usepackage{pgfplots}
-\usepackage{siunitx}
+%\usepackage{siunitx}
 \usepackage{tikz}
+\usepackage{tikz-qtree}
 \usepackage{titlesec}
 \pgfplotsset{compat=1.9}
 \onehalfspacing
@@ -48,6 +49,7 @@
   {€}{{\euro}}1 {£}{{\pounds}}1 {«}{{\guillemotleft}}1
   {»}{{\guillemotright}}1 {ñ}{{\~n}}1 {Ñ}{{\~N}}1 {¿}{{?`}}1
 }
+\babelhyphenation[magyar]{Tanszék}
 \babelhyphenation[magyar]{pszeudo-prím}
 \babelhyphenation[magyar]{prím-eket}
 \begin{document}
@@ -62,7 +64,8 @@
 \begin{minipage}{7cm}
 \vspace{0pt}Eötvös Loránd Tudományegyetem \vspace{10pt} \newline
 Informatikai Kar \vspace{10pt} \newline
-Algoritmusok és Alkalmazásaik Tanszék
+Algoritmusok és Alkalmazásaik \newline
+Tanszék
 \end{minipage}
 \end{tabular}
 
@@ -75,13 +78,13 @@ Algoritmusok és Alkalmazásaik Tanszék
 \vspace*{5cm}
 \begin{tabular}{lp{3cm}l}
 Szabó László Ferenc & & Nagy Péter\\
-Habilitált egyetemi docens & & Programtervező Informatikus MSc
+Docens & & Programtervező Informatikus MSc
 \end{tabular}
 
 \vfill
 
 \vspace*{1cm}
-Budapest, 2022
+Budapest, 2023
 \end{titlepage}
 
 \tableofcontents
@@ -135,13 +138,153 @@ Oszd meg és uralkodj. Több dimenzióban.
 
 Van Emde Boas fák. Dinamikus eset szuperbonyolult, asszem.
 
-\section{Szakdolgozat-szita, aminek nincs rendes neve}
+\section{Edénysor szita}
 
-A műveletigénynél kicsit majd erőszakoskodni kell tételekkel, amik a végtelenben igazak.
+\subsection{A feladat, a fa, és a program}
 
-\section{Párhuzamos algoritmusok (nem lesz)}
+Legyen $a, n \in \mathbb{N}$, $a \ge 2$.
+Szeretnénk meghatározni az $a^n$-nél kisebb prímszámokat.
 
-Végül nem akarok velük foglalkozni. Van egy mendemonda, hogy cache oblivious algoritmusok aránylag jól tűrik, hogy más programokkal együtt futnak. Valamint a work stealing scheduler jól működik együtt a cache-sel, szintén csak mese.
+A feladat megoldásához Eratoszthenész szitáját alkalmazzuk fákra, a főbb tulajdonságok megőrzésével.
+\begin{itemize}
+\item Egy szám prímtulajdonságát minden prímosztójának meghatározásával döntjük el.
+\item Egy prímszám többszöröseit más prímszámoktól függetlenül vizsgáljuk.
+\item A számokról növekvő sorrendben döntjük el a prímtulajdonságot.
+\end{itemize}
+
+A műveletigény becsléséhez egy egyszerűbb feladatot választunk.
+
+Legyen $a$ a helyi értékes számrendszer alapja.
+Legyen $A = \lbrace 0, 1, \dots, a-1 \rbrace$ az ábécé.
+Tekintsük az $n$ hosszú szavak kódfáját.
+Legyen ez a fa $F_{a,n}$.
+Minden $p \in \mathbb{N}$-re $F_{a,n,p}$ legyen a gyökércsúcs és a $p$ többszöröseinek megfelelő levelek által indukált részfa.
+Adjunk algoritmust, ami minden $p < a^n$ prímszámra meglátogatja $F_{a,n,p}$ összes csúcsát, és megjelöli ezeket a csúcsokat $p$-vel.
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[level distance=50pt, sibling distance=5pt]
+\Tree
+[.\node[draw,dashed,red]{$0-15$}; 
+	\edge[dashed,red] node[auto=right] {$0$};
+	[.\node[draw,dashed,red]{$0-7$};
+		\edge[dashed,red] node[auto=right] {$0$};
+		[.\node[draw,dashed,red]{$0-3$};
+			\edge[dashed,red] node[auto=right] {$0$};
+			[.\node[draw,dashed,red]{$0-1$};
+				\edge[dashed,red] node[auto=right] {$0$};
+				[.\node[draw,dashed,red]{$0$}; ]
+				\edge[] node[auto=left] {$1$};
+				[.\node[draw]{$1$}; ]
+			]
+			\edge[] node[auto=left] {$1$};
+			[.\node[draw]{$2-3$};
+				\edge[] node[auto=right] {$0$};
+				[.\node[draw]{$2$}; ]
+				\edge[] node[auto=left] {$1$};
+				[.\node[draw]{$3$}; ]
+			]
+		]
+		\edge[dashed,red] node[auto=left] {$1$};
+		[.\node[draw,dashed,red]{$4-7$};
+			\edge[dashed,red] node[auto=right] {$0$};
+			[.\node[draw,dashed,red]{$4-5$};
+				\edge[] node[auto=right] {$0$};
+				[.\node[draw]{$4$}; ]
+				\edge[dashed,red] node[auto=left] {$1$};
+				[.\node[draw,dashed,red]{$5$}; ]
+			]
+			\edge[] node[auto=left] {$1$};
+			[.\node[draw]{$6-7$};
+				\edge[] node[auto=right] {$0$};
+				[.\node[draw]{$6$}; ]
+				\edge[] node[auto=left] {$1$};
+				[.\node[draw]{$7$}; ]
+			]
+		]
+	]
+	\edge[dashed,red] node[auto=left] {$1$};
+	[.\node[draw,dashed,red]{$8-15$};
+		\edge[dashed,red] node[auto=right] {$0$};
+		[.\node[draw,dashed,red]{$8-11$};
+			\edge[] node[auto=right] {$0$};
+			[.\node[draw]{$8-9$};
+				\edge[] node[auto=right] {$0$};
+				[.\node[draw]{$8$}; ]
+				\edge[] node[auto=left] {$1$};
+				[.\node[draw]{$9$}; ]
+			]
+			\edge[dashed,red] node[auto=left] {$1$};
+			[.\node[draw,dashed,red]{$10-11$};
+				\edge[dashed,red] node[auto=right] {$0$};
+				[.\node[draw,dashed,red]{$10$}; ]
+				\edge[] node[auto=left] {$1$};
+				[.\node[draw]{$11$}; ]
+			]
+		]
+		\edge[dashed,red] node[auto=left] {$1$};
+		[.\node[draw,dashed,red]{$12-15$};
+			\edge[] node[auto=right] {$0$};
+			[.\node[draw]{$12-13$};
+				\edge[] node[auto=right] {$0$};
+				[.\node[draw]{$12$}; ]
+				\edge[] node[auto=left] {$1$};
+				[.\node[draw]{$13$}; ]
+			]
+			\edge[dashed,red] node[auto=left] {$1$};
+			[.\node[draw,dashed,red]{$14-15$};
+				\edge[] node[auto=right] {$0$};
+				[.\node[draw]{$14$}; ]
+				\edge[dashed,red] node[auto=left] {$1$};
+				[.\node[draw,dashed,red]{$15$}; ]
+			]
+		]
+	]
+]
+\end{tikzpicture}
+\caption{$F_{2,4}$ és \color{red} $F_{2,4,5}$}
+\label{fig:F25}
+\end{figure}
+
+Tegyük fel, hogy ismerjük az $a^n$-nél kisebb prímszámokat, és legyen ezek halmaza $P$.
+Ekkor a \ref{alg:tree-factors} algoritmussal $F_{a,n}$ minden $u$ csúcsát meg tudjuk jelölni minden olyan $p$ prímszámmal, hogy az $u$ csúcs $F_{a,n,p}$ csúcsa is.
+
+\begin{algorithm}
+\floatname{algorithm}{Algoritmus}
+\caption{Az $[u, v)$ intervallum szitálása}
+\label{alg:tree-factors}
+\begin{algorithmic}[1]
+\Require $a$: számrendszer alapja
+\Require $n$: kódfa magassága
+\Require $u$: $F_{a,n}$ egy csúcsát azonosító szó
+\Require $P$: azok a $p$ prímszámok, hogy létezik $p$-nek olyan $v$ többszöröse, hogy $u$ prefixe $v$-nek
+\Procedure{FaBejárás}{$a$, $n$, $u$, $P$}
+	\State legyenek a számok az $[u, v)$ intervallumban megjelöletlenek
+	\For{$p \in \{\textrm{prímek}\sqrt{v-1}\textrm{-ig}\}$}
+		\For{$f \gets \max \lbrace p^2, p \left \lceil{\frac{u}{p}}\right \rceil \rbrace ; v > f; f \gets f+p$}
+			\State legyen $f$ megjelölve
+		\EndFor
+	\EndFor
+	\For{$f \in [u, v)$}
+		\If{$f$ nincs megjelölve}
+			\State $f$ prím
+		\EndIf
+	\EndFor
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{A program műveletigénye a fában}
+
+\subsection{A program műveletigénye gyorsítótárral a fában}
+
+\subsection{Feltételek a gyorsítótár méretére}
+
+\subsection{Tetszőleges n-ig, nem csak teljes fára}
+
+\subsection{Az igazi program fix méretű számokkal}
+
+\subsection{Az igazi program változó méretű számokkal}
 
 \chapter{Szimulátor}
 
@@ -150,13 +293,6 @@ Végül nem akarok velük foglalkozni. Van egy mendemonda, hogy cache oblivious 
 Asszociativitás. Több szint. Több mag osztozik. Léteznek egészen speciális cache-ek, TLB, decoded microcode, trace cache, ...
 
 \section{Megoldás}
-
-C egy nagyon szűk része, csak annyi, hogy nagy int és float tömböket rekurzív függyvényekkel módosít. Nincs dinamikus allokáció. Nincs párhuzamosság. Nincs I/O. Nincs semmi op.rendszer.
-
-Igazi gépen a kedvenc C fordítóval futtatható, és lehet méricskélni cache-grind-dal, vagy hardver számlálókkal.
-
-Szimulálásnál valami saját belső gép utasításaira fordítja, ezt a gépet szimulálja, és minden memóriaműveletet naplóz. Utólag valamilyen cache-hierarchián meg lehet határozni a futási sebességet. (Ha csinálnék párhuzamos programokat, akkor nem lehet utólag sebességet rendelni a futáshoz, mert az utasítások sorrendjét befolyásolhatja a cache-re várakozás.)
-A programot is memóriában kell tárolni.
 
 \section{Választható cache-ek}
 
