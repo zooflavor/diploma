@@ -1,0 +1,921 @@
+\documentclass[12pt]{report}
+\usepackage[a4paper,
+			inner = 35mm,
+			outer = 25mm,
+			top = 25mm,
+			bottom = 25mm]{geometry}
+\usepackage{lmodern}
+\usepackage[magyar]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[unicode]{hyperref}
+\usepackage{graphicx}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{epstopdf}
+\usepackage{mathtools}
+\usepackage{setspace}
+\usepackage[nottoc,numbib]{tocbibind}
+\usepackage{color}
+\setcounter{secnumdepth}{3}
+\usepackage[chapter]{algorithm}
+\usepackage{algorithm}
+\usepackage{algorithmicx}
+\usepackage{algpseudocode}
+\usepackage{cellspace}
+\usepackage{float}
+\usepackage{listings}
+\usepackage{moresize}
+\usepackage{multirow}
+\usepackage{pgfplots}
+%\usepackage{siunitx}
+\usepackage{tikz}
+\usepackage{tikz-qtree}
+\usepackage{titlesec}
+\pgfplotsset{compat=1.9}
+\onehalfspacing
+\lstset{basicstyle=\ssmall\tt}
+\lstset{literate=
+  {á}{{\'a}}1 {é}{{\'e}}1 {í}{{\'i}}1 {ó}{{\'o}}1 {ú}{{\'u}}1
+  {Á}{{\'A}}1 {É}{{\'E}}1 {Í}{{\'I}}1 {Ó}{{\'O}}1 {Ú}{{\'U}}1
+  {à}{{\`a}}1 {è}{{\`e}}1 {ì}{{\`i}}1 {ò}{{\`o}}1 {ù}{{\`u}}1
+  {À}{{\`A}}1 {È}{{\'E}}1 {Ì}{{\`I}}1 {Ò}{{\`O}}1 {Ù}{{\`U}}1
+  {ä}{{\"a}}1 {ë}{{\"e}}1 {ï}{{\"i}}1 {ö}{{\"o}}1 {ü}{{\"u}}1
+  {Ä}{{\"A}}1 {Ë}{{\"E}}1 {Ï}{{\"I}}1 {Ö}{{\"O}}1 {Ü}{{\"U}}1
+  {â}{{\^a}}1 {ê}{{\^e}}1 {î}{{\^i}}1 {ô}{{\^o}}1 {û}{{\^u}}1
+  {Â}{{\^A}}1 {Ê}{{\^E}}1 {Î}{{\^I}}1 {Ô}{{\^O}}1 {Û}{{\^U}}1
+  {œ}{{\oe}}1 {Œ}{{\OE}}1 {æ}{{\ae}}1 {Æ}{{\AE}}1 {ß}{{\ss}}1
+  {ű}{{\H{u}}}1 {Ű}{{\H{U}}}1 {ő}{{\H{o}}}1 {Ő}{{\H{O}}}1
+  {ç}{{\c c}}1 {Ç}{{\c C}}1 {ø}{{\o}}1 {å}{{\r a}}1 {Å}{{\r A}}1
+  {€}{{\euro}}1 {£}{{\pounds}}1 {«}{{\guillemotleft}}1
+  {»}{{\guillemotright}}1 {ñ}{{\~n}}1 {Ñ}{{\~N}}1 {¿}{{?`}}1
+}
+\babelhyphenation[magyar]{Tanszék}
+\babelhyphenation[magyar]{pszeudo-prím}
+\babelhyphenation[magyar]{prím-eket}
+\begin{document}
+\begin{titlepage}
+\vspace*{0cm}
+\centering
+\begin{tabular}{cp{2cm}c}
+\begin{minipage}{4cm}
+\vspace{0pt}
+\includegraphics[width=1\textwidth]{eltecimerszines}
+\end{minipage} & &
+\begin{minipage}{7cm}
+\vspace{0pt}Eötvös Loránd Tudományegyetem \vspace{10pt} \newline
+Informatikai Kar \vspace{10pt} \newline
+Algoritmusok és Alkalmazásaik \newline
+Tanszék
+\end{minipage}
+\end{tabular}
+
+\vspace*{0.2cm}
+\rule{\textwidth}{1pt}
+
+\vspace*{6cm}
+{\Huge Cache-optimális algoritmusok elemzése}
+
+\vspace*{5cm}
+\begin{tabular}{lp{3cm}l}
+Szabó László Ferenc & & Nagy Péter\\
+Docens & & Programtervező Informatikus MSc
+\end{tabular}
+
+\vfill
+
+\vspace*{1cm}
+Budapest, 2023
+\end{titlepage}
+
+\tableofcontents
+
+\chapter{Bevezetés}
+
+A modern számítógépek olyan sebességeket érnek el,
+hogy a jelterjedés fizikai korlátai már egy integrált áramkörön belül
+sem feltétlenül engedik meg az összes áramköri elem szinkron működést.
+A végrehajtó egység és a memória sebessége között már nagyságrendi különbségek vannak.
+
+A probléma kezelésére gyorsítótárakat vezettek be a végrehajtó egység és a memória közé,
+ami az utoljára használt memóriaelemeket tárolja.
+A gyorsítótár sebessége nagyobb mint a memóriáé, de lassabb, mint a végrehajtó egységé.
+Egy modern számítógépben a gyorsítótáraknak hierarchiája is van,
+ahol egy gyorsítótár egy szintben alatta lévő másik gyorsítótár elemeit tárolja.
+
+A gyorsítótárakkal ellátott számítógép legjobb kihasználásához olyan
+algoritmusokat kell tervezni, amik figyelembe veszik a gyorsítótárak
+hierarchiáját.
+
+\chapter{Cache modellje}
+
+{\color{red}Katasztrofális.}
+
+Az ideális gyorsítótár modell\cite{prokop} egy végrehajtó egységből,
+memóriából, és egy gyorsítótárból áll.
+A végrehajtó egység a memóriát csak a gyorsítótáron keresztül éri el.
+
+A végrehajtó egység a memóriát gépi szavanként éri el,
+ez egy kicsi konstans, például 8 bájt.
+Egy $(Z, L)$ gyorsítótár $L$ hosszú gyorsítótársorokból áll,
+és $Z/L$ sort tartalmaz.
+Egy sor $L$ gépi szót tárol, ezek a memóriában folytonosan helyezkednek el.
+Egy sor címe a memóriába csak a sorhossz többszöröse lehet.
+A gyorsítótár a memóriát gyorsítótársoronként tárolja.
+Egy sor tipikusan több gépi szóból áll,
+és ezek a szavak folytonosan helyezkednek el a memóriában.
+Egy sor címe a memóriában csak a sorhossz többszöröse lehet.
+Egy sor a gyorsítótárban a memória bármelyik szakaszát tárolhatja.
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}
+\node at (1, 3) [draw,rectangle,minimum width=2cm,minimum height=2cm,label=below:Végrehajtó egység] {};
+\foreach \time in {1,...,9}{
+	\draw (4,0.25*\time+1.75) rectangle (6,0.25*\time+2);
+}
+\node at (5, 1.875) [draw,rectangle,minimum width=2cm,minimum height=0.25cm,label=below:Gyorsítótár] {};
+\foreach \time in {0,...,19}{
+	\draw (8,0.25*\time+0.5) rectangle (9,0.25*\time+0.75);
+}
+\node at (8.5, 5.75) [draw,rectangle,minimum width=1cm,minimum height=0.5cm] {...};
+\node at (8.5, 0.25) [draw,rectangle,minimum width=1cm,minimum height=0.5cm,label=below:Memória] {...};
+\draw[<->,thick] (2, 3) -- (4,3);
+\draw[<->,thick] (6, 3) -- (8,3);
+\end{tikzpicture}
+\caption{Az ideális gyorsítótár modell}
+\label{fig:cache-model}
+\end{figure}
+
+Amikor a végrehajtó egység el akar érni egy adott szót a memóriában,
+a gyorsítótárhoz fordul. Ha a tárban van olyan sor,
+ami tartalmazza a kért gépi szót, akkor az kérést azonnal kiszolgálja.
+Ez a cache hit.
+Ha a tár egyik sora se tartalmazza a kért szót,
+akkor a szóhoz tartozó sort a tár be kell olvassa a tárba,
+majd ezután tudja teljesíteni a kérést.
+Ez a cache miss.
+
+Ha a tárban nincs üres sor amikor egy új sort be kell olvasni,
+akkor először egy sort ki kell ürítsen.
+Ha az ürítésre kiválasztott sor módosult a hozzá tartozó memóriához képest,
+akkor azt vissza kell írnia a memóriába.
+Miután a sort szinkronizálta a memóriával,
+az új sorral felülírja az ürített sort.
+
+A gyorsítótár-csere stratégiája diktálja,
+hogy a tár hogyan választja ki a sort, amit ürít.
+Az ideális gyorsítótár modell ürítési stratégiája az optimális offline
+stratégia\cite{belady-min}.
+Az optimális stratégia azt a sort üríti,
+amit a jövőben legkésőbb ér el a program a teljes futása során.
+Ez a stratégia használja ki a legjobban az időbeli lokalitást.
+
+A gyorsítótár modellben az időbonyolultság
+az algoritmus futása alatt végzett elemi műveletek száma,
+a memóriaelérésekkel együtt.
+A gyorsítótár-bonyolultság a futás alatti találati hibák száma.
+
+Egy algoritmus gyorsítót-tudatos, ha van olyan fordítási vagy futási
+idejű paramétere, ami a gyorsítótár méretétől függ.
+Ha nincs ilyen paramétere, akkor az algoritmus gyorsítótár-független.
+
+\section{Csere stratégiák}
+
+{\color{red}Katasztrófális.}
+
+Több csere startégia is ismert:
+\begin{itemize}
+\item
+MIN, minimális, OPT, optimális, vagy Bélády algoritmusa:
+Ezt az elemet cseréli, amelyiket a jövőben legkésőbb éri el az algoritmus.
+Ennek eldöntésére szükség van a teljes memóriaelérési sorozatra.
+\item
+LRU, least recently used, legrégebben használt:
+Azt a sort cseréli, amit a legrégebben ért el az algoritmus.
+Ennek eldöntésére elég a csere pillanatáig ismerni az elérési sorozatot.
+Az LRU heurisztikája az a feltételezés,
+hogy az időben közelebbi elért memóriát valószínűleg újra el kell érni.
+\item
+LFU, least frequently used, legritkábban használt:
+A gyorsítótár nyilván tartja, hogy egy sort hányszor ért el az algoritmus
+mióta a gyorsítótárba került.
+Azt az elemet cseréli, amelyik elérési száma a legkisebb.
+\item
+FIFO, first in, first out, első be, első ki:
+Azt a sort cseréli, amelyik legrégebben került a tárba.
+A stratégia előnye az egyszerű megvalósíthatóság.
+\item
+Random, véletlen:
+A cserét véletlenszerűen választja ki.
+Az előnye az egyszerű implementáció.
+\end{itemize}
+
+Ha S egy gyorsítótár-csere stratégia,
+akkor legyen S($k$) egy olyan gyorsítótár,
+ami az S stratégiát használja,
+és $k$ sort tartalmaz.
+
+\subsection{Online algoritmusok}
+
+{\color{red}Katasztrofális.}
+
+A gyakorlatban megvalósítható gyorsítótár-csere stratégiák online algoritmusok.
+Az online algoritmusok a bemenetüket sorban, egyesével kell feldolgozzák,
+a teljes bementet nem látják egyszerre.
+Egy gyorsítótár-csere algoritmusnak minden memóriaeléréskor
+úgy kell döntést hoznia a cseréről, hogy csak a múltbeli
+elérések sorozatát ismeri.
+
+Egy offline algoritmus a teljes bemenethez hozzáfér a teljes futása során.
+
+A stratégiák elemzését egy egyszerűbb modellben\cite{stack-algorithm} végezzük.
+Legyen $A = [1, 2, ..., n]$ az elérhető elemek halmaza.
+Legyen $X$ egy $A$ feletti véges sorozat, az elérések sorozata.
+Legyen $B_t(k)$ az $S(k)$ gyorsítótár tartalma $X$ $t$ hosszú prefixének
+feldolgozása után.
+Minden $k$-ra:
+\begin{itemize}
+\item
+Legyen $B_0(k) = \emptyset$.
+\item
+Ha $t > 0$, és $X_t \in B_{t-1}(k)$,
+akkor legyen $B_t{k} = B_{t-1}(k)$. Ez egy találat.
+\item
+Ha $t > 0$, $X_t \notin B_{t-1}(k)$, és $|B_{t-1}(k)| < k$,
+akkor legyen $B_t{k} = B_{t-1}(k) \cup \{X_t\}$.
+Ez egy találati hiba, ürítés nélkül.
+Ha $t > 0$, $X_t \notin B_{t-1}(k)$, és $|B_{t-1}(k)| = k$,
+akkor legyen $y_t \in B_{t-1}(k)$, és $B_t{k} = B_{t-1}(k) \setminus {y_t} \cup \{X_t\}$.
+Ez egy találati hiba, ürítéssel.
+$y_t$ az $S(k)$ stratégiája választja ki, ez az ürített elem.
+\end{itemize}
+
+Ebben a modellben a gyorsítótárban nem sorok vannak, hanem $A$ elemei.
+Ezek a gyorsítótár modellben a memória azon tartományai,
+amik gyorsítótár sorok lehetnek.
+Valamint az elérésben nem különböztetjük meg az olvasást és az írást.
+
+\subsection{Verem stratégiák}
+
+{\color{red}Katasztrofális.}
+
+Egy $S$ gyorsítótár-csere stratégiát verem algoritmusnak\cite{stack-algorithm} nevezünk,
+ha teljesíti a következő feltételt.
+$S$ verem algoritmus, ha minden $t \in [0, 1, ..., |X|]$,
+és minden $k \in \mathbb{N}$-re
+\begin{align*}
+B_t(k) \subset B_t(k+1)
+\end{align*}
+Azaz ha minden időpontban egy nagyobb gyorsítótár tartalmazza
+az összes kisebb gyorsítótár elemeit.
+
+A verem algoritmusnak ekvivalens definíciója az,
+ha $S$ $X$ futtatása közben minden $t$ időpontra ad egy egyértelmű
+preferencialistát az $X$-ben előforduló elemekre, a gyorsítótár méretétől függetlenül,
+és egy $S(k)$ gyorsítótár csere esetén mindig az éppen tartalmazott elemei
+közül a legkisebb precedenciájút üríti.
+
+Egy verem algoritmust használva a gyorsítótár
+méretét növelve a találtai hibák száma nem nő.
+Nézzünk $t$ időpontban egy gyorsítótár találatot $S(k)$-ban.
+Mivel $B_t(k) \subset B_t(k+1)$,
+ezért az elérés $S(k+1)$-ben is találat.
+Ez indukcióval implikálja, hogy minden $k$-nál nagyobb gyorsítótárban is
+találat az elérés.
+
+Az LRU verem algoritmus.
+
+Az OPT verem algoritmus,
+ha a többet el nem ért elemekre létezik egy egyértelmű precedencia lista.
+Például az alacsonyabb című elemek fontosabbak.
+
+Az LFU verem algoritmus, feltéve,
+hogy az egyenlő frekvenciájú elemekre létezik egy egyértelmű precedencia.
+
+A FIFO nem verem algoritmus.
+
+A véletlen startégi nem feltétlen verem algoritmus.
+Ha egyenletesen véletlenül választjuk ki egy $S(k)$ gyorsítótár elemét ürítésre,
+akkor pozitív a valószínűsége annak, hogy az $S(k+1)$ tár egy másik elemet választ.
+Ha a tár méretétől egyenletes véletlenül $X$ egyedi elemeinek egy permutációját,
+és ezt a precedencialistát használjuk az ürített elem kiválasztására,
+akkor a véletlen stratégia verem algoritmus. Ez az RR startégia.
+Egy adott $RR(k)$ gyorsítótárban egy elem ürítésének esélye $1/k$, tehát egyenletes eloszlású.
+
+\subsection{FIFO}
+
+{\color{red}Katasztrofális.}
+
+Bélády\cite{belady-anomaly} megmutatta,
+hogy FIFO stratégiára létezik olyan $k$ és $K$, $k < K$,
+és egy elérési sorozat, hogy ezen az elérési sorozaton a FIFO(K) több
+találati hibát eredményez, mint a FIFO(k)-n.
+Fornai és Iványi megmutatta\cite{fifo-anomaly-unbounded},
+hogy a hiba arányának nincs felső korlátja.
+
+\subsection{LRU}
+
+{\color{red}Katasztrofális. k-competetive hivatkozás.}
+
+Egy adott problémára a versenyképességi analízisben
+egy $A$ online algoritmust hasonlítunk össze 
+az $O$ optimális offline algoritmussal.
+Legyen $X$ egy inputsorozat,
+$A(X)$ az $A$ műveletigénye $X$-en,
+és $O(X)$ az $O$ műveletigénye $X$-en.
+Ekkor $A$ k-versenyképes, ha létezik egy $C$ konstans,
+hogy minden $X$ inputsorozatra
+\begin{align*}
+A(X) \le kO(X)+C
+\end{align*}
+
+Slater és Tarjan\cite{lru-k-competetive} megmutatta,
+hogy az LRU($k$) az OPT($k^*$)-hoz képest $k/(k-k^*+1)$ versenyképes.
+Ha $k=k^*$, akkor az LRU k-versenyképes az OPT-hoz képest.
+Ha $k=2k^*$, akkor az LRU(k) az OPT(k*)-hoz képest
+\begin{align*}
+k/(k-k^*+1) = 2k^*/(2k^*-k^*+1) = 2k^*/(k^*+1) < 2
+\end{align*}
+versenyképes\cite{prokop}.
+
+Legyen $A$ egy adott algoritmus.
+Legyen $LRU(n, Z, L)$ a gyorsítótár komplexitása $A$-nak egy $n$ méretű bemeneten
+és egy LRU(Z, L) gyorsítótáron.
+Legyen $OPT(n, Z, L)$ a gyorsítótár komplexitása $A$-nak egy $n$ méretű bemeneten
+és egy OPT(Z, L) gyorsítótáron.
+Ekkor az $LRU(n, Z, L)$ gyorsítótár komplexitás
+\\
+reguláris\cite{prokop}, ha
+\begin{align*}
+LRU(n, Z, L) = O(LRU(n, 2Z, L))
+\end{align*}
+
+Tegyük fel, hogy $A$ egy reguláris gyorsítótár komplexitású algoritmus.
+Ekkor
+\begin{align*}
+OPT(n, Z, L) \le LRU(n, Z, L) = O(LRU(n, 2Z, L)) = O(OPT(n, Z, L)
+\end{align*}
+az optimalitást, a regularitást, és a 2-versenyképességet felhasználva.
+Tehát
+\begin{align*}
+LRU(n, L, Z) = \Theta(OPT(n, L, Z)
+\end{align*}
+
+\section{Asszociativitás}
+
+{\color{red}Katasztrofális.}
+
+Az ideális gyorsítótár modellben a memória egy sorát a gyorsítótár bármelyik sorába
+be lehet hozni. Ezt hívják teljesen asszociatív gyorsítótárnak.
+
+A gyakorlatban egy teljesen asszociatív gyorsítótár csak kevés sorra
+valósítható meg hatékonyan,
+mert minden elérésnél a gyorsítótárnak meg kell keresnie a sorok között,
+hogy tárolja-e az elérni kívánt sort.
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}
+\foreach \time in {1,...,3}{
+	\draw (0,0.25*\time+1.75) rectangle (2,0.25*\time+2);
+}
+\node at (1, 1.875) [draw,rectangle,minimum width=2cm,minimum height=0.25cm,label=below:Gyorsítótár] {};
+\foreach \time in {0,...,14}{
+	\draw (4,0.25*\time+0.5) rectangle (6,0.25*\time+0.75);
+}
+\node at (5, 0.375) [draw,rectangle,minimum width=2cm,minimum height=0.25cm,label=below:Memória] {};
+\foreach \time in {0,...,3}{
+	\draw[<-,thin] (2, 2.625-0.25*\time) -- (4,4.125);
+	\draw[<-,thin] (2, 2.625-0.25*\time) -- (4,1.125);
+}
+\end{tikzpicture}
+\caption{Teljesen asszociatív gyorsítótár}
+\label{fig:fully-associative-cache}
+\end{figure}
+
+Közvetlen leképezésű gyorsítótárban a memória egy sora a tárban
+csak egyetlen sorba hozható be.
+Ez csere stratégiát is meghatározza,
+a beolvasni kívánt sor címe meghatározza az ürített sort.
+Általában egy sor címét a gyorsítótárban a sor címének alsó bitjei határozzák meg,
+így a gyorsítótárba lehet hozni a memória egy egybefüggő szakaszát.
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}
+\foreach \time in {1,...,3}{
+	\draw (0,0.25*\time+1.75) rectangle (2,0.25*\time+2);
+}
+\node at (1, 1.875) [draw,rectangle,minimum width=2cm,minimum height=0.25cm,label=below:Gyorsítótár] {};
+\foreach \time in {0,...,14}{
+	\draw (4,0.25*\time+0.5) rectangle (6,0.25*\time+0.75);
+}
+\node at (5, 0.375) [draw,rectangle,minimum width=2cm,minimum height=0.25cm,label=below:Memória] {};
+\foreach \ii in {0,...,1}{
+	\foreach \jj in {0,...,3}{
+		\draw[<-,thin] (2, 2.625-0.25*\ii) -- (4,4.125-\jj-0.25*\ii);
+	}
+}
+\end{tikzpicture}
+\caption{Közvetlen leképezésű gyorsítótár}
+\label{fig:direct-mapped-cache}
+\end{figure}
+
+Csoport-asszociatív gyorsítótárban a memória egy sora
+a gyorsítótár több sorába is behozható, de nem az összesbe.
+A gyorsítótár több, egymástól független teljesen asszociatív gyorsítótárból
+áll. A memória sor címe meghatározza, hogy a sor melyik asszociatív tárba
+kerül, és az asszociatív táron belül a csere stratégia alapján
+kerül elhelyezésre.
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}
+\foreach \time in {1,...,3}{
+	\draw (0,0.25*\time+1.75) rectangle (2,0.25*\time+2);
+}
+\node at (1, 1.875) [draw,rectangle,minimum width=2cm,minimum height=0.25cm,label=below:Gyorsítótár] {};
+\foreach \time in {0,...,14}{
+	\draw (4,0.25*\time+0.5) rectangle (6,0.25*\time+0.75);
+}
+\node at (5, 0.375) [draw,rectangle,minimum width=2cm,minimum height=0.25cm,label=below:Memória] {};
+\foreach \ii in {0,...,1}{
+	\foreach \jj in {0,...,1}{
+		\draw[<-,thin] (2, 2.625-0.25*\jj) -- (4,4.125-2*\ii);
+		\draw[<-,thin] (2, 2.175-0.25*\jj) -- (4,3.875-2*\ii);
+	}
+}
+\end{tikzpicture}
+\caption{Csoport-asszociatív gyorsítótár}
+\label{fig:set-associative-cache}
+\end{figure}
+
+{\color{red}Ide lehetne tenni részleteket a cím bitjeiről, meg helykitöltő ábrákat.
+Talán van haszna a szimulátor tárgyalásánál.}
+
+\section{Írási stratégia}
+
+{\color{red}Katasztrofális.
+Bele lehet ebbe keverni a memória tényleges címezhetőségét.
+Nem tudom, hogy ide akarom-e másolni a wikipedia-ról a hivatkozást a tipikus
+write back-write allocate és write through-no write allocate-re.}
+
+A gyorsítótár az írásokat többféleképpen is kezelheti.
+
+A {\color{red} write back} stratégia az írást csak a gyorsítótárban végzi el.
+Ebben az esetben a gyorsítótárnak a sorok módosítottságát is nyilván kell tartani,
+és egy módosított sort ürítés előtt a memóriába kell írnia.
+
+A {\color{red} write through} stratégia az írást a gyorsítótárban is elvégzi,
+és a memóriában is.
+
+Írási találtai hiba esetén további két stratágiát lehet választani.
+A {\color{red} write allocate} startégia találati hiba esetén a módosítandó sort
+a gyorsítótárba tölti, szükség esetén egy sort ürítve.
+A {\color{red} no-write allocate} az írást közvetlenül a memóriában végzi el.
+
+\chapter{Gyorsítótár független algoritmusok}
+
+\section{Lista}
+
+{\color{red}Katasztrofális.}
+
+Ha a memóriában nem túl sok egybefüggő részen vannak sorban a lista elemei, akkor az cache-oblivious végigolvasni.
+A cache line méretével oszthatjuk a sebességet.
+
+\subsection{Másolás}
+
+\subsection{Partíció}
+
+\subsection{Megszámlálásos rendezés}
+
+\section{Rendezés}
+
+{\color{red}Katasztrofális.}
+
+Oszd meg és uralkodj. 2 algoritmus is van. Az alsó korlát elérhető, de a papír nem az igazi erről. Tall cache assumption. A tall cache assumption lényegesen befolyásolja a műveletigényt.
+
+\section{Mátrix szorzás}
+
+{\color{red}Katasztrofális.}
+
+Oszd meg és uralkodj.
+
+\section{FFT}
+
+{\color{red}Katasztrofális.}
+
+Oszd meg és uralkodj. Alsó korlát is van, amit elér, de túl erős feltevésekkel.
+
+\section{Diff.egyenlet közelítés}
+
+{\color{red}Katasztrofális.}
+
+Oszd meg és uralkodj. Több dimenzióban.
+
+\section{Statikus keresőfa}
+
+{\color{red}Katasztrofális.}
+
+Van Emde Boas fák. Dinamikus eset szuperbonyolult, asszem.
+
+\section{Edénysor szita}
+
+{\color{red}Katasztrofális.}
+
+Az edénysor szitát a szakdolgozatomban írtam le.
+Ez egy eratoszthenészi rekurzívan szegmentált szita.
+
+Az eratoszthenészi sziták prímek többszöröseit jelölik meg
+egy adott intervallumon,
+és egy-egy prím többszöröseinek megjelöléseit
+a többi prímtől függetlenül végzik.
+A szitát lehet használni prímek keresésére is,
+és az intervallum számainak prím-faktorizációjára is.
+
+Egy szegmentált szita a teljes intervallumot kisebb intervallumokra osztja,
+ezek a szegmensek, és a szegmensekben külön-külön végzi el a megjelöléseket.
+A szegmensek átfedés nélkül lefedik a teljes intervallumot.
+A szegmens méretet úgy választják meg,
+hogy szitáláshoz használt prímek és egy szegmens a gyorsítótárban elférjen.
+Egy szegmentált szita cache-aware.
+
+A rekurzív edényszita egy $a^h$ hosszú intervallumot szitál,
+ahol $a$ és $h$ természetes számok, $a \ge 2$.
+Ha $h > 0$, akkor az intervallumot $a$ darab ugyanolyan hosszú részre osztja,
+és ezeket rekurzívan szitálja.
+A prímek listáját előszűri, hogy egy szegmensbe csak olyan prím kerüljön,
+ami ténylegesen szitál is a szegmensben.
+
+\subsection{A rekurzív fa}
+
+Vegyük a $[u, u+a^h)$ intervallumot, $u$ természetes szám.
+és egy $p$ prímet, aminek van nullánál nagyobb többszöröse az intervallumban.
+Tegyük fel, hogy $h>0$.
+Ekkor az $i$. részintervallum $[u+ia^{h-1}, u+(i+1)a^{h-1}), (i \in {0, ..., a-1})$
+\begin{itemize}
+\item Ha $p \ge a^h$, akkor $p$ pontosan egy részintervallumban szitál.
+\item Ha $a^{h-1} < p < a^h$, akkor $p$ legalább egy részintervallumban szitál,
+de nem feltétlen mindegyikben.
+\item Ha $p \le a^{h-1}$, akkor $p$ minden részintervallumban szitál.
+\end{itemize}
+
+Példának nézzük meg, hogy az $5$ milyen utat jár be a rekurzív fában
+a $[0, 2^4)$ intervallum szitálásakor.
+Az ábrán a prím $0$-t is bejárja, ami prímek keresésekor nem következik be.
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[level distance=50pt, sibling distance=5pt]
+\Tree
+[.\node[draw,dashed,red]{$0-15$}; 
+	\edge[dashed,red] node[auto=right] {$0$};
+	[.\node[draw,dashed,red]{$0-7$};
+		\edge[dashed,red] node[auto=right] {$0$};
+		[.\node[draw,dashed,red]{$0-3$};
+			\edge[dashed,red] node[auto=right] {$0$};
+			[.\node[draw,dashed,red]{$0-1$};
+				\edge[dashed,red] node[auto=right] {$0$};
+				[.\node[draw,dashed,red]{$0$}; ]
+				\edge[] node[auto=left] {$1$};
+				[.\node[draw]{$1$}; ]
+			]
+			\edge[] node[auto=left] {$1$};
+			[.\node[draw]{$2-3$};
+				\edge[] node[auto=right] {$0$};
+				[.\node[draw]{$2$}; ]
+				\edge[] node[auto=left] {$1$};
+				[.\node[draw]{$3$}; ]
+			]
+		]
+		\edge[dashed,red] node[auto=left] {$1$};
+		[.\node[draw,dashed,red]{$4-7$};
+			\edge[dashed,red] node[auto=right] {$0$};
+			[.\node[draw,dashed,red]{$4-5$};
+				\edge[] node[auto=right] {$0$};
+				[.\node[draw]{$4$}; ]
+				\edge[dashed,red] node[auto=left] {$1$};
+				[.\node[draw,dashed,red]{$5$}; ]
+			]
+			\edge[] node[auto=left] {$1$};
+			[.\node[draw]{$6-7$};
+				\edge[] node[auto=right] {$0$};
+				[.\node[draw]{$6$}; ]
+				\edge[] node[auto=left] {$1$};
+				[.\node[draw]{$7$}; ]
+			]
+		]
+	]
+	\edge[dashed,red] node[auto=left] {$1$};
+	[.\node[draw,dashed,red]{$8-15$};
+		\edge[dashed,red] node[auto=right] {$0$};
+		[.\node[draw,dashed,red]{$8-11$};
+			\edge[] node[auto=right] {$0$};
+			[.\node[draw]{$8-9$};
+				\edge[] node[auto=right] {$0$};
+				[.\node[draw]{$8$}; ]
+				\edge[] node[auto=left] {$1$};
+				[.\node[draw]{$9$}; ]
+			]
+			\edge[dashed,red] node[auto=left] {$1$};
+			[.\node[draw,dashed,red]{$10-11$};
+				\edge[dashed,red] node[auto=right] {$0$};
+				[.\node[draw,dashed,red]{$10$}; ]
+				\edge[] node[auto=left] {$1$};
+				[.\node[draw]{$11$}; ]
+			]
+		]
+		\edge[dashed,red] node[auto=left] {$1$};
+		[.\node[draw,dashed,red]{$12-15$};
+			\edge[] node[auto=right] {$0$};
+			[.\node[draw]{$12-13$};
+				\edge[] node[auto=right] {$0$};
+				[.\node[draw]{$12$}; ]
+				\edge[] node[auto=left] {$1$};
+				[.\node[draw]{$13$}; ]
+			]
+			\edge[dashed,red] node[auto=left] {$1$};
+			[.\node[draw,dashed,red]{$14-15$};
+				\edge[] node[auto=right] {$0$};
+				[.\node[draw]{$14$}; ]
+				\edge[dashed,red] node[auto=left] {$1$};
+				[.\node[draw,dashed,red]{$15$}; ]
+			]
+		]
+	]
+]
+\end{tikzpicture}
+\caption{Az $5$ többszörösei a $[0, 2^4)$ intervallumhoz tartozó rekurzív fában.}
+\label{fig:F25}
+\end{figure}
+
+\subsection{Feladat}
+
+Jelöljük meg az $[u, u+a^h)$ intervallumban az összes olyan számot,
+amik többszörösei valamelyik $p \le m$ prímnek.
+
+\subsection{A megoldás}
+
+\begin{algorithm}
+\floatname{algorithm}{Algoritmus}
+\caption{Az $[u, u+a^h)$ intervallum szitálása}
+\label{alg:tree-factors}
+\begin{algorithmic}[1]
+\Require $a$: a számrendszer alapja
+\Require $h$: a fa magassága
+\Require $m$: a keresett prímek felső korlátja
+\Require $u$: a az intervallum kezdőpontja
+\Require $P$: lista, azok a $p$ prímszámok, hogy létezik $p$-nek többszöröse az $[u, u+a^h)$ intervallumban
+\Ensure $P$: $P$ kiegészítve az intervallumban talált prímekkel
+\Function{RekurzívSzita}{$a, h, m, u, P$} $\rightarrow$ $P$
+	\If{$h=0$}
+		\If{$P$ üres és $u \ge 2$}
+			\Comment $u$ egy újonnan megtalált prím
+			\If{$u \le m$}
+				\State $P \leftarrow P \cup \{u\}$
+			\EndIf
+		\Else
+			\State jelöljük meg $u$-t
+			\Comment $u$ összetett szám
+		\EndIf
+	\Else
+		\State Legyenek a részintervallumok
+			$I_i = [u+ia^{h-1}, u+(i+1)a^{h-1}$, $i \in [0, a)$
+		\State $Q$ legyen listák egy $a$ elemű tömbje, és legyen minden lista üres
+		\For{$p \in P$}
+			\State Legyen $i$ a legkisebb olyan szám,
+				hogy $p$-nek van többszöröse $I_i$-ben
+			\State $Q[i] \leftarrow Q[i] \cup \{p\}$
+			\State $P \leftarrow P \setminus \{p\}$
+		\EndFor
+		\For{$i = 0, ..., a-1$}
+			\State $Q[i] \leftarrow$
+				\Call{RekurzívSzita}{$a, h-1, m, u+ia^{h-1}, Q[i]$}
+			\For{$p \in Q[i]$}
+				\If{$p$-nek van többszöröse $I_{i+1}, ..., I_{a-1}$-ben}
+					\State Legyen $j$ a legkisebb olyan szám,
+					\State hogy $p$-nek van többszöröse $I_{i+1}, ..., I_{a-1}$-ben
+					\State $Q[j] \leftarrow Q[j] \cup \{p\}$
+				\Else
+					\State $P \leftarrow P \cup \{p\}$
+				\EndIf
+				\State $Q[i] \leftarrow Q[i] \setminus \{p\}$
+			\EndFor
+		\EndFor
+	\EndIf
+	\State \Return $P$
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+Azt, hogy egy adott $p$ prím melyik részintervallumban fog szitálni legközelebb,
+meghatározhatjuk maradékos osztással.
+Legyen $u$ a szóba jöhető legkisebb intervallum kezdőpontja.
+Legyen $m = u \bmod p$. Ekkor $p$ következő többszöröse
+\begin{equation}
+\begin{cases*}
+      u		& ha m = 0 \\
+      u-m+p	& különben
+\end{cases*}
+\end{equation}
+Az is megoldás, ha minden prím mellé tároljuk a legutolsó megtalált többszörösét is,
+és ezt frissítjük, amikor a prímet megjelölésre használjuk.
+Ezzel az osztás időigényét memóriaigényre cseréljük.
+
+Prímek keresését a $[0, a^h)$ intervallumban a
+RekurzívSzita$(a, h, \lfloor \sqrt(a^h) \rfloor, a^h, \emptyset)$
+hívás után az intervallum végigolvasásával lehet elvégezni.
+Azok a számok a prímek, amik nincsenek megjelölve.
+
+A $[0, a^h)$ intervallum prím-faktorizációját a
+RekurzívSzita$(a, h, a^h, a^h, \emptyset)$
+hívással lehet elvégezni.
+A hívás után az intervallum egy száma prím, ha nincs megjelölve,
+és összetett, ha meg van jelölve, és az összes prímosztója megjelölte.
+
+\subsection{Műveletigény gyorsítótár nélkül}
+
+Tegyük fel, hogy a $[0, a^h)$ intervallumot szitáljuk.
+Legyen $n = a^h$, és $m$ a minket érdeklő prímek felső korlátja.
+Legyen $p \le m$ egy prím.
+
+Nézzük a rekurzív fában az összes $a^k$ hosszú részintervallumot,
+$k \le h$.
+\begin{itemize}
+\item Ha $p > a^k$, akkor $p$-nek legfeljebb egy többszöröse van egy adott részintervallumban, és összesen $\lfloor a^h \rfloor$ többszöröse van,
+és ennyi $a^k$ hosszú részintervallumot jár be.
+\item Ha $p \le a^{k}$, akkor $p$ minden részintervallumban szitál.
+\end{itemize}
+
+\begin{align*}
+p \le a^k \Leftrightarrow log_{a}{p} \le k
+\end{align*}
+
+Így a rekurzív fában $p$ legfeljebb a felső
+$h - \lfloor log_{a}{p} \rfloor + 1$ szinten jár be minden csúcsot.
+Az alsó $\lfloor log_{a}{p} \rfloor$ szinten szintenként $\lfloor a^h/p \rfloor$
+csúcsot jár be.
+Tehát $p$ legfeljebb
+\begin{align*}
+C_p &\le \sum_{k=0}^{h - \lfloor \log_{a}{p} \rfloor} a^k + \sum_{k=0}^{\lfloor log_{a}{p} \rfloor} \left\lfloor \frac{a^h}{p} \right\rfloor \\
+\
+&\le \sum_{k=0}^{h - \lfloor \log_{a}{p} \rfloor} a^k + \sum_{k=0}^{\lfloor log_{a}{p} \rfloor} \frac{a^h}{p} \\
+\
+&= \sum_{k=0}^{h - \lfloor \log_{a}{p} \rfloor} a^k + \frac{(\lfloor log_{a}{p} \rfloor+1)a^h}{p} \\
+\
+&\le \sum_{k=0}^{h - \lfloor \log_{a}{p} \rfloor} a^k + \frac{(log_{a}{p}+1)a^h}{p} \\
+\
+&= \sum_{k=0}^{h - \lfloor \log_{a}{p} \rfloor} a^k + n\left(\frac{log_{a}{p}}{p} + \frac{1}{p} \right) \\
+\
+&= \sum_{k=0}^{h - \lfloor \log_{a}{p} \rfloor} a^k + \frac{n}{\ln{a}} \frac{ln{p}}{p} + n \frac{1}{p} \\
+\
+&= \frac{a^{h - \lfloor \log_{a}{p} \rfloor + 1}-1}{a-1} + \frac{n}{\ln{a}} \frac{ln{p}}{p} + n \frac{1}{p} \\
+\
+&< \frac{a^{h - \lfloor \log_{a}{p} \rfloor + 1}}{a-1} + \frac{n}{\ln{a}} \frac{ln{p}}{p} + n \frac{1}{p} \\
+\
+&\le \frac{2a^{h - \lfloor \log_{a}{p} \rfloor + 1}}{a} + \frac{n}{\ln{a}} \frac{ln{p}}{p} + n \frac{1}{p} \\
+&= 2a^{h - \lfloor \log_{a}{p} \rfloor} + \frac{n}{\ln{a}} \frac{ln{p}}{p} + n \frac{1}{p} \\
+&= \frac{2a^h}{a^{\lfloor \log_{a}{p} \rfloor}} + \frac{n}{\ln{a}} \frac{ln{p}}{p} + n \frac{1}{p} \\
+\
+&\le \frac{2a^h}{a^{\log_{a}{p} - 1}} + \frac{n}{\ln{a}} \frac{ln{p}}{p} + n \frac{1}{p} \\
+\
+&= \frac{2a^{h+1}}{a^{\log_{a}{p}}} + \frac{n}{\ln{a}} \frac{ln{p}}{p} + n \frac{1}{p} \\
+\
+&= \frac{2a^{h+1}}{p} + \frac{n}{\ln{a}} \frac{ln{p}}{p} + n \frac{1}{p} \\
+\
+&= 2an\frac{1}{p} + \frac{n}{\ln{a}} \frac{ln{p}}{p} + n \frac{1}{p} \\
+\
+&= (2an+1)\frac{1}{p} + \frac{n}{\ln{a}} \frac{ln{p}}{p} 
+\end{align*}
+csúcsot jár be a rekurzív fában.
+
+Az összes prím által meglátogatott csúcsok számának becsléséhez felhasználjuk Mertens két tételét. {\color{red} Hivatkozás: wikipedia.}
+
+\begin{align*}
+\sum_{p \le n} \frac{\ln{p}}{p} = \ln{n} + O(1) \\
+\sum_{p \le n} \frac{1}{p} = \ln{\ln{n}} + O(1) \\
+\end{align*}
+
+Így az összes prím által meglátogatott összes csúcs száma
+\begin{align*}
+C &\le \sum_{p \le m} C_p \\
+\
+&= \sum_{p \le m} \left( (2an+1)\frac{1}{p} + \frac{n}{\ln{a}} \frac{ln{p}}{p} \right) \\
+\
+&= \sum_{p \le m} (2an+1)\frac{1}{p} + \sum_{p \le m} \frac{n}{\ln{a}} \frac{ln{p}}{p} \\
+\
+&= (2an+1)\sum_{p \le m} \frac{1}{p} + \frac{n}{\ln{a}} \sum_{p \le m} \frac{ln{p}}{p} \\
+\
+&= (2an+1) \left(\ln{\ln{n}} + O(1)\right) + \frac{n}{\ln{a}} \left( \ln{n} + O(1) \right) \\
+&= (2an+1)\ln{\ln{n}} + (2an+1)O(1) + \frac{n}{\ln{a}}\ln{n} + \frac{n}{\ln{a}}O(1) \\
+\
+&= \frac{n \ln{n}}{\ln{a}} + (2an+1)\ln{\ln{n}} + (2an+1)O(1) + \frac{n}{\ln{a}}O(1) \\
+\
+&= \frac{n \ln{n}}{\ln{a}} + (2an+1)\ln{\ln{n}} + O(an) + O(\frac{n}{\ln{a}}) \\
+\
+&= \frac{n \ln{n}}{\ln{a}} + (2an+1)\ln{\ln{n}} + O(an)
+\end{align*}
+
+A RekurzívSzita program egy adott belső csúcsában egy adott prímmel többször is foglalkozik.
+\begin{itemize}
+\item Kiosztja legalább egy részintervallumra. Intervallumonként $O(1)$ időben.
+\item Összegyűjti a visszatérési értékbe. Egyszer $O(1)$ időben.
+\end{itemize}
+Valamint vannak $a$-tól függő inicializálási lépések, $O(a)$ időben.
+Egy levél csúcsban minden prímmel $O(1)$ időt foglalkozik.
+
+Az összesítéshez számoljuk el a a részintervallumra kiosztás költségét a részintervallum csúcsában. Igy
+\begin{itemize}
+\item Egy levélben minden prímmel $O(1)$ időt foglalkozik.
+\item Egy belső csúcsban $O(a)$ időt tölt karbantartással, és prímenként $O(1)$ időt azzal,
+hogy rá osztották, vagy visszatér vele.
+\end{itemize}
+Tehát a teljes időigény
+\begin{align*}
+T &= \frac{a^h-1}{a-1} O(a) + C O(1) \\
+&= \frac{a^h-1}{a-1} O(a) + O\left(\frac{n \ln{n}}{\ln{a}}\right) \\
+&= O(a^h) + O\left(\frac{n \ln{n}}{\ln{a}}\right) \\
+&= O(n) + O\left(\frac{n \ln{n}}{\ln{a}}\right) \\
+&= O\left(\frac{n \ln{n}}{\ln{a}}\right) \\
+\end{align*}
+
+\subsection{Cache-oblivious edényszita}
+
+{\color{red} Cache oblivious talán csak $a=2$-re.
+A c program nem szép most tetszőleges $a$-ra.
+Lesz midly cache aware is, mert könnyű.}
+
+Megadunk egy konkrét implementációt a fenti RekurzívSzitára,
+ahol a listák egybefüggő memóriatartományok.
+
+Az algoritmus a prímeket, amik egynél több, de nem minden részintervallumban szitálnak,
+minden rekurzív hívásnál újrarendezi.
+
+\subsection{Műveletigénye gyorsítótárral}
+
+{\color{red} Itt szégyenérzet nélkül fel fogom tenni,
+hogy egy intervallumban szitáló prímek száma
+az az egy-egy prím szitálásának várható értékének összege.
+Ami nem igaz, de senki se tud jobbat, és ad valami "elméletit",
+amivel össze lehet hasonlítani méréseket.}
+
+\subsection{Feltételek a gyorsítótár méretére}
+
+\subsection{Tetszőleges n-ig, nem csak teljes fára}
+
+\subsection{Az igazi program fix méretű számokkal}
+
+\subsection{Az igazi program változó méretű számokkal}
+
+{\color{red} Valszeg nem lesz, mert semmi hasznosat nem tudok mondani.}
+
+\chapter{Szimulátor}
+
+\section{Igazi cache}
+
+Asszociativitás. Több szint. Több mag osztozik. Léteznek egészen speciális cache-ek, TLB, decoded microcode, trace cache, ...
+
+\section{Megoldás}
+
+\section{Választható cache-ek}
+
+\begin{itemize}
+\item utasítás/adat/mindkettő
+\item MIN
+\item LRU
+\item FIFO, LIFO, LFU, ..., kevésbé izgalmasak
+\item teljes/1-2-3...-n asszociativitás
+\item mindenféle méretben
+\item egymás után akár több is
+\end{itemize}
+
+\chapter{Mérési eredmények}
+
+\begin{thebibliography}{9}
+
+\bibitem{prokop}
+Frigo, M., Leiserson, C. E., Prokop, H., Ramachandran, S.: Cache-oblivious algorithms, ACM Transactions on Algorithms (TALG), 8(1)  (2012)., 1-22.
+
+\bibitem{belady-min}
+Belady, L. A.: A study of replacement algorithms for virtual storage computers. IBM Systems Journal 5, 2 (1966), 78–101.
+
+\bibitem{belady-anomaly}
+Belady, L. A.; Nelson, R. A.; Shedler, G. S.: An anomaly in space-time characteristics of certain programs running in a paging machine. Communications of the ACM, 12(6), (1969) 349–353. 
+
+\bibitem{fifo-anomaly-unbounded}
+Fornai, P., Iványi, A.: FIFO anomaly is unbounded.  (2010) arXiv preprint arXiv:1003.1336.
+
+\bibitem{stack-algorithm}
+Mattson, R.L., Gecsei, J., Slutz, D.R., Traiger, I.L.: Evaluation Techniques for Storage Hierarchies. IBM Syst. J., 9, (1970) 78-117.
+
+\bibitem{lru-k-competetive}
+Daniel D. Sleator and Robert E. Tarjan.: Amortized efficiency of list update and paging rules. Commun. ACM 28, 2 (Feb. 1985), 202–208.
+
+\end{thebibliography}
+
+\end{document}
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: t
+%%% End:
