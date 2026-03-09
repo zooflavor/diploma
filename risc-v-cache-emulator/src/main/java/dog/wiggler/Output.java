@@ -1,0 +1,67 @@
+package dog.wiggler;
+
+import dog.wiggler.function.Consumer;
+
+public interface Output {
+    static Output consumer(Consumer<? super Number> consumer) {
+        return new Output() {
+            @Override
+            public void writeDouble(double value) throws Throwable {
+                consumer.accept(value);
+            }
+
+            @Override
+            public void writeFloat(float value) throws Throwable {
+                consumer.accept(value);
+            }
+
+            @Override
+            public void writeInt16(short value) throws Throwable {
+                consumer.accept(value);
+            }
+
+            @Override
+            public void writeInt32(int value) throws Throwable {
+                consumer.accept(value);
+            }
+
+            @Override
+            public void writeInt64(long value) throws Throwable {
+                consumer.accept(value);
+            }
+
+            @Override
+            public void writeInt8(byte value) throws Throwable {
+                consumer.accept(value);
+            }
+        };
+    }
+
+    void writeDouble(double value) throws Throwable;
+
+    void writeFloat(float value) throws Throwable;
+
+    void writeInt16(short value) throws Throwable;
+
+    void writeInt32(int value) throws Throwable;
+
+    void writeInt64(long value) throws Throwable;
+
+    void writeInt8(byte value) throws Throwable;
+
+    default void writeUint16(short value) throws Throwable {
+        writeInt16(value);
+    }
+
+    default void writeUint32(int value) throws Throwable {
+        writeInt32(value);
+    }
+
+    default void writeUint64(long value) throws Throwable {
+        writeInt64(value);
+    }
+
+    default void writeUint8(byte value) throws Throwable {
+        writeInt8(value);
+    }
+}
