@@ -1,16 +1,30 @@
 package dog.wiggler.memory;
 
+import org.jetbrains.annotations.NotNull;
+
+import java.util.Objects;
+
+/**
+ * Helper methods to encode and decode memory access log entries.
+ * All type of entries are encoded to 64 bits.
+ * For all entries the three most significant bits specify the type.
+ * This leaves 61 bits for data.
+ * Elapsed cycles and user data uses all 61 bits, and limited to 61 bits.
+ * Memory access addresses are limited to 48 bits.
+ * Memory access sizes must be powers of two.
+ */
 public class Logs {
-    public static final long ADDRESS_MASK=mask(48);
-    public static final int ADDRESS_SHIFT=0;
-    public static final long ELAPSED_CYCLES_MASK=mask(61);
-    public static final int ELAPSED_CYCLES_SHIFT=0;
-    public static final long SIZE_MASK=mask(5);
-    public static final int SIZE_SHIFT=48;
-    public static final long TYPE_MASK=mask(3);
-    public static final int TYPE_SHIFT=61;
-    public static final long USER_DATA_MASK=mask(61);
-    public static final int USER_DATA_SHIFT=0;
+    private static final long ADDRESS_MASK=mask(Memory.ADDRESS_BITS);
+    private static final int ADDRESS_SHIFT=0;
+    private static final long ELAPSED_CYCLES_MASK=mask(61);
+    private static final int ELAPSED_CYCLES_SHIFT=0;
+    public static final int PAGE_SIZE=1<<12;
+    private static final long SIZE_MASK=mask(5);
+    private static final int SIZE_SHIFT=Memory.ADDRESS_BITS;
+    private static final long TYPE_MASK=mask(3);
+    private static final int TYPE_SHIFT=61;
+    private static final long USER_DATA_MASK=mask(61);
+    private static final int USER_DATA_SHIFT=0;
 
     private Logs() {
     }
@@ -23,15 +37,15 @@ public class Logs {
         return decode(log, ADDRESS_MASK, ADDRESS_SHIFT);
     }
 
-    public static long decodeElapsedCycles(long log) {
+    private static long decodeElapsedCycles(long log) {
         return decode(log, ELAPSED_CYCLES_MASK, ELAPSED_CYCLES_SHIFT);
     }
 
-    public static int decodeSize(long log) {
+    private static int decodeSize(long log) {
         return 1<<(int)decode(log, SIZE_MASK, SIZE_SHIFT);
     }
 
-    public static LogType decodeType(long log) {
+    public static @NotNull LogType decodeType(long log) {
         int type=(int)decode(log, TYPE_MASK, TYPE_SHIFT);
         if ((0>type) || (LogType.TYPES.size()<=type)) {
             throw new RuntimeException("unknown log type %x".formatted(type));
@@ -39,7 +53,7 @@ public class Logs {
         return LogType.TYPES.get(type);
     }
 
-    public static long decodeUserData(long log) {
+    private static long decodeUserData(long log) {
         return decode(log, USER_DATA_MASK, USER_DATA_SHIFT);
     }
 
@@ -50,9 +64,9 @@ public class Logs {
         return value<<shift;
     }
 
-    public static long encodeAccess(long address, int size, AccessType type) {
+    public static long encodeAccess(long address, int size, @NotNull AccessType type) {
         int shift=log2Checked(size);
-        LogType type2=switch (type) {
+        @NotNull LogType type2=switch (type) {
             case LOAD_DATA -> LogType.ACCESS_LOAD_DATA;
             case LOAD_INSTRUCTION -> LogType.ACCESS_LOAD_INSTRUCTION;
             case STORE -> LogType.ACCESS_STORE;
@@ -72,7 +86,7 @@ public class Logs {
                 |encode(TYPE_MASK, TYPE_SHIFT, LogType.USER_DATA.ordinal());
     }
 
-    public static int log2(int value) {
+    private static int log2(int value) {
         if (0==value) {
             return -1;
         }
@@ -95,13 +109,19 @@ public class Logs {
         return (1L<<bits)-1L;
     }
 
-    public static <R> R visit(long log, LogVisitor<R> visitor) throws Throwable {
+    public static <R> R visit(
+            long log,
+            @NotNull LogVisitor<R> visitor)
+            throws Throwable {
         LogType type=Logs.decodeType(log);
         return switch (type) {
             case ACCESS_LOAD_DATA, ACCESS_LOAD_INSTRUCTION, ACCESS_STORE -> {
                 long address=Logs.decodeAddress(log);
                 int size=Logs.decodeSize(log);
-                yield visitor.access(address, size, type.accessType);
+                yield visitor.access(
+                        address,
+                        size,
+                        Objects.requireNonNull(type.accessType, "type.accessType"));
             }
             case ELAPSED_CYCLES -> {
                 long elapsedCycles=Logs.decodeElapsedCycles(log);

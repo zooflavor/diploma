@@ -1,7 +1,11 @@
 package dog.wiggler;
 
 import dog.wiggler.function.Supplier;
+import org.jetbrains.annotations.NotNull;
 
+/**
+ * Input abstracts over the standard input.
+ */
 public interface Input {
     double readDouble() throws Throwable;
 
@@ -31,7 +35,8 @@ public interface Input {
         return readInt8();
     }
 
-    static Input supplier(Supplier<? extends Number> supplier) {
+    static @NotNull Input supplier(
+            @NotNull Supplier<? extends @NotNull Number> supplier) {
         return new Input() {
             @Override
             public double readDouble() throws Throwable {

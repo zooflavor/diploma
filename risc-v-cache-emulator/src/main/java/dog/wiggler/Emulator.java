@@ -7,8 +7,11 @@ import dog.wiggler.function.Supplier;
 import dog.wiggler.memory.Log;
 import dog.wiggler.memory.Memory;
 import dog.wiggler.memory.MemoryLog;
+import dog.wiggler.riscv64.ABI;
 import dog.wiggler.riscv64.Hart;
 import dog.wiggler.riscv64.Trap;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.EOFException;
 import java.io.IOException;
@@ -23,29 +26,32 @@ import java.util.Map;
 import java.util.Objects;
 
 public class Emulator implements AutoCloseable {
-    public FileHeader elfHeader;
-    public final Exit exit=new Exit();
-    public final Hart hart;
-    public final HeapAndStack heapAndStack=new HeapAndStack();
+    public @Nullable FileHeader elfHeader;
+    public final @NotNull Exit exit=new Exit();
+    public final @NotNull Hart hart;
+    public final @NotNull HeapAndStack heapAndStack=new HeapAndStack();
     public long heapStart;
-    public final Input input;
-    public final MemoryLog memoryLog;
-    public final Output output;
-    public final Map<Long, Trap> traps;
+    public final @NotNull Input input;
+    public final @NotNull MemoryLog memoryLog;
+    public final @NotNull Output output;
+    public final @NotNull Map<@NotNull Long, @NotNull Trap> traps;
 
-    private Emulator(Input input, MemoryLog memoryLog, Output output) {
+    private Emulator(
+            @NotNull Input input,
+            @NotNull MemoryLog memoryLog,
+            @NotNull Output output) {
         this.input=Objects.requireNonNull(input, "input");
         this.memoryLog=Objects.requireNonNull(memoryLog, "memoryAccessLog");
         this.output=Objects.requireNonNull(output, "output");
-        hart=new Hart(heapAndStack);
+        hart=new Hart();
         Map<Long, Trap> traps2=new HashMap<>();
-        traps2.put(IOMap.MALLOC, Trap.int64Operator((size)->heapAndStack.malloc(hart, size)));
-        traps2.put(IOMap.FREE, Trap.int64Consumer(heapAndStack::free));
+        traps2.put(IOMap.MALLOC, Emulator.mallocTrap());
+        traps2.put(IOMap.FREE, Emulator.freeTrap());
         traps2.put(IOMap.EXIT, Trap.int32Consumer(exit::set));
         traps2.put(IOMap.EXIT_OK, Trap.runnable(exit::setOk));
-        traps2.put(IOMap.MEMORY_ACCESS_LOG_DISABLE, Trap.runnable(this.memoryLog::disableAccessLog));
-        traps2.put(IOMap.MEMORY_ACCESS_LOG_ENABLE, Trap.runnable(this.memoryLog::enableAccessLog));
-        traps2.put(IOMap.MEMORY_ACCESS_LOG_USER_DATA, Trap.int64Consumer(this.memoryLog::userData));
+        traps2.put(IOMap.MEMORY_ACCESS_LOG_DISABLE, Emulator.disableAccessLogTrap());
+        traps2.put(IOMap.MEMORY_ACCESS_LOG_ENABLE, Emulator.enableAccessLogTrap());
+        traps2.put(IOMap.MEMORY_ACCESS_LOG_USER_DATA, Emulator.logUserDataTrap());
         traps2.put(IOMap.READ_DOUBLE, Trap.doubleSupplier(input::readDouble));
         traps2.put(IOMap.READ_FLOAT, Trap.floatSupplier(input::readFloat));
         traps2.put(IOMap.READ_INT16, Trap.int16Supplier(input::readInt16));
@@ -85,8 +91,21 @@ public class Emulator implements AutoCloseable {
         }
     }
 
-    public static Supplier<Emulator> factory(
-            Input input, Supplier<? extends Log> logFactory, Supplier<? extends Memory> memoryFactory, Output output) {
+    private static @NotNull Trap.Subroutine disableAccessLogTrap() {
+        return (hart, heapAndStack, memoryLog)->
+                memoryLog.disableAccessLog();
+    }
+
+    private static @NotNull Trap.Subroutine enableAccessLogTrap() {
+        return (hart, heapAndStack, memoryLog)->
+                memoryLog.enableAccessLog();
+    }
+
+    public static @NotNull Supplier<@NotNull Emulator> factory(
+            @NotNull Input input,
+            @Nullable Supplier<Log> logFactory,
+            @NotNull Supplier<Memory> memoryFactory,
+            @NotNull Output output) {
         return Supplier.factory2(
                 (log)->Supplier.factory(
                         (memory)->new Emulator(input, new MemoryLog(log, memory), output),
@@ -96,7 +115,16 @@ public class Emulator implements AutoCloseable {
                         :logFactory);
     }
 
-    public void loadELFAndReset(Path imageFile) throws Throwable {
+    private static @NotNull Trap.Subroutine freeTrap() {
+        return (hart, heapAndStack, memoryLog)->{
+            long address=hart.xRegisters.getInt64(ABI.REGISTER_A0);
+            heapAndStack.free(address);
+        };
+    }
+
+    public void loadELFAndReset(
+            @NotNull Path imageFile)
+            throws Throwable {
         heapStart=0L;
         for (long trap: traps.keySet()) {
             heapStart=Math.max(heapStart, trap+4L);
@@ -128,16 +156,31 @@ public class Emulator implements AutoCloseable {
         reset();
     }
 
+    private static @NotNull Trap.Subroutine logUserDataTrap() {
+        return (hart, heapAndStack, memoryLog)->{
+            long userData=hart.xRegisters.getInt64(ABI.REGISTER_A0);
+            memoryLog.userData(userData);
+        };
+    }
+
+    private static @NotNull Trap.Subroutine mallocTrap() {
+        return (hart, heapAndStack, memoryLog)->{
+            long size=hart.xRegisters.getInt64(ABI.REGISTER_A0);
+            long result=heapAndStack.malloc(hart, size);
+            hart.xRegisters.setInt64(heapAndStack, ABI.REGISTER_A0, result);
+        };
+    }
+
     public void reset() {
-        hart.reset(IOMap.EXIT, memoryLog.size(), elfHeader.entryPoint);
         exit.clear();
+        hart.reset(heapAndStack, IOMap.EXIT, Objects.requireNonNull(elfHeader, "elfHeader").entryPoint);
         heapAndStack.reset(hart, heapStart, memoryLog.size());
         memoryLog.disableAccessLog();
     }
 
     public void run() throws Throwable {
         while (!exit.set()) {
-            hart.step(memoryLog, traps);
+            hart.step(heapAndStack, memoryLog, traps);
         }
     }
 }

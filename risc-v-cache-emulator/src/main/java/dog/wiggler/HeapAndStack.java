@@ -1,54 +1,69 @@
 package dog.wiggler;
 
+import dog.wiggler.riscv64.ABI;
 import dog.wiggler.riscv64.Hart;
+import org.jetbrains.annotations.NotNull;
 
+/**
+ * Manages the heap.
+ * The free heap memory is the memory between the {@code heapFreeStart} pointer and the stack pointer.
+ * Malloc allocates at the bottom of the heap.
+ * Free does nothing.
+ * Stack grows downward, as usual.
+ * Malloc and stack operations ensure that the heap and the stack cannot overlap.
+ * Malloc fails when the free pointer catches up to the stack pointer.
+ * Stack operations throw {@link StackOverflowException} when stack catches up with the free pointer.
+ */
 public class HeapAndStack {
     private static final long MIN_HEAP_STACK_DISTANCE=4096;
 
+    /**
+     * The start address of the free space on the heap.
+     * It's aligned to 8 bytes.
+     */
     private long heapFreeStart;
 
-    private static long alignmentBits(long size) {
-        for (int ii=3; 0<ii; --ii) {
-            if (0!=(size&((-1L)<<ii))) {
-                return ii;
-            }
-        }
-        return 0;
-    }
-
-    private static long alignDown(long address, long alignmentBits) {
-        if (0>=alignmentBits) {
-            return address;
-        }
-        return address&((-1L)<<alignmentBits);
-    }
-
-    private static long alignUp(long address, long alignmentBits) {
-        long result=alignDown(address, alignmentBits);
-        if (result<address) {
-            result+=1L<<alignmentBits;
-        }
-        return result;
-    }
-
+    /**
+     * Checks the stack pointer for misalignment and stack overflow.
+     */
     public void checkStackPointer(long stackPointer) {
+        if (0!=(stackPointer&0xfL)) {
+            throw new MisalignedStackPointerException(
+                    "stack pointer: %016x"
+                            .formatted(stackPointer));
+        }
         if (MIN_HEAP_STACK_DISTANCE>stackPointer-heapFreeStart) {
-            throw new StackOverflowException();
+            throw new StackOverflowException(
+                    "heap free start: %016x, stack pointer: %016x"
+                            .formatted(heapFreeStart, stackPointer));
         }
     }
 
+    /**
+     * Free does nothing.
+     */
     public void free(long ignoreAddress) {
     }
 
-    public long getStackPointer(Hart hart) {
-        return hart.registersXs.getInt64(Hart.REGISTER_SP);
+    public long getStackPointer(
+            @NotNull Hart hart) {
+        return hart.xRegisters.getInt64(ABI.REGISTER_SP);
     }
 
-    public long malloc(Hart hart, long size) {
+    /**
+     * Allocates memory at the start of the heap.
+     * The size is always rounded up to be a multiple of 8,
+     * and the result is always divisible by 8.
+     * Malloc fails when there's no enough memory left between the start of the heap and the stack.
+     */
+    public long malloc(
+            @NotNull Hart hart,
+            long size) {
         if (0L>=size) {
             return 0L;
         }
-        long result=alignUp(heapFreeStart, alignmentBits(size));
+        size=roundUp8(size);
+        long result=heapFreeStart;
         long newHeapFreeStart=result+size;
         if (MIN_HEAP_STACK_DISTANCE>getStackPointer(hart)-newHeapFreeStart) {
             return 0L;
@@ -57,23 +72,39 @@ public class HeapAndStack {
         return result;
     }
 
-    public void reset(Hart hart, long heapStart, long heapEnd) {
+    public void reset(
+            @NotNull Hart hart,
+            long heapStart,
+            long heapEnd) {
         if ((0>=heapEnd)
                 || (0L>heapStart)) {
             throw new IllegalArgumentException("heap too large");
         }
-        heapFreeStart=heapStart;
-        long stackPointer=alignDown(heapEnd, 4);
-        setStackPointer(hart, stackPointer);
-        if (MIN_HEAP_STACK_DISTANCE>stackPointer-heapFreeStart) {
-            throw new IllegalArgumentException("heap too small");
-        }
+        heapFreeStart=roundUp8(heapStart);
+        setStackPointer(hart, heapEnd&(~0xfL));
     }
 
-    public void setStackPointer(Hart hart, long stackPointer) {
-        hart.registersXs.setInt64(Hart.REGISTER_SP, stackPointer);
-        if (MIN_HEAP_STACK_DISTANCE>stackPointer-heapFreeStart) {
-            throw new StackOverflowException();
+    /**
+     * Rounds down a value to be divisible by 16.
+     */
+    public static long roundDown16(long value) {
+        return value&(~0xfL);
+    }
+
+    /**
+     * Rounds up a value to be divisible by 8.
+     */
+    private static long roundUp8(long value) {
+        long result=value&(~0x7L);
+        if (result!=value) {
+            result+=8L;
         }
+        return result;
+    }
+
+    public void setStackPointer(
+            @NotNull Hart hart,
+            long stackPointer) {
+        hart.xRegisters.setInt64(this, ABI.REGISTER_SP, roundDown16(stackPointer));
     }
 }

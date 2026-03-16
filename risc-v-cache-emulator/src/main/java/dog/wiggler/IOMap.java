@@ -1,5 +1,9 @@
 package dog.wiggler;
 
+/**
+ * Entry points for system calls.
+ * These values must much the system calls in emulator.h.
+ */
 public class IOMap {
     public static final long MALLOC                     =0x1000L;
     public static final long FREE                       =0x1004L;
@@ -32,4 +36,7 @@ public class IOMap {
     public static final long WRITE_UINT32               =0x107cL;
     public static final long WRITE_UINT64               =0x1080L;
     public static final long WRITE_UINT8                =0x1084L;
+
+    private IOMap() {
+    }
 }

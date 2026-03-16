@@ -3,6 +3,7 @@ package dog.wiggler.cache;
 import dog.wiggler.memory.AccessType;
 import dog.wiggler.memory.Log;
 import dog.wiggler.memory.Logs;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -48,7 +49,7 @@ public class LRUCache implements Log {
     }
 
     @Override
-    public Void access(long address, int size, AccessType type) throws Throwable {
+    public Void access(long address, int size, @NotNull AccessType type) throws Throwable {
         while (0<size) {
             long lineAddress=address&lineMaskHigh;
             int size2=Math.min(size, (int)(lineAddress+lineBytes-address));

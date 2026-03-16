@@ -1,5 +1,9 @@
 package dog.wiggler;
 
+/**
+ * Casts between doubles and unsigned integers.
+ * Signed integers are supported through java casts.
+ */
 public class Casts {
     private static final double UINT64_MAX=2.0*(1L<<62);
 

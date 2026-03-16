@@ -1,7 +1,10 @@
 package dog.wiggler.memory;
 
 import dog.wiggler.function.Supplier;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.channels.FileChannel;
@@ -10,20 +13,31 @@ import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Memory implementation using heap memory or a file mapped to memory.
+ */
 public class MemoryMappedMemory implements Memory {
     private static final int BUFFER_BITS=30;
     private static final long BUFFER_MASK=-1L<<BUFFER_BITS;
 
-    private final List<ByteBuffer> buffers;
+    private final boolean allowMisalignedAccess;
+    private final @NotNull List<@NotNull ByteBuffer> buffers;
+    private final @Nullable FileChannel channel;
     private final long size;
 
-    private MemoryMappedMemory(List<ByteBuffer> buffers, long size) {
+    private MemoryMappedMemory(
+            boolean allowMisalignedAccess,
+            @NotNull List<@NotNull ByteBuffer> buffers,
+            @Nullable FileChannel channel,
+            long size) {
+        this.allowMisalignedAccess=allowMisalignedAccess;
         this.buffers=buffers;
+        this.channel=channel;
         this.size=size;
     }
 
-    private ByteBuffer buffer(long address) {
-        return buffers.get((int)(address>>> BUFFER_BITS));
+    private @NotNull ByteBuffer buffer(long address) {
+        return buffers.get((int)(address >>> BUFFER_BITS));
     }
 
     private int bufferIndex(long address) {
@@ -31,35 +45,80 @@ public class MemoryMappedMemory implements Memory {
     }
 
     private void check(long address, int size) {
-        if ((address>=this.size) || (address+size-1>=this.size)) {
-            throw IllegalMemoryAccessException.illegalAccess(address);
+        IllegalMemoryAccessException.checkAccess(address);
+        if (address+size-1>=this.size) {
+            throw new IllegalMemoryAccessException(
+                    "memory access is out of range, address: %016x, access size: %04x, memory size: %016x".formatted(
+                            address, size, this.size));
+        }
+        if ((!allowMisalignedAccess)
+                && (!Memory.isAccessAligned(address, size))) {
+            throw new MisalignedMemoryAccessException(
+                    "misaligned memory access, address: %016x, access size: %04x".formatted(
+                            address, size));
         }
     }
 
     @Override
-    public void close() {
+    public void close() throws IOException {
+        try {
+            buffers.clear();
+        }
+        finally {
+            if (null!=channel) {
+                channel.close();
+            }
+        }
     }
 
-    public static Supplier<MemoryMappedMemory> factory(Path path, long size) {
+    public static @NotNull Supplier<@NotNull Memory> factory(
+            boolean allowMisalignedAccess,
+            @NotNull Path path,
+            long size) {
         return Supplier.factory(
                 (channel)->{
-                    channel.truncate(size);
+                    if (channel.size()<size) {
+                        channel.truncate(size);
+                    }
                     List<ByteBuffer> buffers=new ArrayList<>();
                     for (long position=0L; size>position; position+=1L<<BUFFER_BITS) {
                         buffers.add(
                                 channel.map(
-                                        FileChannel.MapMode.READ_WRITE,
-                                        position,
-                                        Math.min(size-position, 1L<<BUFFER_BITS))
+                                                FileChannel.MapMode.READ_WRITE,
+                                                position,
+                                                Math.min(size-position, 1L<<BUFFER_BITS))
                                         .order(ByteOrder.LITTLE_ENDIAN));
                     }
-                    return new MemoryMappedMemory(buffers, size);
+                    return new MemoryMappedMemory(
+                            allowMisalignedAccess,
+                            buffers,
+                            channel,
+                            size);
                 },
                 ()->FileChannel.open(
                         path,
                         StandardOpenOption.CREATE,
                         StandardOpenOption.READ,
                         StandardOpenOption.WRITE));
+    }
+
+    public static @NotNull Supplier<@NotNull Memory> factory(
+            boolean allowMisalignedAccess,
+            long size) {
+        return ()->{
+            List<ByteBuffer> buffers=new ArrayList<>();
+            for (long position=0L; size>position; position+=1L<<BUFFER_BITS) {
+                buffers.add(
+                        ByteBuffer.allocate(
+                                        (int)Math.min(size-position, 1L<<BUFFER_BITS))
+                                .order(ByteOrder.LITTLE_ENDIAN));
+            }
+            return new MemoryMappedMemory(
+                    allowMisalignedAccess,
+                    buffers,
+                    null,
+                    size);
+        };
     }
 
     private long load(long address) {

@@ -1,9 +1,14 @@
 package dog.wiggler;
 
 import dog.wiggler.function.Consumer;
+import org.jetbrains.annotations.NotNull;
 
+/**
+ * Output abstracts over the standard output.
+ */
 public interface Output {
-    static Output consumer(Consumer<? super Number> consumer) {
+    static @NotNull Output consumer(
+            @NotNull Consumer<? super @NotNull Number> consumer) {
         return new Output() {
             @Override
             public void writeDouble(double value) throws Throwable {

@@ -1,20 +1,31 @@
 package dog.wiggler.memory;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.io.IOException;
 import java.util.Objects;
 
+/**
+ * Wraps a memory and a log object.
+ * All memory operations are first logged to the log object,
+ * and then delegated to the memory object.
+ * The logging of the memory access and user data can be turned on and off.
+ * The elapsed cycles are always logged.
+ */
 public class MemoryLog implements Log, Memory {
     private boolean accessLogEnabled;
-    private final Log log;
-    private final Memory memory;
+    private final @NotNull Log log;
+    private final @NotNull Memory memory;
 
-    public MemoryLog(Log log, Memory memory) {
+    public MemoryLog(
+            @NotNull Log log,
+            @NotNull Memory memory) {
         this.log=Objects.requireNonNull(log, "log");
         this.memory=Objects.requireNonNull(memory, "memory");
     }
 
     @Override
-    public Void access(long address, int size, AccessType type) throws Throwable {
+    public Void access(long address, int size, @NotNull AccessType type) throws Throwable {
         if (accessLogEnabled) {
             return log.access(address, size, type);
         }
@@ -69,7 +80,12 @@ public class MemoryLog implements Log, Memory {
 
     @Override
     public int loadInt32(long address, boolean instruction) throws Throwable {
-        access(address, 4, instruction?AccessType.LOAD_INSTRUCTION:AccessType.LOAD_DATA);
+        access(
+                address,
+                4,
+                instruction
+                        ?AccessType.LOAD_INSTRUCTION
+                        :AccessType.LOAD_DATA);
         return memory.loadInt32(address, instruction);
     }
 

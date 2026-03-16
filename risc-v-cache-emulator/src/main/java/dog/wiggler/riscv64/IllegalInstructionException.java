@@ -8,7 +8,7 @@ public class IllegalInstructionException extends EmulatorException {
     @Serial
     private static final long serialVersionUID=0L;
 
-    public IllegalInstructionException(String format, Object... args) {
-        super(String.format(format, args));
+    public IllegalInstructionException(String message) {
+        super(message);
     }
 }

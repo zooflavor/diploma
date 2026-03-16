@@ -1,17 +1,16 @@
 package dog.wiggler;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.math.BigInteger;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class CastsTest {
     @Test
     public void testDoubleToUint64() {
-        Assert.assertEquals(0L, Casts.castDoubleToUint64(Double.NaN));
+        assertEquals(0L, Casts.castDoubleToUint64(Double.NaN));
         assertEquals(0L, Casts.castDoubleToUint64(Double.NEGATIVE_INFINITY));
         assertEquals(-1L, Casts.castDoubleToUint64(Double.POSITIVE_INFINITY));
         for (long bits: List.of(0L, 1L, 3L, 5L, 13L)) {
@@ -32,6 +31,7 @@ public class CastsTest {
                             assertEquals(0L, Casts.castDoubleToUint64(value));
                         }
                         else {
+                            // noinspection ExtractMethodRecommender
                             BigInteger value2=BigInteger.valueOf(bits)
                                     .shiftLeft(shift)
                                     .and(new BigInteger("fffffffffffff", 16))

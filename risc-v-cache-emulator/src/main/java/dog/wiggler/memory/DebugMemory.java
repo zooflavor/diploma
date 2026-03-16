@@ -3,6 +3,11 @@ package dog.wiggler.memory;
 import java.io.IOException;
 import java.util.Objects;
 
+/**
+ * Wraps a memory object. Logs every access to the standard output,
+ * and then delegates the access to the memory object.
+ */
+@Deprecated
 public class DebugMemory implements Memory {
     private final Memory memory;
 

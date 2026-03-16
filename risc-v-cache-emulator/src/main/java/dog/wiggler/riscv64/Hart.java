@@ -3,66 +3,27 @@ package dog.wiggler.riscv64;
 import dog.wiggler.HeapAndStack;
 import dog.wiggler.memory.IllegalMemoryAccessException;
 import dog.wiggler.memory.MemoryLog;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
-import java.util.Objects;
 
+/**
+ * A hart is an execution unit of a risc-v processor.
+ * It contains a full set of registers: a program counter, 32 integer registers, 32 floating point registers.
+ */
 public class Hart {
-    public static final int REGISTER_A0=10;
-    public static final int REGISTER_FA0=10;
-    public static final int REGISTER_RA=1;
-    public static final int REGISTER_SP=2;
-
-    private final class RegistersFxs implements Registers {
-        @Override
-        public long getInt64(int register) {
-            return registerFxs[register];
-        }
-
-        @Override
-        public void setInt64(int register, long value) {
-            registerFxs[register]=value;
-        }
-    }
-
-    private final class RegistersXs implements Registers {
-        @Override
-        public long getInt64(int register) {
-            return (0==register)
-                    ?0
-                    :registerXs[register-1];
-        }
-
-        @Override
-        public void setInt64(int register, long value) {
-            if (0!=register) {
-                if (REGISTER_SP==register) {
-                    stack.checkStackPointer(value);
-                }
-                registerXs[register-1]=value;
-            }
-        }
-    }
-
-    public long elapsedCycles;
-    private final Instructions instructions=new RV64IMFD();
+    private long elapsedCycles;
+    public final @NotNull Registers fxRegisters=new FXRegisters();
+    private final @NotNull Instructions instructions=RV64IMFD.create();
     private long registerPc;
-    private final long[] registerFxs=new long[32];
-    public final Registers registersFxs=new RegistersFxs();
-    public final Registers registersXs=new RegistersXs();
-    private final long[] registerXs=new long[31];
-    public final HeapAndStack stack;
-
-    public Hart(HeapAndStack stack) {
-        this.stack=Objects.requireNonNull(stack, "stack");
-    }
+    public final @NotNull Registers xRegisters=new XRegisters();
 
     public long getPc() {
         return registerPc;
     }
 
     public long getReturnAddress() {
-        return registersXs.getInt64(REGISTER_RA);
+        return xRegisters.getInt64(ABI.REGISTER_RA);
     }
 
     public void incPc() {
@@ -73,46 +34,59 @@ public class Hart {
         return registerPc+4L;
     }
 
-    public void reset(long returnAddress, long stackEndAddress, long startAddress) {
+    /**
+     * Sets the program counter to {@code startAddress},
+     * the return address to {@code returnAddress},
+     * and the stack pointer to {@code stackEndAddress}.
+     */
+    public void reset(
+            @NotNull HeapAndStack heapAndStack,
+            long returnAddress,
+            long startAddress) {
         IllegalMemoryAccessException.checkAccess(startAddress);
-        IllegalMemoryAccessException.checkAccess(stackEndAddress-8L);
-        if (0L!=(stackEndAddress&0xfL)) {
-            throw new IllegalMemoryAccessException(
-                    "end address of the stack %013x is not aligned to 16 bytes", stackEndAddress);
-        }
         elapsedCycles=0;
         setPc(startAddress);
-        setReturnAddress(returnAddress);
-        stack.setStackPointer(this, stackEndAddress);
+        setReturnAddress(heapAndStack, returnAddress);
     }
 
     public void setPc(long value) {
         registerPc=value;
     }
 
-    public void setReturnAddress(long value) {
-        registersXs.setInt64(REGISTER_RA, value);
+    public void setReturnAddress(
+            @NotNull HeapAndStack heapAndStack,
+            long value) {
+        xRegisters.setInt64(heapAndStack, ABI.REGISTER_RA, value);
     }
 
-    public void step(MemoryLog memoryLog, Map<Long, Trap> traps) throws Throwable {
+    /**
+     * Executes one instruction.
+     * If the program counter points to a trap, it calls the trap.
+     * The trap must manipulate all the registers and memory, including the program counter.
+     * If there's no trap for the address of the program counter,
+     * it reads an instruction from memory,
+     * decodes it, and executes it.
+     * In all cases, the elapsed cycles increase by one.
+     */
+    public void step(
+            @NotNull HeapAndStack heapAndStack,
+            @NotNull MemoryLog memoryLog,
+            @NotNull Map<@NotNull Long, @NotNull Trap> traps)
+            throws Throwable {
         IllegalMemoryAccessException.checkAccess(registerPc);
         if (0L!=(registerPc&3)) {
-            throw new IllegalMemoryAccessException("register pc %012x is not aligned to 4 bytes", registerPc);
+            throw new IllegalMemoryAccessException(
+                    "register pc %016x is not aligned to 4 bytes"
+                            .formatted(registerPc));
         }
         ++elapsedCycles;
         Trap trap=traps.get(registerPc);
         if (null!=trap) {
-            trap.triggered(this, memoryLog);
+            trap.triggered(this, heapAndStack, memoryLog);
             return;
         }
         int instruction=memoryLog.loadInt32(registerPc, true);
-        int opcode=instruction&0x7f;
-        Instruction instruction2=instructions.getInstruction(opcode);
-        if (null==instruction2) {
-            throw new IllegalInstructionException(
-                    "illegal instruction 0x%08x at 0x%012x, opcode: 0x%02x", instruction, registerPc, opcode);
-        }
-        instruction2.execute(this, instruction, memoryLog, opcode);
+        instructions.execute(this, heapAndStack, instruction, memoryLog);
         memoryLog.elapsedCycles(elapsedCycles);
     }
 }

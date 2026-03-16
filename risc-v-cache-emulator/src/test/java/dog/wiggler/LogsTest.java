@@ -3,17 +3,18 @@ package dog.wiggler;
 import dog.wiggler.memory.AccessType;
 import dog.wiggler.memory.LogVisitor;
 import dog.wiggler.memory.Logs;
-import org.junit.Test;
+import org.jetbrains.annotations.NotNull;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class LogsTest {
     @Test
     public void test() throws Throwable {
         class FailVisitor implements LogVisitor<Void> {
             @Override
-            public Void access(long address, int size, AccessType type) {
+            public Void access(long address, int size, @NotNull AccessType type) {
                 fail();
                 return null;
             }
@@ -41,7 +42,7 @@ public class LogsTest {
                 Logs.encodeAccess(0x12345L, 2, AccessType.LOAD_DATA),
                 new FailVisitor() {
                     @Override
-                    public Void access(long address, int size, AccessType type) {
+                    public Void access(long address, int size, @NotNull AccessType type) {
                         assertEquals(0x12345L, address);
                         assertEquals(2, size);
                         assertEquals(AccessType.LOAD_DATA, type);
@@ -54,7 +55,7 @@ public class LogsTest {
                 Logs.encodeAccess(0x12345, 4, AccessType.LOAD_INSTRUCTION),
                 new FailVisitor() {
                     @Override
-                    public Void access(long address, int size, AccessType type) {
+                    public Void access(long address, int size, @NotNull AccessType type) {
                         assertEquals(0x12345L, address);
                         assertEquals(4, size);
                         assertEquals(AccessType.LOAD_INSTRUCTION, type);
@@ -66,7 +67,7 @@ public class LogsTest {
                 Logs.encodeAccess(0x654321, 8, AccessType.STORE),
                 new FailVisitor() {
                     @Override
-                    public Void access(long address, int size, AccessType type) {
+                    public Void access(long address, int size, @NotNull AccessType type) {
                         assertEquals(0x654321L, address);
                         assertEquals(8, size);
                         assertEquals(AccessType.STORE, type);

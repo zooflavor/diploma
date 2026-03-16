@@ -1,11 +1,20 @@
 package dog.wiggler.function;
 
+import org.jetbrains.annotations.NotNull;
+
+/**
+ * Functional interface for functions without arguments.
+ */
 @FunctionalInterface
 public interface Supplier<T> {
     T get() throws Throwable;
 
-    static <T extends AutoCloseable, U> Supplier<U> factory(
-            Function<? super T, ? extends U> function, Supplier<? extends T> supplier) {
+    /**
+     * Creates a factory safely wrapping a factory for {@link AutoCloseable} objects.
+     */
+    static <T extends AutoCloseable, U> @NotNull Supplier<U> factory(
+            @NotNull Function<@NotNull T, U> function,
+            @NotNull Supplier<@NotNull T> supplier) {
         return ()->{
             boolean error=true;
             T tt=supplier.get();
@@ -22,8 +31,15 @@ public interface Supplier<T> {
         };
     }
 
-    static <T extends AutoCloseable, U> Supplier<U> factory2(
-            Function<? super T, ? extends Supplier<? extends U>> function, Supplier<? extends T> supplier) {
-        return factory((tt)->function.apply(tt).get(), supplier);
+    /**
+     * Creates a factory safely wrapping a factory for {@link AutoCloseable} objects.
+     * This can be used to safely nest factories.
+     */
+    static <T extends AutoCloseable, U> @NotNull Supplier<U> factory2(
+            @NotNull Function<@NotNull T, @NotNull Supplier<U>> function,
+            @NotNull Supplier<@NotNull T> supplier) {
+        return factory(
+                (tt)->function.apply(tt).get(),
+                supplier);
     }
 }

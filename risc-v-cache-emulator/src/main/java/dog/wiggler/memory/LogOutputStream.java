@@ -1,6 +1,7 @@
 package dog.wiggler.memory;
 
 import dog.wiggler.function.Supplier;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -11,16 +12,22 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Objects;
 
+/**
+ * Writes memory access log to a file.
+ */
 public class LogOutputStream implements Log {
-    private final ByteBuffer buffer=ByteBuffer.allocate(4096).order(ByteOrder.LITTLE_ENDIAN);
-    private final WritableByteChannel channel;
+    private final @NotNull ByteBuffer buffer
+            =ByteBuffer.allocate(Logs.PAGE_SIZE)
+            .order(ByteOrder.LITTLE_ENDIAN);
+    private final @NotNull WritableByteChannel channel;
 
-    public LogOutputStream(WritableByteChannel channel) {
+    public LogOutputStream(
+            @NotNull WritableByteChannel channel) {
         this.channel=Objects.requireNonNull(channel, "channel");
     }
 
     @Override
-    public Void access(long address, int size, AccessType type) throws Throwable {
+    public Void access(long address, int size, @NotNull AccessType type) throws Throwable {
         writeLog(Logs.encodeAccess(address, size, type));
         return null;
     }
@@ -47,7 +54,8 @@ public class LogOutputStream implements Log {
         return null;
     }
 
-    public static Supplier<LogOutputStream> factory(Path path) {
+    public static @NotNull Supplier<@NotNull Log> factory(
+            @NotNull Path path) {
         return Supplier.factory(
                 LogOutputStream::new,
                 ()->Files.newByteChannel(

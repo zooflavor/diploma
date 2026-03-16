@@ -12,17 +12,19 @@ import dog.wiggler.memory.AccessType;
 import dog.wiggler.memory.Log;
 import dog.wiggler.memory.LogInputStream;
 import dog.wiggler.memory.LogOutputStream;
-import dog.wiggler.memory.LogVisitor;
 import dog.wiggler.memory.Logs;
+import dog.wiggler.memory.Memory;
 import dog.wiggler.memory.MemoryMappedMemory;
-import dog.wiggler.riscv64.Hart;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import dog.wiggler.riscv64.ABI;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedClass;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -34,30 +36,35 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.Random;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.stream.Stream;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
-@RunWith(Parameterized.class)
+@ParameterizedClass
+@MethodSource("parameters")
 public class EmulatorTests {
+    public record MemorySettings(
+            boolean allowMisalignedAccess,
+            @Nullable Path memoryImagePath,
+            long memoryImageSize) {
+        public @NotNull Supplier<@NotNull Memory> factory() {
+            return (null==memoryImagePath())
+                    ?MemoryMappedMemory.factory(allowMisalignedAccess(), memoryImageSize())
+                    :MemoryMappedMemory.factory(allowMisalignedAccess(), memoryImagePath(), memoryImageSize());
+        }
+    }
+
     public static final List<PrimitiveValue.DFloat> DOUBLES;
-    public static final List<String> EXECUTABLE_IMAGE_OPTIONS=List.of(
-            "clang-O0",
-            "clang-O1",
-            "clang-O2",
-            "gcc-O0",
-            "gcc-O1",
-            "gcc-O2");
     public static final List<PrimitiveValue.SFloat> FLOATS;
-    public static final Path MEMORY_IMAGE_PATH;
-    public static final long MEMORY_IMAGE_SIZE=1L<<34;
     public static final Path ROOT_PATH;
     public static final List<PrimitiveValue.SInt16> SINT16S;
     public static final List<PrimitiveValue.SInt32> SINT32S;
@@ -273,24 +280,22 @@ public class EmulatorTests {
                 .map(PrimitiveValue.UInt8::new)
                 .toList());
 
-        try {
-            MEMORY_IMAGE_PATH=Paths.get("../memory.image").toAbsolutePath().toRealPath();
-            ROOT_PATH=Paths.get("../c/out").toAbsolutePath().toRealPath();
-        }
-        catch (IOException ex) {
-            throw new RuntimeException(ex);
-        }
+        ROOT_PATH=Paths.get("../c/out").toAbsolutePath();
     }
 
-    public Emulator emulator;
-    public final String executableImageOption;
+    private Emulator emulator;
+    private final @NotNull String executableImageOption;
+    private final @NotNull MemorySettings memorySettings;
 
-    public EmulatorTests(String executableImageOption) {
+    public EmulatorTests(
+            @NotNull String executableImageOption,
+            @NotNull MemorySettings memorySettings) {
         this.executableImageOption=executableImageOption;
+        this.memorySettings=memorySettings;
     }
 
-    @After
-    public void after() throws Throwable {
+    @AfterEach
+    public void afterEach() throws Throwable {
         if (null!=emulator) {
             emulator.close();
         }
@@ -301,9 +306,9 @@ public class EmulatorTests {
             throws Throwable {
         for (V parameter: parameters) {
             assertEquals(
-                    String.format("function=%s, parameter=%s", function, parameter),
                     resultType.java(expected.apply(parameter.java())),
-                    callFunction(true, function, resultType, parameter));
+                    callFunction(true, function, resultType, parameter),
+                    String.format("function=%s, parameter=%s", function, parameter));
         }
     }
 
@@ -314,9 +319,9 @@ public class EmulatorTests {
         for (V parameter0: parameters0) {
             for (W parameter1: parameters1) {
                 assertEquals(
-                        String.format("function=%s, parameter0=%s, parameter1=%s", function, parameter0, parameter1),
                         resultType.java(expected.apply(parameter0.java(), parameter1.java())),
-                        callFunction(true, function, resultType, parameter0, parameter1));
+                        callFunction(true, function, resultType, parameter0, parameter1),
+                        String.format("function=%s, parameter0=%s, parameter1=%s", function, parameter0, parameter1));
             }
         }
     }
@@ -330,33 +335,36 @@ public class EmulatorTests {
             for (W parameter1: parameters1) {
                 for (X parameter2: parameters2) {
                     assertEquals(
+                            resultType.java(expected.apply(parameter0.java(), parameter1.java(), parameter2.java())),
+                            callFunction(true, function, resultType, parameter0, parameter1, parameter2),
                             String.format(
                                     "function=%s, parameter0=%s, parameter1=%s, parameter2=%s",
-                                    function, parameter0, parameter1, parameter2),
-                            resultType.java(expected.apply(parameter0.java(), parameter1.java(), parameter2.java())),
-                            callFunction(true, function, resultType, parameter0, parameter1, parameter2));
+                                    function, parameter0, parameter1, parameter2));
                 }
             }
         }
     }
 
-    @Before
-    public void before() throws Throwable {
+    @BeforeEach
+    public void beforeEach() throws Throwable {
         emulator=emulator(null, null, null);
     }
 
     public <J, V extends PrimitiveValue<J>> V callFunction(
             boolean reset, String function, PrimitiveType<J, V> resultType, List<PrimitiveValue<?>> parameters)
             throws Throwable {
-        SymbolTableEntry functionSymbol=emulator.elfHeader.symbolTable.get(function);
-        assertNotNull(function, functionSymbol);
+        SymbolTableEntry functionSymbol
+                =Objects.requireNonNull(emulator.elfHeader, "emulator.elfHeader")
+                .symbolTable
+                .get(function);
+        assertNotNull(functionSymbol, function);
         if (reset) {
             emulator.reset();
         }
         FunctionCallParameters.create()
                 .addAll(parameters)
                 .setParameters(emulator);
-        emulator.hart.setReturnAddress(IOMap.EXIT_OK);
+        emulator.hart.setReturnAddress(emulator.heapAndStack, IOMap.EXIT_OK);
         emulator.hart.setPc(functionSymbol.value);
         emulator.run();
         assertEquals(0, emulator.exit.code());
@@ -370,7 +378,7 @@ public class EmulatorTests {
     }
 
     private Emulator emulator(
-            Input input, Supplier<? extends Log> logFactory, Output output) throws Throwable {
+            Input input, Supplier<Log> logFactory, Output output) throws Throwable {
         if (null==input) {
             input=Input.supplier(()->{
                 fail();
@@ -385,7 +393,7 @@ public class EmulatorTests {
                 .factory(
                         input,
                         logFactory,
-                        MemoryMappedMemory.factory(MEMORY_IMAGE_PATH, MEMORY_IMAGE_SIZE),
+                        memorySettings.factory(),
                         output)
                 .get();
         emulator.loadELFAndReset(imageFile);
@@ -414,9 +422,35 @@ public class EmulatorTests {
         };
     }
 
-    @Parameterized.Parameters(name="{0}")
-    public static List<String> parameters() {
-        return EXECUTABLE_IMAGE_OPTIONS;
+    public static @NotNull Stream<@NotNull Arguments> parameters() {
+        @NotNull List<@NotNull Arguments> result=new ArrayList<>();
+        for (var executableImageOptions: List.of(
+                "clang-O0",
+                "clang-O1",
+                "clang-O2",
+                "gcc-O0",
+                "gcc-O1",
+                "gcc-O2")) {
+            for (var memorySettings: List.of(
+                    new MemorySettings(
+                            false,
+                            null,
+                            1L<<24),
+                    new MemorySettings(
+                            true,
+                            null,
+                            1L<<24),
+                    new MemorySettings(
+                            false,
+                            Paths.get("../memory.image").toAbsolutePath(),
+                            1L<<31))) {
+                result.add(
+                        Arguments.of(
+                                executableImageOptions,
+                                memorySettings));
+            }
+        }
+        return result.stream();
     }
 
     public static Random random() {
@@ -452,27 +486,31 @@ public class EmulatorTests {
     }
 
     private <J, V extends PrimitiveValue<J>> void testAddArray(
-            String function, Function<Random, J> next, BiFunction<J, J, J> operator, PrimitiveType<J, V> type)
+            String function,
+            Function<Random, J> next,
+            BiFunction<J, J, J> operator,
+            PrimitiveType<J, V> type)
             throws Throwable {
+        final int size=16;
         emulator.reset();
-        long baseAddress=emulator.heapAndStack.malloc(emulator.hart, 1L<<32);
+        long baseAddress=emulator.heapAndStack.malloc(emulator.hart, 8L*size*type.size());
         assertNotEquals(0L, baseAddress);
-        baseAddress&=((-1L)<<30);
-        baseAddress+=1L<<32;
-        baseAddress-=1L<<30;
         Random random=random();
-        int size=16;
-        for (int ii=8; 0<ii; --ii) {
-            long input0=baseAddress-ii;
+        for (int ii=memorySettings.allowMisalignedAccess()?7:0; 0<=ii; --ii) {
+            long input0=baseAddress+ii;
             long input1=input0+(long)type.size()*size;
             long output=input1+(long)type.size()*size;
-            List<V> expected=new ArrayList<>(size);
+            List<V> expectedInput0=new ArrayList<>(size);
+            List<V> expectedInput1=new ArrayList<>(size);
+            List<V> expectedOutput=new ArrayList<>(size);
             for (int jj=0; size>jj; ++jj) {
                 V value0=type.java(next.apply(random));
                 V value1=type.java(next.apply(random));
                 type.store(emulator.memoryLog, input0+(long)type.size()*jj, value0);
                 type.store(emulator.memoryLog, input1+(long)type.size()*jj, value1);
-                expected.add(type.java(operator.apply(value0.java(), value1.java())));
+                expectedInput0.add(value0);
+                expectedInput1.add(value1);
+                expectedOutput.add(type.java(operator.apply(value0.java(), value1.java())));
             }
             callFunction(
                     true,
@@ -484,9 +522,17 @@ public class EmulatorTests {
                     PrimitiveValue.uint32(size));
             for (int jj=0; size>jj; ++jj) {
                 assertEquals(
-                        String.format("ii=%s, jj=%s", ii, jj),
-                        expected.get(jj),
-                        type.load(emulator.memoryLog, output+(long)type.size()*jj));
+                        expectedInput0.get(jj),
+                        type.load(emulator.memoryLog, input0+(long)type.size()*jj),
+                        String.format("ii=%s, jj=%s", ii, jj));
+                assertEquals(
+                        expectedInput1.get(jj),
+                        type.load(emulator.memoryLog, input1+(long)type.size()*jj),
+                        String.format("ii=%s, jj=%s", ii, jj));
+                assertEquals(
+                        expectedOutput.get(jj),
+                        type.load(emulator.memoryLog, output+(long)type.size()*jj),
+                        String.format("ii=%s, jj=%s", ii, jj));
             }
         }
     }
@@ -695,51 +741,51 @@ public class EmulatorTests {
         for (V value: values) {
             callFunction(true, function, PrimitiveType.VOID, PrimitiveValue.uint64(casts), value);
             assertEquals(
-                    String.format("function=%s, value=%s", function, value),
                     toDouble.apply(value.java()),
-                    Double.valueOf(emulator.memoryLog.loadDouble(casts)));
+                    Double.valueOf(emulator.memoryLog.loadDouble(casts)),
+                    String.format("function=%s, value=%s", function, value));
             assertEquals(
-                    String.format("function=%s, value=%s", function, value),
                     toFloat.apply(value.java()),
-                    Float.valueOf(emulator.memoryLog.loadFloat(casts+8)));
+                    Float.valueOf(emulator.memoryLog.loadFloat(casts+8)),
+                    String.format("function=%s, value=%s", function, value));
             assertEquals(
-                    String.format("function=%s, value=%s", function, value),
                     toInt16.apply(value.java()),
-                    Short.valueOf(emulator.memoryLog.loadInt16(casts+12)));
+                    Short.valueOf(emulator.memoryLog.loadInt16(casts+12)),
+                    String.format("function=%s, value=%s", function, value));
             assertEquals(
-                    String.format("function=%s, value=%s", function, value),
                     toInt32.apply(value.java()),
-                    Integer.valueOf(emulator.memoryLog.loadInt32(casts+16, false)));
+                    Integer.valueOf(emulator.memoryLog.loadInt32(casts+16, false)),
+                    String.format("function=%s, value=%s", function, value));
             assertEquals(
-                    String.format("function=%s, value=%s", function, value),
                     toInt64.apply(value.java()),
-                    Long.valueOf(emulator.memoryLog.loadInt64(casts+24)));
+                    Long.valueOf(emulator.memoryLog.loadInt64(casts+24)),
+                    String.format("function=%s, value=%s", function, value));
             assertEquals(
-                    String.format("function=%s, value=%s", function, value),
                     toInt8.apply(value.java()),
-                    Byte.valueOf(emulator.memoryLog.loadInt8(casts+32)));
+                    Byte.valueOf(emulator.memoryLog.loadInt8(casts+32)),
+                    String.format("function=%s, value=%s", function, value));
             assertEquals(
-                    String.format("function=%s, value=%s", function, value),
                     toPtr.apply(value.java()),
-                    Long.valueOf(emulator.memoryLog.loadInt64(casts+40)));
+                    Long.valueOf(emulator.memoryLog.loadInt64(casts+40)),
+                    String.format("function=%s, value=%s", function, value));
             List<Short> expectedUint16s=toUint16.apply(value.java());
             Short actualUint16=emulator.memoryLog.loadInt16(casts+48);
             assertTrue(
-                    String.format("value=%s, expected=%s, actual=%s", value, expectedUint16s, actualUint16),
-                    expectedUint16s.contains(actualUint16));
+                    expectedUint16s.contains(actualUint16),
+                    String.format("value=%s, expected=%s, actual=%s", value, expectedUint16s, actualUint16));
             assertEquals(
-                    String.format("value=%s", value),
                     toUint32.apply(value.java()),
-                    Integer.valueOf(emulator.memoryLog.loadInt32(casts+52, false)));
+                    Integer.valueOf(emulator.memoryLog.loadInt32(casts+52, false)),
+                    String.format("value=%s", value));
             assertEquals(
-                    String.format("value=%s", value),
                     toUint64.apply(value.java()),
-                    Long.valueOf(emulator.memoryLog.loadInt64(casts+56)));
+                    Long.valueOf(emulator.memoryLog.loadInt64(casts+56)),
+                    String.format("value=%s", value));
             List<Byte> expectedUint8s=toUint8.apply(value.java());
             Byte actualUint8=emulator.memoryLog.loadInt8(casts+64);
             assertTrue(
-                    String.format("value=%s, expected=%s, actual=%s", value, expectedUint8s, actualUint8),
-                    expectedUint8s.contains(actualUint8));
+                    expectedUint8s.contains(actualUint8),
+                    String.format("value=%s, expected=%s, actual=%s", value, expectedUint8s, actualUint8));
         }
     }
 
@@ -841,7 +887,7 @@ public class EmulatorTests {
     @Test
     public void testExit() throws Throwable {
         emulator.reset();
-        emulator.hart.registersXs.setInt32(Hart.REGISTER_A0, 13);
+        emulator.hart.xRegisters.setInt32(emulator.heapAndStack, ABI.REGISTER_A0, 13);
         emulator.hart.setPc(IOMap.EXIT);
         emulator.run();
         assertEquals(13, emulator.exit.code());
@@ -850,7 +896,7 @@ public class EmulatorTests {
     @Test
     public void testExitExits() throws Throwable {
         emulator.reset();
-        emulator.hart.setReturnAddress(IOMap.EXIT_OK);
+        emulator.hart.setReturnAddress(emulator.heapAndStack, IOMap.EXIT_OK);
         emulator.hart.setPc(emulator.elfHeader.symbolTable.get("exit_forever").value);
         emulator.run();
         assertEquals(13, emulator.exit.code());
@@ -859,7 +905,7 @@ public class EmulatorTests {
     @Test
     public void testExitOk() throws Throwable {
         emulator.reset();
-        emulator.hart.registersXs.setInt32(0, 13);
+        emulator.hart.xRegisters.setInt32(emulator.heapAndStack, ABI.REGISTER_A0, 13);
         emulator.hart.setPc(IOMap.EXIT_OK);
         emulator.run();
         assertEquals(0, emulator.exit.code());
@@ -877,9 +923,13 @@ public class EmulatorTests {
         for (int ii=0; 9>=ii; ++ii) {
             for (int value=0; 9>value; ++value) {
                 assertEquals(
-                        String.format("ii=%s, value=%s", ii, value),
                         PrimitiveValue.uint32(factorial.apply(value)),
-                        callFunction(true, "factorial"+ii, PrimitiveType.UINT32, PrimitiveValue.uint32(value)));
+                        callFunction(
+                                true,
+                                "factorial"+ii,
+                                PrimitiveType.UINT32,
+                                PrimitiveValue.uint32(value)),
+                        String.format("ii=%s, value=%s", ii, value));
             }
         }
     }
@@ -982,7 +1032,7 @@ public class EmulatorTests {
     }
 
     @Test
-    public void testMallocFailure() throws Throwable {
+    public void testMallocFailure() {
         emulator.reset();
         assertEquals(0L, emulator.heapAndStack.malloc(emulator.hart, 0L));
         assertEquals(0L, emulator.heapAndStack.malloc(emulator.hart, -1L));
@@ -990,24 +1040,24 @@ public class EmulatorTests {
     }
 
     @Test
-    public void testMallocFreeDoesNothing() throws Throwable {
+    public void testMallocFreeDoesNothing() {
         emulator.reset();
         long address0=emulator.heapAndStack.malloc(emulator.hart, 1L);
         assertNotEquals(0L, address0);
         emulator.heapAndStack.free(address0);
         long address1=emulator.heapAndStack.malloc(emulator.hart, 1L);
         assertNotEquals(0L, address1);
-        assertEquals(address0+1, address1);
+        assertEquals(address0+8L, address1);
     }
 
     @Test
-    public void testMallocHasMemory() throws Throwable {
+    public void testMallocHasMemory() {
         emulator.reset();
         assertTrue((1L<<16)<emulator.heapAndStack.getStackPointer(emulator.hart)-emulator.heapStart);
     }
 
     @Test
-    public void testMallocOutOfMemory() throws Throwable {
+    public void testMallocOutOfMemory() {
         emulator.reset();
         long address0=0L;
         long size0=0L;
@@ -1027,7 +1077,7 @@ public class EmulatorTests {
         try {
             emulator.heapAndStack.setStackPointer(
                     emulator.hart,
-                    emulator.heapAndStack.getStackPointer(emulator.hart)-1L);
+                    emulator.heapAndStack.getStackPointer(emulator.hart)-16L);
             fail();
         }
         catch (StackOverflowException ignore) {
@@ -1070,10 +1120,10 @@ public class EmulatorTests {
                     PrimitiveValue.uint64(p2),
                     PrimitiveValue.uint64(p3));
             emulator.memoryLog.disableAccessLog();
-            //assertEquals((short)28, emulator.memoryLog.loadInt16(p0));
-            //assertEquals(28, emulator.memoryLog.loadInt32(p1, false));
-            //assertEquals(28L, emulator.memoryLog.loadInt64(p2));
-            //assertEquals((byte)28, emulator.memoryLog.loadInt8(p3));
+            assertEquals((short)28, emulator.memoryLog.loadInt16(p0));
+            assertEquals(28, emulator.memoryLog.loadInt32(p1, false));
+            assertEquals(28L, emulator.memoryLog.loadInt64(p2));
+            assertEquals((byte)28, emulator.memoryLog.loadInt8(p3));
             emulator.close();
             try (LogInputStream logStream=LogInputStream.factory(logPath).get()) {
                 assertEquals(
@@ -1265,6 +1315,7 @@ public class EmulatorTests {
             }
             return result;
         };
+        // noinspection ExtractMethodRecommender
         BiFunction<Integer, Double, Double> apply2=(coefficientsSize, xx)->{
             List<PrimitiveValue<?>> parameters=new ArrayList<>(coefficientsSize+1);
             for (int ii=0; coefficientsSize>ii; ++ii) {
@@ -1523,7 +1574,11 @@ public class EmulatorTests {
     @Test
     public void testStackOverflow() throws Throwable {
         try {
-            callFunction(true, "stack_overflow", PrimitiveType.VOID, PrimitiveValue.uint64(1L<<48));
+            callFunction(
+                    true,
+                    "stack_overflow",
+                    PrimitiveType.VOID,
+                    PrimitiveValue.uint64(1L<<Memory.ADDRESS_BITS));
             emulator.run();
             fail();
         }
