@@ -367,7 +367,7 @@ public class EmulatorTests {
             @NotNull PrimitiveType<J> resultType,
             @NotNull List<@NotNull PrimitiveValue<?>> parameters)
             throws Throwable {
-        SymbolTableEntry functionSymbol=emulator.elfHeader().symbolTable.get(function);
+        SymbolTableEntry functionSymbol=emulator.elfHeader().symbolTable().get(function);
         assertNotNull(functionSymbol, function);
         if (reset) {
             emulator.reset();
@@ -376,7 +376,7 @@ public class EmulatorTests {
                 .addAll(parameters)
                 .setParameters(emulator);
         emulator.hart.setReturnAddress(emulator.heapAndStack, IOMap.EXIT_OK);
-        emulator.hart.setPc(functionSymbol.value);
+        emulator.hart.setPc(functionSymbol.value());
         emulator.run();
         assertEquals(0, emulator.exit.code());
         return resultType.value(resultType.functionCallResult(emulator.hart));
@@ -926,7 +926,7 @@ public class EmulatorTests {
     public void testExitExits() throws Throwable {
         emulator.reset();
         emulator.hart.setReturnAddress(emulator.heapAndStack, IOMap.EXIT_OK);
-        emulator.hart.setPc(emulator.elfHeader().symbolTable.get("exit_forever").value);
+        emulator.hart.setPc(emulator.elfHeader().symbolTable().get("exit_forever").value());
         emulator.run();
         assertEquals(13, emulator.exit.code());
     }
@@ -977,7 +977,7 @@ public class EmulatorTests {
                 (x, y, z)->operator.apply(y, z),
                 "function_pointer_call",
                 PrimitiveType.uint64(),
-                List.of(PrimitiveType.uint64().value(emulator.elfHeader().symbolTable.get(function).value)),
+                List.of(PrimitiveType.uint64().value(emulator.elfHeader().symbolTable().get(function).value())),
                 UINT64S,
                 UINT64S);
     }
@@ -1160,7 +1160,7 @@ public class EmulatorTests {
             try (LogInputStream logStream=LogInputStream.factory(logPath).get()) {
                 assertEquals(
                         Logs.encodeAccess(
-                                emulator.elfHeader().symbolTable.get("memory_access").value,
+                                emulator.elfHeader().symbolTable().get("memory_access").value(),
                                 4,
                                 AccessType.LOAD_INSTRUCTION),
                         logStream.readNext());

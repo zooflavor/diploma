@@ -149,11 +149,11 @@ public class Emulator implements AutoCloseable {
         try (SeekableByteChannel channel=Files.newByteChannel(imageFile, StandardOpenOption.READ)) {
             elfHeader=ELF.read(channel);
             ByteBuffer buffer=ByteBuffer.allocate(4096);
-            for (SectionHeader sectionHeader: elfHeader.sectionHeaders) {
-                if (SectionHeader.TYPE_PROGRAM_DATA==sectionHeader.type) {
-                    channel.position(sectionHeader.offset);
-                    long address=sectionHeader.address;
-                    long size=sectionHeader.size;
+            for (SectionHeader sectionHeader: elfHeader.sectionHeaders()) {
+                if (SectionHeader.TYPE_PROGRAM_DATA==sectionHeader.type()) {
+                    channel.position(sectionHeader.offset());
+                    long address=sectionHeader.address();
+                    long size=sectionHeader.size();
                     heapStart=Math.max(heapStart, address+size);
                     while (0<size) {
                         buffer.clear();
@@ -197,7 +197,7 @@ public class Emulator implements AutoCloseable {
      */
     public void reset() {
         exit.clear();
-        hart.reset(heapAndStack, IOMap.EXIT, elfHeader().entryPoint);
+        hart.reset(heapAndStack, IOMap.EXIT, elfHeader().entryPoint());
         heapAndStack.reset(hart, heapStart, memoryLog.size());
         memoryLog.disableAccessLog();
     }

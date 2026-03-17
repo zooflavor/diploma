@@ -1,27 +1,27 @@
 package dog.wiggler.elf;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.nio.ByteBuffer;
 
-public class SymbolTableEntry {
+/**
+ * One entry of the symbol table.
+ */
+public record SymbolTableEntry(
+        // type and binding attributes
+        byte info,
+        // index of the name
+        int name,
+        // visibility
+        byte other,
+        // section header index
+        short shndx,
+        long size,
+        long value) {
     public static final int SIZE=24;
 
-    public final byte info;
-    public final int name;
-    public final byte other;
-    public final short shndx;
-    public final long size;
-    public final long value;
-
-    public SymbolTableEntry(byte info, int name, byte other, short shndx, long size, long value) {
-        this.info=info;
-        this.name=name;
-        this.other=other;
-        this.shndx=shndx;
-        this.size=size;
-        this.value=value;
-    }
-
-    public static SymbolTableEntry read(ByteBuffer buffer) {
+    public static @NotNull SymbolTableEntry read(
+            @NotNull ByteBuffer buffer) {
         int name=buffer.getInt();
         byte info=buffer.get();
         byte other=buffer.get();

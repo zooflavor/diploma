@@ -1,6 +1,8 @@
 package dog.wiggler.elf;
 
 import dog.wiggler.function.Function;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.ByteArrayOutputStream;
 import java.io.EOFException;
@@ -17,18 +19,25 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
+/**
+ * Reads the header of an ELF file.
+ * Only the 64 bit format is supported.
+ */
 public class ELF {
     private ELF() {
     }
 
-    public static FileHeader read(SeekableByteChannel channel) throws Throwable {
+    public static @NotNull FileHeader read(
+            @NotNull SeekableByteChannel channel)
+            throws Throwable {
         if (64>channel.size()) {
             throw new IOException("file too short for a 64 bit ELF header");
         }
         long originalPosition=channel.position();
         try {
-            ByteBuffer buffer=ByteBuffer.allocate(4096)
+            @NotNull ByteBuffer buffer=ByteBuffer.allocate(4096)
                     .order(ByteOrder.LITTLE_ENDIAN);
             readFully(buffer, channel, 64, 0L);
             if (0x464c457f!=buffer.getInt()) {
@@ -75,43 +84,43 @@ public class ELF {
             }
             int sectionHeaderEntryNumber=buffer.getShort()&0xffff;
             int sectionNamesIndex=buffer.getShort()&0xffff;
-            List<ProgramHeader> programHeaders=readBlocks(
+            @NotNull List<@NotNull ProgramHeader> programHeaders=readBlocks(
                     programHeaderEntryNumber,
                     ProgramHeader.SIZE,
                     buffer,
                     channel,
                     ProgramHeader::read,
                     programHeaderOffset);
-            List<SectionHeader> sectionHeaders=readBlocks(
+            @NotNull List<@NotNull SectionHeader> sectionHeaders=readBlocks(
                     sectionHeaderEntryNumber,
                     SectionHeader.SIZE,
                     buffer,
                     channel,
                     SectionHeader::read,
                     sectionHeaderOffset);
-            Map<Integer, String> sectionNames=new HashMap<>(sectionHeaders.size());
+            @NotNull Map<@NotNull Integer, @NotNull String> sectionNames=new HashMap<>(sectionHeaders.size());
             if (sectionHeaders.size()>sectionNamesIndex) {
                 SectionHeader stringTableHeader=sectionHeaders.get(sectionNamesIndex);
                 for (SectionHeader sectionHeader: sectionHeaders) {
-                    String name=readString(buffer, channel, sectionHeader.nameOffset, stringTableHeader);
+                    String name=readString(buffer, channel, sectionHeader.nameOffset(), stringTableHeader);
                     if (null!=name) {
-                        sectionNames.put(sectionHeader.nameOffset, name);
+                        sectionNames.put(sectionHeader.nameOffset(), name);
                     }
                 }
             }
-            Map<String, SymbolTableEntry> symbolTable=new HashMap<>();
+            @NotNull Map<@NotNull String, @NotNull SymbolTableEntry> symbolTable=new TreeMap<>();
             for (SectionHeader sectionHeader: sectionHeaders) {
-                if ((SectionHeader.SYMBOL_TABLE!=sectionHeader.type)
-                        || (0>sectionHeader.link)
-                        || (sectionHeaders.size()<=sectionHeader.link)) {
+                if ((SectionHeader.SYMBOL_TABLE!=sectionHeader.type())
+                        || (0>sectionHeader.link())
+                        || (sectionHeaders.size()<=sectionHeader.link())) {
                     continue;
                 }
-                List<SymbolTableEntry> symbolTableEntries=readBlocks(
-                        (int)(sectionHeader.size/SymbolTableEntry.SIZE), SymbolTableEntry.SIZE,
-                        buffer, channel, SymbolTableEntry::read, sectionHeader.offset);
-                for (SymbolTableEntry symbolTableEntry: symbolTableEntries) {
+                @NotNull List<@NotNull SymbolTableEntry> symbolTableEntries=readBlocks(
+                        (int)(sectionHeader.size()/SymbolTableEntry.SIZE), SymbolTableEntry.SIZE,
+                        buffer, channel, SymbolTableEntry::read, sectionHeader.offset());
+                for (@NotNull SymbolTableEntry symbolTableEntry: symbolTableEntries) {
                     String name=readString(
-                            buffer, channel, symbolTableEntry.name, sectionHeaders.get(sectionHeader.link));
+                            buffer, channel, symbolTableEntry.name(), sectionHeaders.get(sectionHeader.link()));
                     if ((null!=name)
                             && (!name.isEmpty())) {
                         symbolTable.put(name, symbolTableEntry);
@@ -119,33 +128,49 @@ public class ELF {
                 }
             }
             return new FileHeader(
-                    abiVersion, entryPoint, flags, programHeaders, sectionNamesIndex,
-                    sectionHeaders, sectionNames, symbolTable, type);
+                    abiVersion,
+                    entryPoint,
+                    flags,
+                    programHeaders,
+                    sectionNamesIndex,
+                    sectionHeaders,
+                    sectionNames,
+                    symbolTable,
+                    type);
         }
         finally {
             channel.position(originalPosition);
         }
     }
 
-    public static FileHeader read(Path path) throws Throwable {
-        try (SeekableByteChannel channel=Files.newByteChannel(path, StandardOpenOption.READ)) {
+    public static @NotNull FileHeader read(
+            @NotNull Path path) throws Throwable {
+        try (@NotNull SeekableByteChannel channel=Files.newByteChannel(path, StandardOpenOption.READ)) {
             return read(channel);
         }
     }
 
-    public static <T> List<T> readBlocks(
-            int blocks, int blockSize, ByteBuffer buffer, SeekableByteChannel channel,
-            Function<? super ByteBuffer, ? extends T> constructor, long position) throws Throwable {
-        List<T> result=new ArrayList<>(blocks);
+    public static <T> @NotNull List<@NotNull T> readBlocks(
+            int blocks,
+            int blockSize,
+            @NotNull ByteBuffer buffer,
+            @NotNull SeekableByteChannel channel,
+            @NotNull Function<ByteBuffer, @NotNull T> constructor,
+            long position)
+            throws Throwable {
+        @NotNull List<@NotNull T> result=new ArrayList<>(blocks);
         for (long ii=0; blocks>ii; ++ii) {
             readFully(buffer, channel, blockSize, position+ii*blockSize);
-            T value=constructor.apply(buffer);
+            @NotNull T value=constructor.apply(buffer);
             result.add(value);
         }
         return Collections.unmodifiableList(result);
     }
 
-    public static void readFully(ByteBuffer buffer, SeekableByteChannel channel) throws IOException {
+    public static void readFully(
+            @NotNull ByteBuffer buffer,
+            @NotNull SeekableByteChannel channel)
+            throws Throwable {
         while (buffer.hasRemaining()) {
             if (0>channel.read(buffer)) {
                 throw new EOFException();
@@ -154,7 +179,11 @@ public class ELF {
     }
 
     public static void readFully(
-            ByteBuffer buffer, SeekableByteChannel channel, int limit, long position) throws IOException {
+            @NotNull ByteBuffer buffer,
+            @NotNull SeekableByteChannel channel,
+            int limit,
+            long position)
+            throws Throwable {
         buffer.clear();
         buffer.limit(limit);
         channel.position(position);
@@ -162,18 +191,21 @@ public class ELF {
         buffer.flip();
     }
 
-    public static String readString(
-            ByteBuffer buffer, SeekableByteChannel channel, int nameOffset, SectionHeader sectionHeader)
+    public static @Nullable String readString(
+            @NotNull ByteBuffer buffer,
+            @NotNull SeekableByteChannel channel,
+            int nameOffset,
+            @NotNull SectionHeader sectionHeader)
             throws Throwable {
         if ((0>nameOffset)
-                || (sectionHeader.size<=nameOffset)) {
+                || (sectionHeader.size()<=nameOffset)) {
             return null;
         }
         readFully(
                 buffer,
                 channel,
-                (int)Math.min(buffer.capacity(), sectionHeader.size-nameOffset),
-                sectionHeader.offset+nameOffset);
+                (int)Math.min(buffer.capacity(), sectionHeader.size()-nameOffset),
+                sectionHeader.offset()+nameOffset);
         ByteArrayOutputStream baos=new ByteArrayOutputStream();
         while (buffer.hasRemaining()) {
             byte bb=buffer.get();

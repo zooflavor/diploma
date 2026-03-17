@@ -1,53 +1,34 @@
 package dog.wiggler.elf;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.nio.ByteBuffer;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Set;
+import java.util.TreeSet;
 
-public class SectionHeader {
+/**
+ * Header for sections. Sections are parts of the ELF binary.
+ */
+public record SectionHeader(
+        long address,
+        long addressAlignment,
+        long entrySize,
+        long flags,
+        int info,
+        int link,
+        int nameOffset,
+        long offset,
+        long size,
+        int type) {
     public static final int DYNAMIC_SYMBOL_TABLE=11;
     public static final int SIZE=64;
     public static final int STRING_TABLE=3;
     public static final int SYMBOL_TABLE=2;
     public static final int TYPE_PROGRAM_DATA=1;
 
-    public final long address;
-    public final long addressAlignment;
-    public final long entrySize;
-    public final long flags;
-    public final int info;
-    public final int link;
-    public final int nameOffset;
-    public final long offset;
-    public final long size;
-    public final int type;
-
-    public SectionHeader(
-            long address,
-            long addressAlignment,
-            long entrySize,
-            long flags,
-            int info,
-            int link,
-            int nameOffset,
-            long offset,
-            long size,
-            int type) {
-        this.address=address;
-        this.addressAlignment=addressAlignment;
-        this.entrySize=entrySize;
-        this.flags=flags;
-        this.info=info;
-        this.link=link;
-        this.nameOffset=nameOffset;
-        this.offset=offset;
-        this.size=size;
-        this.type=type;
-    }
-
-    public Set<String> flagNames() {
-        Set<String> names=new HashSet<>(32);
+    public @NotNull Set<@NotNull String> flagNames() {
+        @NotNull Set<@NotNull String> names=new TreeSet<>();
         long ff=flags;
         for (int ii=63; 0<=ii; ff<<=1, --ii) {
             if (0!=(ff&0x8000000000000000L)) {
@@ -73,7 +54,8 @@ public class SectionHeader {
         return Collections.unmodifiableSet(names);
     }
 
-    public static SectionHeader read(ByteBuffer buffer) {
+    public static @NotNull SectionHeader read(
+            @NotNull ByteBuffer buffer) {
         int nameOffset=buffer.getInt();
         int type=buffer.getInt();
         long flags2=buffer.getLong();
@@ -88,7 +70,7 @@ public class SectionHeader {
                 address, addressAlignment, entrySize, flags2, info, link, nameOffset, offset, size, type);
     }
 
-    public String typeName() {
+    public @NotNull String typeName() {
         switch (type) {
             case 0:
                 return "null";

@@ -1,39 +1,25 @@
 package dog.wiggler.elf;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.nio.ByteBuffer;
 
-public class ProgramHeader {
+/**
+ * Header for program segments.
+ */
+public record ProgramHeader(
+        long alignment,
+        long fileSize,
+        int flags,
+        long memorySize,
+        long offset,
+        long physicalAddress,
+        int type,
+        long virtualAddress) {
     public static final int SIZE=56;
 
-    public final long alignment;
-    public final long fileSize;
-    public final int flags;
-    public final long memorySize;
-    public final long offset;
-    public final long physicalAddress;
-    public final int type;
-    public final long virtualAddress;
-
-    public ProgramHeader(
-            long alignment,
-            long fileSize,
-            int flags,
-            long memorySize,
-            long offset,
-            long physicalAddress,
-            int type,
-            long virtualAddress) {
-        this.alignment=alignment;
-        this.fileSize=fileSize;
-        this.flags=flags;
-        this.memorySize=memorySize;
-        this.offset=offset;
-        this.physicalAddress=physicalAddress;
-        this.type=type;
-        this.virtualAddress=virtualAddress;
-    }
-
-    public static ProgramHeader read(ByteBuffer buffer) {
+    public static @NotNull ProgramHeader read(
+            @NotNull ByteBuffer buffer) {
         int type=buffer.getInt();
         int flags2=buffer.getInt();
         long offset=buffer.getLong();
@@ -46,7 +32,7 @@ public class ProgramHeader {
                 alignment, fileSize, flags2, memorySize, offset, physicalAddress, type, virtualAddress);
     }
 
-    public String typeName() {
+    public @NotNull String typeName() {
         switch (type) {
             case 0:
                 return "null";
