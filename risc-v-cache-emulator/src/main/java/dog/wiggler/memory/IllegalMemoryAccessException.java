@@ -18,7 +18,7 @@ public class IllegalMemoryAccessException extends EmulatorException {
 
     /**
      * Maximum memory size is capped at 64 terabytes.
-     * This is a holdover from aarch64, and is no longer strictly necessary,
+     * This is a holdover from AArch64, and is no longer strictly necessary,
      * but it helps to catch overflows.
      */
     public static void checkAccess(long address) {

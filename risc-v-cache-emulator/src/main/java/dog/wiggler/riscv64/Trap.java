@@ -1,10 +1,11 @@
 package dog.wiggler.riscv64;
 
-import dog.wiggler.HeapAndStack;
+import dog.wiggler.riscv64.abi.HeapAndStack;
 import dog.wiggler.function.Consumer;
 import dog.wiggler.function.Runnable;
 import dog.wiggler.function.Supplier;
 import dog.wiggler.memory.MemoryLog;
+import dog.wiggler.riscv64.abi.ABI;
 import org.jetbrains.annotations.NotNull;
 
 /**

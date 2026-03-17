@@ -1,4 +1,6 @@
-package dog.wiggler;
+package dog.wiggler.riscv64.abi;
+
+import dog.wiggler.EmulatorException;
 
 import java.io.Serial;
 

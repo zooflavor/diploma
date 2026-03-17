@@ -1,13 +1,18 @@
-package dog.wiggler.riscv64;
+package dog.wiggler.riscv64.abi;
 
 /**
  * Risc-v LP64D ABI values.
+ * The ABI describes the function call conventions.
  * @see <a href="https://riscv.org/wp-content/uploads/2024/12/riscv-calling.pdf">https://riscv.org/wp-content/uploads/2024/12/riscv-calling.pdf</a>.
  */
 public class ABI {
-    // register for first integer parameter
+    // number of registers to pass arguments
+    public static final int ARGUMENT_REGISTERS=8;
+    // number of floating-point registers to pass arguments
+    public static final int FLOAT_ARGUMENT_REGISTERS=8;
+    // register for first integer argument
     public static final int REGISTER_A0=10;
-    // register for first floating point parameter
+    // register for first floating-point argument
     public static final int REGISTER_FA0=10;
     // register for return address
     public static final int REGISTER_RA=1;

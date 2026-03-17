@@ -1,6 +1,6 @@
 package dog.wiggler.riscv64;
 
-import dog.wiggler.HeapAndStack;
+import dog.wiggler.riscv64.abi.HeapAndStack;
 import dog.wiggler.memory.MemoryLog;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

@@ -54,7 +54,7 @@ public class ELF {
                 throw new IOException("file is not an shared object");
             }
             if (0xf3!=buffer.getShort()) {
-                throw new IOException("instruction set is not Aarch64");
+                throw new IOException("instruction set is not RISC-V");
             }
             if (1!=buffer.getInt()) {
                 throw new IOException("version is not 1");

@@ -1,11 +1,10 @@
-package dog.wiggler;
+package dog.wiggler.riscv64.abi;
 
-import dog.wiggler.riscv64.ABI;
 import dog.wiggler.riscv64.Hart;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * Manages the heap.
+ * Manages the heap and the stack.
  * The free heap memory is the memory between the {@code heapFreeStart} pointer and the stack pointer.
  * Malloc allocates at the bottom of the heap.
  * Free does nothing.

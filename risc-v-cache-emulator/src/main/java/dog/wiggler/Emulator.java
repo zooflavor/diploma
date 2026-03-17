@@ -7,9 +7,10 @@ import dog.wiggler.function.Supplier;
 import dog.wiggler.memory.Log;
 import dog.wiggler.memory.Memory;
 import dog.wiggler.memory.MemoryLog;
-import dog.wiggler.riscv64.ABI;
+import dog.wiggler.riscv64.abi.ABI;
 import dog.wiggler.riscv64.Hart;
 import dog.wiggler.riscv64.Trap;
+import dog.wiggler.riscv64.abi.HeapAndStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -25,8 +26,17 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
+/**
+ * All he things needed to run a command line program.
+ * This has an execution unit, memory, stack, heap, system calls,
+ * a way to check termination, an input, and an output.
+ * To run a program the object code must be loaded from an ELF file.
+ * Resetting the emulator resets the stack,
+ * sets the program counter to the entry point of the program,
+ * and sets the return address to the exit system call.
+ */
 public class Emulator implements AutoCloseable {
-    public @Nullable FileHeader elfHeader;
+    private @Nullable FileHeader elfHeader;
     public final @NotNull Exit exit=new Exit();
     public final @NotNull Hart hart;
     public final @NotNull HeapAndStack heapAndStack=new HeapAndStack();
@@ -96,6 +106,10 @@ public class Emulator implements AutoCloseable {
                 memoryLog.disableAccessLog();
     }
 
+    public @NotNull FileHeader elfHeader() {
+        return Objects.requireNonNull(elfHeader, "elfHeader");
+    }
+
     private static @NotNull Trap.Subroutine enableAccessLogTrap() {
         return (hart, heapAndStack, memoryLog)->
                 memoryLog.enableAccessLog();
@@ -122,6 +136,9 @@ public class Emulator implements AutoCloseable {
         };
     }
 
+    /**
+     * Loads the object code from an ELF file, and resets the emulator.
+     */
     public void loadELFAndReset(
             @NotNull Path imageFile)
             throws Throwable {
@@ -171,13 +188,23 @@ public class Emulator implements AutoCloseable {
         };
     }
 
+    /**
+     * Clears the exit code,
+     * clears the stack and the heap,
+     * sets the program counter to the entry point of the program,
+     * sets the return address to the exit system call,
+     * and disables the memory log.
+     */
     public void reset() {
         exit.clear();
-        hart.reset(heapAndStack, IOMap.EXIT, Objects.requireNonNull(elfHeader, "elfHeader").entryPoint);
+        hart.reset(heapAndStack, IOMap.EXIT, elfHeader().entryPoint);
         heapAndStack.reset(hart, heapStart, memoryLog.size());
         memoryLog.disableAccessLog();
     }
 
+    /**
+     * Runs the program until the exit code is set or an exception is thrown.
+     */
     public void run() throws Throwable {
         while (!exit.set()) {
             hart.step(heapAndStack, memoryLog, traps);
