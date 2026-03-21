@@ -5,6 +5,11 @@ import org.jetbrains.annotations.NotNull;
 
 /**
  * Implementation of the instructions for RV64IMFD.
+ * 64 bits,
+ * integers,
+ * multiplication and division,
+ * single-precision floating-point,
+ * and double-precision floating-point.
  */
 public class RV64IMFD {
     public static @NotNull Instructions create() {
@@ -77,7 +82,7 @@ public class RV64IMFD {
         };
     }
 
-    private static @NotNull Instruction.IType opcode13() {
+    public static @NotNull Instruction.IType opcode13() {
         return (funct3, hart, heapAndStack, imm, instruction, memory, opcode, rd, rs1)->{
             switch (funct3) {
                 // ADDI
@@ -331,7 +336,8 @@ public class RV64IMFD {
                                         .formatted(instruction, hart.getPc(), opcode, funct3, funct7));
                     }
                 }
-                case 7 -> {
+                // funct3 has 3 bits, using default instead of case 7 to cover the default branch
+                default -> {
                     switch (funct7) {
                         // AND
                         case 0 ->
@@ -352,9 +358,6 @@ public class RV64IMFD {
                                         .formatted(instruction, hart.getPc(), opcode, funct3, funct7));
                     }
                 }
-                default -> throw new IllegalInstructionException(
-                        "illegal instruction 0x%08x at 0x%012x, opcode: 0x%02x, funct3=%x"
-                                .formatted(instruction, hart.getPc(), opcode, funct3));
             }
             hart.incPc();
         };
@@ -518,28 +521,28 @@ public class RV64IMFD {
         return (funct3, funct7, hart, heapAndStack, instruction, opcode, rd, rs1, rs2)->{
             switch (funct7) {
                 // FADD.S
-                case 0 ->
+                case 0x00 ->
                         hart.fxRegisters.setFloat(heapAndStack, rd, hart.fxRegisters.getFloat(rs1)+hart.fxRegisters.getFloat(rs2));
                 // FADD.D
-                case 1 ->
+                case 0x01 ->
                         hart.fxRegisters.setDouble(heapAndStack, rd, hart.fxRegisters.getDouble(rs1)+hart.fxRegisters.getDouble(rs2));
                 // FSUB.S
-                case 4 ->
+                case 0x04 ->
                         hart.fxRegisters.setFloat(heapAndStack, rd, hart.fxRegisters.getFloat(rs1)-hart.fxRegisters.getFloat(rs2));
                 // FSUB.D
-                case 5 ->
+                case 0x05 ->
                         hart.fxRegisters.setDouble(heapAndStack, rd, hart.fxRegisters.getDouble(rs1)-hart.fxRegisters.getDouble(rs2));
                 // FMUL.S
-                case 0x8 ->
+                case 0x08 ->
                         hart.fxRegisters.setFloat(heapAndStack, rd, hart.fxRegisters.getFloat(rs1)*hart.fxRegisters.getFloat(rs2));
                 // FMUL.D
-                case 0x9 ->
+                case 0x09 ->
                         hart.fxRegisters.setDouble(heapAndStack, rd, hart.fxRegisters.getDouble(rs1)*hart.fxRegisters.getDouble(rs2));
                 // FDIV.S
-                case 0xc ->
+                case 0x0c ->
                         hart.fxRegisters.setFloat(heapAndStack, rd, hart.fxRegisters.getFloat(rs1)/hart.fxRegisters.getFloat(rs2));
                 // FDIV.D
-                case 0xd ->
+                case 0x0d ->
                         hart.fxRegisters.setDouble(heapAndStack, rd, hart.fxRegisters.getDouble(rs1)/hart.fxRegisters.getDouble(rs2));
                 case 0x10 -> {
                     switch (funct3) {

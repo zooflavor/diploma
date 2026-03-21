@@ -7,9 +7,9 @@ import dog.wiggler.function.Supplier;
 import dog.wiggler.memory.Log;
 import dog.wiggler.memory.Memory;
 import dog.wiggler.memory.MemoryLog;
-import dog.wiggler.riscv64.abi.ABI;
 import dog.wiggler.riscv64.Hart;
 import dog.wiggler.riscv64.Trap;
+import dog.wiggler.riscv64.abi.ABI;
 import dog.wiggler.riscv64.abi.HeapAndStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -36,6 +36,11 @@ import java.util.Objects;
  * and sets the return address to the exit system call.
  */
 public class Emulator implements AutoCloseable {
+    /**
+     * This is the same value as the address of the text section in the linker script.
+     */
+    public static final long DEFAULT_ENTRY_POINT=1L<<16;
+
     private @Nullable FileHeader elfHeader;
     public final @NotNull Exit exit=new Exit();
     public final @NotNull Hart hart;
@@ -140,37 +145,55 @@ public class Emulator implements AutoCloseable {
      * Loads the object code from an ELF file, and resets the emulator.
      */
     public void loadELFAndReset(
-            @NotNull Path imageFile)
+            @NotNull SeekableByteChannel channel)
+            throws Throwable {
+        loadELFAndReset(channel, elfHeader=ELF.read(channel));
+    }
+
+    /**
+     * Loads the object code from an ELF file, and resets the emulator.
+     */
+    public void loadELFAndReset(
+            @NotNull SeekableByteChannel channel,
+            @NotNull FileHeader elfHeader)
             throws Throwable {
         heapStart=0L;
         for (long trap: traps.keySet()) {
             heapStart=Math.max(heapStart, trap+4L);
         }
-        try (SeekableByteChannel channel=Files.newByteChannel(imageFile, StandardOpenOption.READ)) {
-            elfHeader=ELF.read(channel);
-            ByteBuffer buffer=ByteBuffer.allocate(4096);
-            for (SectionHeader sectionHeader: elfHeader.sectionHeaders()) {
-                if (SectionHeader.TYPE_PROGRAM_DATA==sectionHeader.type()) {
-                    channel.position(sectionHeader.offset());
-                    long address=sectionHeader.address();
-                    long size=sectionHeader.size();
-                    heapStart=Math.max(heapStart, address+size);
-                    while (0<size) {
-                        buffer.clear();
-                        if (0>channel.read(buffer)) {
-                            throw new EOFException();
-                        }
-                        buffer.flip();
-                        while (buffer.hasRemaining()) {
-                            memoryLog.storeInt8(address, buffer.get());
-                            ++address;
-                            --size;
-                        }
+        ByteBuffer buffer=ByteBuffer.allocate(4096);
+        for (SectionHeader sectionHeader: elfHeader.sectionHeaders()) {
+            if (SectionHeader.TYPE_PROGRAM_DATA==sectionHeader.type()) {
+                channel.position(sectionHeader.offset());
+                long address=sectionHeader.address();
+                long size=sectionHeader.size();
+                heapStart=Math.max(heapStart, address+size);
+                while (0<size) {
+                    buffer.clear();
+                    if (0>channel.read(buffer)) {
+                        throw new EOFException();
+                    }
+                    buffer.flip();
+                    while (buffer.hasRemaining()) {
+                        memoryLog.storeInt8(address, buffer.get());
+                        ++address;
+                        --size;
                     }
                 }
             }
         }
         reset();
+    }
+
+    /**
+     * Loads the object code from an ELF file, and resets the emulator.
+     */
+    public void loadELFAndReset(
+            @NotNull Path imageFile)
+            throws Throwable {
+        try (SeekableByteChannel channel=Files.newByteChannel(imageFile, StandardOpenOption.READ)) {
+            loadELFAndReset(channel);
+        }
     }
 
     private static @NotNull Trap.Subroutine logUserDataTrap() {
@@ -192,12 +215,17 @@ public class Emulator implements AutoCloseable {
      * Clears the exit code,
      * clears the stack and the heap,
      * sets the program counter to the entry point of the program,
-     * sets the return address to the exit system call,
+     * sets the return address to the exitOk system call,
      * and disables the memory log.
      */
     public void reset() {
         exit.clear();
-        hart.reset(heapAndStack, IOMap.EXIT, elfHeader().entryPoint());
+        hart.reset(
+                heapAndStack,
+                IOMap.EXIT_OK,
+                (null==elfHeader)
+                        ?DEFAULT_ENTRY_POINT
+                        :elfHeader.entryPoint());
         heapAndStack.reset(hart, heapStart, memoryLog.size());
         memoryLog.disableAccessLog();
     }

@@ -41,7 +41,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Random;
-import java.util.Set;
 import java.util.TreeMap;
 import java.util.stream.Stream;
 
@@ -67,8 +66,15 @@ public class EmulatorTests {
     }
 
     public static final @NotNull List<@NotNull PrimitiveValue<@NotNull Double>> DOUBLES;
+    public static final @NotNull Path ELF_PATH=Paths.get("../c/out").toAbsolutePath();
+    public static final @NotNull List<@NotNull String> EXECUTABLE_IMAGE_OPTIONS=List.of(
+            "clang-O0",
+            "clang-O1",
+            "clang-O2",
+            "gcc-O0",
+            "gcc-O1",
+            "gcc-O2");
     public static final @NotNull List<@NotNull PrimitiveValue<@NotNull Float>> FLOATS;
-    public static final @NotNull Path ROOT_PATH;
     public static final @NotNull List<@NotNull PrimitiveValue<@NotNull Short>> SINT16S;
     public static final @NotNull List<@NotNull PrimitiveValue<@NotNull Integer>> SINT32S;
     public static final @NotNull List<@NotNull PrimitiveValue<@NotNull Long>> SINT64S;
@@ -80,7 +86,7 @@ public class EmulatorTests {
     public static final @NotNull List<@NotNull PrimitiveValue<@NotNull Byte>> UINT8S;
 
     static {
-        Set<Double> doubles0=new HashSet<>();
+        var doubles0=new HashSet<@NotNull Double>();
         doubles0.add(0.0);
         doubles0.add(1.0);
         doubles0.add(2.0);
@@ -104,7 +110,7 @@ public class EmulatorTests {
                 doubles0.add(Double.longBitsToDouble(value2|(((long)ii)<<52)));
             }
         }
-        Set<Double> doubles1=new HashSet<>();
+        var doubles1=new HashSet<@NotNull Double>();
         for (double value: doubles0) {
             doubles1.add(value);
             doubles1.add(-value);
@@ -116,7 +122,7 @@ public class EmulatorTests {
                 .map(PrimitiveType.dfloat()::value)
                 .toList());
 
-        Set<Float> floats0=new HashSet<>();
+        var floats0=new HashSet<@NotNull Float>();
         floats0.add(0.0f);
         floats0.add(1.0f);
         floats0.add(2.0f);
@@ -139,7 +145,7 @@ public class EmulatorTests {
                 floats0.add(Float.intBitsToFloat(value2|(ii<<23)));
             }
         }
-        Set<Float> floats1=new HashSet<>();
+        var floats1=new HashSet<@NotNull Float>();
         for (float value: floats0) {
             floats1.add(value);
             floats1.add(-value);
@@ -151,7 +157,7 @@ public class EmulatorTests {
                 .map(PrimitiveType.sfloat()::value)
                 .toList());
 
-        Set<Short> int16s0=new HashSet<>();
+        var int16s0=new HashSet<@NotNull Short>();
         int16s0.add((short)0);
         int16s0.add((short)1);
         int16s0.add((short)2);
@@ -167,7 +173,7 @@ public class EmulatorTests {
                 int16s0.add((short)(5<<ii));
             }
         }
-        Set<Short> int16s1=new HashSet<>();
+        var int16s1=new HashSet<@NotNull Short>();
         for (int value: int16s0) {
             int16s1.add((short)value);
             int16s1.add((short)-value);
@@ -184,7 +190,7 @@ public class EmulatorTests {
                 .map(PrimitiveType.uint16()::value)
                 .toList());
 
-        Set<Integer> int32s0=new HashSet<>();
+        var int32s0=new HashSet<@NotNull Integer>();
         int32s0.add(0);
         int32s0.add(1);
         int32s0.add(2);
@@ -200,7 +206,7 @@ public class EmulatorTests {
                 int32s0.add(5<<ii);
             }
         }
-        Set<Integer> int32s1=new HashSet<>();
+        var int32s1=new HashSet<@NotNull Integer>();
         for (int value: int32s0) {
             int32s1.add(value);
             int32s1.add(-value);
@@ -217,7 +223,7 @@ public class EmulatorTests {
                 .map(PrimitiveType.uint32()::value)
                 .toList());
 
-        Set<Long> int64s0=new HashSet<>();
+        var int64s0=new HashSet<@NotNull Long>();
         int64s0.add(0L);
         int64s0.add(1L);
         int64s0.add(2L);
@@ -233,7 +239,7 @@ public class EmulatorTests {
                 int64s0.add(5L<<ii);
             }
         }
-        Set<Long> int64s1=new HashSet<>();
+        var int64s1=new HashSet<@NotNull Long>();
         for (long value: int64s0) {
             int64s1.add(value);
             int64s1.add(-value);
@@ -250,7 +256,7 @@ public class EmulatorTests {
                 .map(PrimitiveType.uint64()::value)
                 .toList());
 
-        Set<Byte> int8s0=new HashSet<>();
+        var int8s0=new HashSet<@NotNull Byte>();
         int8s0.add((byte)0);
         int8s0.add((byte)1);
         int8s0.add((byte)2);
@@ -266,7 +272,7 @@ public class EmulatorTests {
                 int8s0.add((byte)(5<<ii));
             }
         }
-        Set<Byte> int8s1=new HashSet<>();
+        var int8s1=new HashSet<@NotNull Byte>();
         for (int value: int8s0) {
             int8s1.add((byte)value);
             int8s1.add((byte)-value);
@@ -282,8 +288,6 @@ public class EmulatorTests {
                 .distinct()
                 .map(PrimitiveType.uint8()::value)
                 .toList());
-
-        ROOT_PATH=Paths.get("../c/out").toAbsolutePath();
     }
 
     private Emulator emulator;
@@ -304,13 +308,13 @@ public class EmulatorTests {
         }
     }
 
-    public <J, K, V extends PrimitiveValue<J>> void assertFunction1(
+    public <J, K> void assertFunction1(
             @NotNull Function<J, K> expected,
             @NotNull String function,
             @NotNull PrimitiveType<K> resultType,
-            @NotNull Iterable<V> parameters)
+            @NotNull Iterable<@NotNull PrimitiveValue<J>> parameters)
             throws Throwable {
-        for (V parameter: parameters) {
+        for (var parameter: parameters) {
             assertEquals(
                     resultType.value(expected.apply(parameter.value())),
                     callFunction(true, function, resultType, parameter),
@@ -318,16 +322,16 @@ public class EmulatorTests {
         }
     }
 
-    public <J, K, L, V extends PrimitiveValue<J>, W extends PrimitiveValue<K>>
+    public <J, K, L>
     void assertFunction2(
-            BiFunction<J, K, L> expected,
-            String function,
-            PrimitiveType<L> resultType,
-            Iterable<V> parameters0,
-            Iterable<W> parameters1)
+            @NotNull BiFunction<J, K, L> expected,
+            @NotNull String function,
+            @NotNull PrimitiveType<L> resultType,
+            @NotNull Iterable<@NotNull PrimitiveValue<J>> parameters0,
+            @NotNull Iterable<@NotNull PrimitiveValue<K>> parameters1)
             throws Throwable {
-        for (V parameter0: parameters0) {
-            for (W parameter1: parameters1) {
+        for (var parameter0: parameters0) {
+            for (var parameter1: parameters1) {
                 assertEquals(
                         expected.apply(parameter0.value(), parameter1.value()),
                         callFunction(true, function, resultType, parameter0, parameter1)
@@ -337,13 +341,18 @@ public class EmulatorTests {
         }
     }
 
-    public <J, K, L, M, V extends PrimitiveValue<J>, W extends PrimitiveValue<K>, X extends PrimitiveValue<L>>
+    public <J, K, L, M>
     void assertFunction3(
-            TriFunction<J, K, L, M> expected, String function, PrimitiveType<M> resultType,
-            Iterable<V> parameters0, Iterable<W> parameters1, Iterable<X> parameters2) throws Throwable {
-        for (V parameter0: parameters0) {
-            for (W parameter1: parameters1) {
-                for (X parameter2: parameters2) {
+            @NotNull TriFunction<J, K, L, M> expected,
+            @NotNull String function,
+            @NotNull PrimitiveType<M> resultType,
+            @NotNull Iterable<@NotNull PrimitiveValue<J>> parameters0,
+            @NotNull Iterable<@NotNull PrimitiveValue<K>> parameters1,
+            @NotNull Iterable<@NotNull PrimitiveValue<L>> parameters2)
+            throws Throwable {
+        for (var parameter0: parameters0) {
+            for (var parameter1: parameters1) {
+                for (var parameter2: parameters2) {
                     assertEquals(
                             expected.apply(parameter0.value(), parameter1.value(), parameter2.value()),
                             callFunction(true, function, resultType, parameter0, parameter1, parameter2)
@@ -386,23 +395,24 @@ public class EmulatorTests {
             boolean reset,
             @NotNull String function,
             @NotNull PrimitiveType<J> resultType,
-            PrimitiveValue<?>... parameters)
+            @NotNull PrimitiveValue<?> @NotNull ... parameters)
             throws Throwable {
         return callFunction(reset, function, resultType, List.of(parameters));
     }
 
-    private Emulator emulator(
-            Input input, Supplier<Log> logFactory, Output output) throws Throwable {
+    private @NotNull Emulator emulator(
+            @Nullable Input input,
+            @Nullable Supplier<@NotNull Log> logFactory,
+            @Nullable Output output)
+            throws Throwable {
         if (null==input) {
-            input=Input.supplier(()->{
-                fail();
-                return null;
-            });
+            input=Input.empty();
         }
         if (null==output) {
-            output=Output.consumer((value)->fail());
+            output=Output.refuse();
         }
-        Path imageFile=ROOT_PATH.resolve("emulator-tests.riscv64-"+executableImageOption+".elf");
+        Path imageFile=imagePath(executableImageOption, "emulator-tests");
+        boolean error=true;
         Emulator emulator=Emulator
                 .factory(
                         input,
@@ -410,8 +420,22 @@ public class EmulatorTests {
                         memorySettings.factory(),
                         output)
                 .get();
-        emulator.loadELFAndReset(imageFile);
-        return emulator;
+        try {
+            emulator.loadELFAndReset(imageFile);
+            error=false;
+            return emulator;
+        }
+        finally {
+            if (error) {
+                emulator.close();
+            }
+        }
+    }
+
+    public static @NotNull Path imagePath(
+            @NotNull String executableImageOption,
+            @NotNull String imageName) {
+        return ELF_PATH.resolve(imageName+".riscv64-"+executableImageOption+".elf");
     }
 
     public static @NotNull Iterable<@NotNull PrimitiveValue<@NotNull Integer>> int32s(
@@ -440,13 +464,7 @@ public class EmulatorTests {
 
     public static @NotNull Stream<@NotNull Arguments> parameters() {
         @NotNull List<@NotNull Arguments> result=new ArrayList<>();
-        for (var executableImageOptions: List.of(
-                "clang-O0",
-                "clang-O1",
-                "clang-O2",
-                "gcc-O0",
-                "gcc-O1",
-                "gcc-O2")) {
+        for (var executableImageOptions: EXECUTABLE_IMAGE_OPTIONS) {
             for (var memorySettings: List.of(
                     new MemorySettings(
                             false,
@@ -469,7 +487,7 @@ public class EmulatorTests {
         return result.stream();
     }
 
-    public static Random random() {
+    public static @NotNull Random random() {
         return new Random(267238775);
     }
 
@@ -502,10 +520,10 @@ public class EmulatorTests {
     }
 
     private <J> void testAddArray(
-            String function,
-            Function<Random, J> next,
-            BiFunction<J, J, J> operator,
-            PrimitiveType<J> type)
+            @NotNull String function,
+            @NotNull Function<@NotNull Random, J> next,
+            @NotNull BiFunction<J, J, J> operator,
+            @NotNull PrimitiveType<J> type)
             throws Throwable {
         final int size=16;
         emulator.reset();
@@ -746,26 +764,31 @@ public class EmulatorTests {
                 UINT8S);
     }
 
-    private <J, V extends PrimitiveValue<J>> void testCasts(
-            String function,
-            Function<J, Double> toDouble,
-            Function<J, Float> toFloat,
-            Function<J, Short> toInt16,
-            Function<J, Integer> toInt32,
-            Function<J, Long> toInt64,
-            Function<J, Byte> toInt8,
-            Function<J, Long> toPtr,
-            Function<J, List<Short>> toUint16,
-            Function<J, Integer> toUint32,
-            Function<J, Long> toUint64,
-            Function<J, List<Byte>> toUint8,
-            Iterable<V> values)
+    private <J> void testCasts(
+            @NotNull String function,
+            @NotNull Function<J, @NotNull Double> toDouble,
+            @NotNull Function<J, @NotNull Float> toFloat,
+            @NotNull Function<J, @NotNull Short> toInt16,
+            @NotNull Function<J, @NotNull Integer> toInt32,
+            @NotNull Function<J, @NotNull Long> toInt64,
+            @NotNull Function<J, @NotNull Byte> toInt8,
+            @NotNull Function<J, @NotNull Long> toPtr,
+            @NotNull Function<J, @NotNull List<@NotNull Short>> toUint16,
+            @NotNull Function<J, @NotNull Integer> toUint32,
+            @NotNull Function<J, @NotNull Long> toUint64,
+            @NotNull Function<J, @NotNull List<@NotNull Byte>> toUint8,
+            @NotNull Iterable<@NotNull PrimitiveValue<J>> values)
             throws Throwable {
         emulator.reset();
         long casts=emulator.heapAndStack.malloc(emulator.hart, 72);
         assertNotEquals(0L, casts);
-        for (V value: values) {
-            callFunction(true, function, PrimitiveType.voidType(), PrimitiveType.uint64().value(casts), value);
+        for (var value: values) {
+            callFunction(
+                    true,
+                    function,
+                    PrimitiveType.voidType(),
+                    PrimitiveType.uint64().value(casts),
+                    value);
             assertEquals(
                     toDouble.apply(value.value()),
                     Double.valueOf(emulator.memoryLog.loadDouble(casts)),
@@ -873,9 +896,9 @@ public class EmulatorTests {
 
     @SafeVarargs
     private <J> void testConstants(
-            String functionName,
-            PrimitiveType<J> resultType,
-            J... values)
+            @NotNull String functionName,
+            @NotNull PrimitiveType<J> resultType,
+            @NotNull J @NotNull ... values)
             throws Throwable {
         for (int ii=0; values.length>ii; ++ii) {
             assertEquals(
@@ -970,8 +993,8 @@ public class EmulatorTests {
     }
 
     private void testFunctionPointerCall(
-            String function,
-            BiFunction<Long, Long, Long> operator)
+            @NotNull String function,
+            @NotNull BiFunction<@NotNull Long, @NotNull Long, @NotNull Long> operator)
             throws Throwable {
         assertFunction3(
                 (x, y, z)->operator.apply(y, z),
@@ -1391,6 +1414,40 @@ public class EmulatorTests {
             }
             coefficients[i0]=0.0;
         }
+    }
+
+    @Test
+    public void testParametersAbiAllTypes() throws Throwable {
+        callFunction(
+                true,
+                "parameters_abi_all_types",
+                PrimitiveType.voidType(),
+                PrimitiveType.uint64().value(1L),
+                PrimitiveType.uint64().value(2L),
+                PrimitiveType.uint64().value(3L),
+                PrimitiveType.uint64().value(4L),
+                PrimitiveType.uint64().value(5L),
+                PrimitiveType.uint64().value(6L),
+                PrimitiveType.uint64().value(7L),
+                PrimitiveType.uint64().value(8L),
+                PrimitiveType.dfloat().value(9.0),
+                PrimitiveType.dfloat().value(10.0),
+                PrimitiveType.dfloat().value(11.0),
+                PrimitiveType.dfloat().value(12.0),
+                PrimitiveType.dfloat().value(13.0),
+                PrimitiveType.dfloat().value(14.0),
+                PrimitiveType.dfloat().value(15.0),
+                PrimitiveType.dfloat().value(16.0),
+                PrimitiveType.dfloat().value(17.0),
+                PrimitiveType.sfloat().value(18.0f),
+                PrimitiveType.sint16().value((short)19),
+                PrimitiveType.sint32().value(20),
+                PrimitiveType.sint64().value(21L),
+                PrimitiveType.sint8().value((byte)22),
+                PrimitiveType.uint16().value((short)23),
+                PrimitiveType.uint32().value(24),
+                PrimitiveType.uint64().value(25L),
+                PrimitiveType.uint8().value((byte)26));
     }
 
     @Test

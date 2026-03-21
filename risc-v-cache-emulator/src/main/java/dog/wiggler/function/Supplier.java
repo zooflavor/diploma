@@ -16,17 +16,19 @@ public interface Supplier<T> {
             @NotNull Function<@NotNull T, U> function,
             @NotNull Supplier<@NotNull T> supplier) {
         return ()->{
-            boolean error=true;
             T tt=supplier.get();
             try {
-                U uu=function.apply(tt);
-                error=false;
-                return uu;
+                return function.apply(tt);
             }
-            finally {
-                if (error) {
+            catch (Throwable throwable) {
+                try {
                     tt.close();
                 }
+                catch (Throwable throwable2) {
+                    throwable2.addSuppressed(throwable);
+                    throw throwable2;
+                }
+                throw throwable;
             }
         };
     }

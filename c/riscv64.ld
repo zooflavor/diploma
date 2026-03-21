@@ -2,24 +2,26 @@ ENTRY(start)
 
 SECTIONS
 {
-    . = 0x10000;
+	. = 0x10000;
 
-    .text BLOCK(4K) : ALIGN(4K)
+    .text (READONLY) : ALIGN(4K)
     {
         *(.text*)
     }
-
-    .rodata BLOCK(4K) : ALIGN(4K)
+ 
+    .rodata (READONLY) : ALIGN(4K)
     {
         *(.rodata)
     }
 
-    .data BLOCK(4K) : ALIGN(4K)
+	. = ALIGN (CONSTANT (COMMONPAGESIZE));
+
+    .data : ALIGN(4K)
     {
         *(.data)
     }
 
-    .bss BLOCK(4K) : ALIGN(4K)
+    .bss : ALIGN(4K)
     {
         *(COMMON)
         *(.bss)

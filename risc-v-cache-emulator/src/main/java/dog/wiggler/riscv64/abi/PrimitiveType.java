@@ -625,7 +625,7 @@ public sealed abstract class PrimitiveType<J> {
         }
 
         private static <T> T fail() {
-            throw new RuntimeException("voids can't be stored");
+            throw new UnsupportedOperationException("voids can't be stored");
         }
 
         @Override
@@ -689,22 +689,11 @@ public sealed abstract class PrimitiveType<J> {
         return DFloatType.INSTANCE;
     }
 
-    @Override
-    public boolean equals(Object obj) {
-        return (null!=obj)
-                && getClass().equals(obj.getClass());
-    }
-
     public J functionCallResult(
             @NotNull Hart hart) {
         return integral()
                 ?loadArgument(hart, ABI.REGISTER_A0)
                 :loadArgument(hart, ABI.REGISTER_FA0);
-    }
-
-    @Override
-    public int hashCode() {
-        return getClass().hashCode();
     }
 
     public abstract boolean integral();

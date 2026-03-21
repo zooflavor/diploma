@@ -77,10 +77,12 @@ public class HeapAndStack {
             long heapEnd) {
         if ((0>=heapEnd)
                 || (0L>heapStart)) {
-            throw new IllegalArgumentException("heap too large");
+            throw new HeapToLargeException(
+                    "heap start: %016x, heap end: %016x"
+                            .formatted(heapStart, heapEnd));
         }
         heapFreeStart=roundUp8(heapStart);
-        setStackPointer(hart, heapEnd&(~0xfL));
+        setStackPointer(hart, roundDown16(heapEnd));
     }
 
     /**
@@ -104,6 +106,6 @@ public class HeapAndStack {
     public void setStackPointer(
             @NotNull Hart hart,
             long stackPointer) {
-        hart.xRegisters.setInt64(this, ABI.REGISTER_SP, roundDown16(stackPointer));
+        hart.xRegisters.setInt64(this, ABI.REGISTER_SP, stackPointer);
     }
 }

@@ -42,6 +42,13 @@ public interface Output {
         };
     }
 
+    static @NotNull Output refuse() {
+        return consumer(
+                (value)->{
+                    throw new RuntimeException("no output is accepted");
+                });
+    }
+
     void writeDouble(double value) throws Throwable;
 
     void writeFloat(float value) throws Throwable;

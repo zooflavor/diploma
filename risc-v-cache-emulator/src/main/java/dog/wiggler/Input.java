@@ -3,10 +3,19 @@ package dog.wiggler;
 import dog.wiggler.function.Supplier;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.NoSuchElementException;
+
 /**
  * Input abstracts over the standard input.
  */
 public interface Input {
+    static @NotNull Input empty() {
+        return supplier(
+                ()->{
+                    throw new NoSuchElementException("no inputs");
+                });
+    }
+
     double readDouble() throws Throwable;
 
     float readFloat() throws Throwable;

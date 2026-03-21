@@ -55,7 +55,7 @@ public class FunctionCallParameters {
         long oldSp=heapAndStack.getStackPointer(hart);
         int stackSize=Math.max(0, integrals-ABI.ARGUMENT_REGISTERS)
                 +Math.max(0, parameters.size()-integrals-ABI.FLOAT_ARGUMENT_REGISTERS);
-        long newSp=(oldSp-8L*stackSize)&(~0xfL);
+        long newSp=HeapAndStack.roundDown16(oldSp-8L*stackSize);
         int ai=0;
         int fai=0;
         int si=0;

@@ -1,5 +1,6 @@
 package dog.wiggler.riscv64;
 
+import dog.wiggler.memory.MisalignedMemoryAccessException;
 import dog.wiggler.riscv64.abi.HeapAndStack;
 import dog.wiggler.memory.IllegalMemoryAccessException;
 import dog.wiggler.memory.MemoryLog;
@@ -76,7 +77,7 @@ public class Hart {
             throws Throwable {
         IllegalMemoryAccessException.checkAccess(registerPc);
         if (0L!=(registerPc&3)) {
-            throw new IllegalMemoryAccessException(
+            throw new MisalignedMemoryAccessException(
                     "register pc %016x is not aligned to 4 bytes"
                             .formatted(registerPc));
         }

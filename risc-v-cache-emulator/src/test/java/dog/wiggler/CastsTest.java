@@ -7,7 +7,22 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+/**
+ * Test casts between doubles and unsigned integers.
+ */
 public class CastsTest {
+    @Test
+    public void testDoubleToUint32() {
+        assertEquals(0, Casts.castDoubleToUint32(Double.NaN));
+        assertEquals(0, Casts.castDoubleToUint32(Double.NEGATIVE_INFINITY));
+        assertEquals(-1, Casts.castDoubleToUint32(Double.POSITIVE_INFINITY));
+        assertEquals(0, Casts.castDoubleToUint32(-1.0));
+        assertEquals(0, Casts.castDoubleToUint32(0));
+        assertEquals(1, Casts.castDoubleToUint32(1.0));
+        assertEquals(-1, Casts.castDoubleToUint32(0xffffffffL));
+        assertEquals(-1, Casts.castDoubleToUint32(0x100000000L));
+    }
+    
     @Test
     public void testDoubleToUint64() {
         assertEquals(0L, Casts.castDoubleToUint64(Double.NaN));

@@ -557,20 +557,6 @@ void *or_logical_ptr(void *value0, void *value1) {
     return (void*)(uint64_t)(value0 || value1);
 }
 
-double parameters_abi8(
-        double a0, int64_t a1, float a2, int32_t a3,
-        double a4, int64_t a5, float a6, int32_t a7,
-        double xx) {
-    double result=a7;
-    result=result*xx+a6;
-    result=result*xx+a5;
-    result=result*xx+a4;
-    result=result*xx+a3;
-    result=result*xx+a2;
-    result=result*xx+a1;
-    return result*xx+a0;
-}
-
 double parameters_abi19(
         double a0, int64_t a1, float a2, int32_t a3,
         double a4, int64_t a5, float a6, int32_t a7,
@@ -626,6 +612,63 @@ double parameters_abi20(
     result=result*xx+a2;
     result=result*xx+a1;
     return result*xx+a0;
+}
+
+double parameters_abi8(
+        double a0, int64_t a1, float a2, int32_t a3,
+        double a4, int64_t a5, float a6, int32_t a7,
+        double xx) {
+    double result=a7;
+    result=result*xx+a6;
+    result=result*xx+a5;
+    result=result*xx+a4;
+    result=result*xx+a3;
+    result=result*xx+a2;
+    result=result*xx+a1;
+    return result*xx+a0;
+}
+
+void parameters_abi_all_types(
+		uint64_t a0, uint64_t a1, uint64_t a2, uint64_t a3,
+		uint64_t a4, uint64_t a5, uint64_t a6, uint64_t a7,
+		double fa0, double fa1, double fa2, double fa3,
+		double fa4, double fa5, double fa6, double fa7,
+		double s0,
+		float s1,
+		int16_t s2,
+		int32_t s3,
+		int64_t s4,
+		int8_t s5,
+		uint16_t s6,
+		uint32_t s7,
+		uint64_t s8,
+		uint8_t s9) {
+	if (1!=a0) exit(1);
+	if (2!=a1) exit(2);
+	if (3!=a2) exit(3);
+	if (4!=a3) exit(4);
+	if (5!=a4) exit(5);
+	if (6!=a5) exit(6);
+	if (7!=a6) exit(7);
+	if (8!=a7) exit(8);
+	if (9!=fa0) exit(9);
+	if (10!=fa1) exit(10);
+	if (11!=fa2) exit(11);
+	if (12!=fa3) exit(12);
+	if (13!=fa4) exit(13);
+	if (14!=fa5) exit(14);
+	if (15!=fa6) exit(15);
+	if (16!=fa7) exit(16);
+	if (17!=s0) exit(17);
+	if (18!=s1) exit(18);
+	if (19!=s2) exit(19);
+	if (20!=s3) exit(20);
+	if (21!=s4) exit(21);
+	if (22!=s5) exit(22);
+	if (23!=s6) exit(23);
+	if (24!=s7) exit(24);
+	if (25!=s8) exit(25);
+	if (26!=s9) exit(26);
 }
 
 void read_input_write_output() {

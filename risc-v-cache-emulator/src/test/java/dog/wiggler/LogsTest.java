@@ -9,6 +9,9 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 
+/**
+ * Test the encoding and decoding of memory access log entries.
+ */
 public class LogsTest {
     @Test
     public void test() throws Throwable {
