@@ -33,6 +33,18 @@ public class LogOutputStream implements Log {
     }
 
     @Override
+    public Void accessLogDisabled() throws Throwable {
+        writeLog(Logs.encodeAccessLogDisabled());
+        return null;
+    }
+
+    @Override
+    public Void accessLogEnabled() throws Throwable {
+        writeLog(Logs.encodeAccessLogEnabled());
+        return null;
+    }
+
+    @Override
     public void close() throws IOException {
         try {
             writeBuffer();

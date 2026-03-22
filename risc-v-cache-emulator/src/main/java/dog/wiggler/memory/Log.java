@@ -26,6 +26,16 @@ public interface Log extends AutoCloseable, LogVisitor<Void> {
             }
 
             @Override
+            public Void accessLogDisabled() {
+                return null;
+            }
+
+            @Override
+            public Void accessLogEnabled() {
+                return null;
+            }
+
+            @Override
             public Void elapsedCycles(long elapsedCycles) {
                 return null;
             }

@@ -93,6 +93,16 @@ public class LRUCache implements Log {
         }
     }
 
+    @Override
+    public Void accessLogDisabled() {
+        return null;
+    }
+
+    @Override
+    public Void accessLogEnabled() {
+        return null;
+    }
+
     private CacheLine allocate(long lineAddress) throws Throwable {
         CacheLine line;
         if (cacheLines>linesByAddress.size()) {

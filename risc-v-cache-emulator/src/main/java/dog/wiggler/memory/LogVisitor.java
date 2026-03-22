@@ -10,7 +10,17 @@ public interface LogVisitor<R> {
      * Memory access.
      */
     R access(long address, int size, @NotNull AccessType type) throws Throwable;
-    
+
+    /**
+     * Access log disabled.
+     */
+    R accessLogDisabled() throws Throwable;
+
+    /**
+     * Access log enabled.
+     */
+    R accessLogEnabled() throws Throwable;
+
     /**
      * Total elapsed emulator cycles up to this point.
      */

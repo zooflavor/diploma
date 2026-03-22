@@ -108,7 +108,7 @@ public class Emulator implements AutoCloseable {
 
     private static @NotNull Trap.Subroutine disableAccessLogTrap() {
         return (hart, heapAndStack, memoryLog)->
-                memoryLog.disableAccessLog();
+                memoryLog.accessLogDisabled();
     }
 
     public @NotNull FileHeader elfHeader() {
@@ -117,7 +117,7 @@ public class Emulator implements AutoCloseable {
 
     private static @NotNull Trap.Subroutine enableAccessLogTrap() {
         return (hart, heapAndStack, memoryLog)->
-                memoryLog.enableAccessLog();
+                memoryLog.accessLogEnabled();
     }
 
     public static @NotNull Supplier<@NotNull Emulator> factory(
@@ -218,7 +218,7 @@ public class Emulator implements AutoCloseable {
      * sets the return address to the exitOk system call,
      * and disables the memory log.
      */
-    public void reset() {
+    public void reset() throws Throwable {
         exit.clear();
         hart.reset(
                 heapAndStack,
@@ -227,7 +227,7 @@ public class Emulator implements AutoCloseable {
                         ?DEFAULT_ENTRY_POINT
                         :elfHeader.entryPoint());
         heapAndStack.reset(hart, heapStart, memoryLog.size());
-        memoryLog.disableAccessLog();
+        memoryLog.accessLogDisabled();
     }
 
     /**

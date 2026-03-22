@@ -138,6 +138,18 @@ public class Main {
             }
 
             @Override
+            public Void accessLogDisabled() {
+                printStatistics("access log disabled");
+                return null;
+            }
+
+            @Override
+            public Void accessLogEnabled() {
+                printStatistics("access log enabled");
+                return null;
+            }
+
+            @Override
             public Void elapsedCycles(long elapsedCycles) {
                 this.elapsedCycles=elapsedCycles;
                 return null;
@@ -148,16 +160,20 @@ public class Main {
                 return null;
             }
 
-            @Override
-            public Void userData(long userData) {
+            public void printStatistics(@NotNull Object userData) {
                 System.out.printf(
-                        "%d,%d,%d,%d,%d,%d%n",
+                        "%s,%d,%d,%d,%d,%d%n",
                         userData,
                         elapsedCycles,
                         instructionLoads,
                         dataLoads,
                         stores,
                         instructionLoads+dataLoads+stores);
+            }
+
+            @Override
+            public Void userData(long userData) {
+                printStatistics(userData);
                 return null;
             }
         }
@@ -168,13 +184,7 @@ public class Main {
             while (log.hasNext()) {
                 log.readNext(visitor);
             }
-            System.out.printf(
-                    "end,%d,%d,%d,%d,%d%n",
-                    visitor.elapsedCycles,
-                    visitor.instructionLoads,
-                    visitor.dataLoads,
-                    visitor.stores,
-                    visitor.instructionLoads+visitor.dataLoads+visitor.stores);
+            visitor.printStatistics("end");
         }
     }
 }

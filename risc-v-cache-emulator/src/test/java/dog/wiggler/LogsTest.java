@@ -28,6 +28,16 @@ public class LogsTest {
         }
 
         @Override
+        public T accessLogDisabled() {
+            throw new RuntimeException();
+        }
+
+        @Override
+        public T accessLogEnabled() {
+            throw new RuntimeException();
+        }
+
+        @Override
         public T elapsedCycles(long elapsedCycles) {
             throw new RuntimeException();
         }
@@ -121,6 +131,24 @@ public class LogsTest {
                         assertEquals(0x654321L, address);
                         assertEquals(8, size);
                         assertEquals(AccessType.STORE, type);
+                        return null;
+                    }
+                });
+
+        Logs.visit(
+                Logs.encodeAccessLogDisabled(),
+                new FailVisitor<Void>() {
+                    @Override
+                    public Void accessLogDisabled() {
+                        return null;
+                    }
+                });
+
+        Logs.visit(
+                Logs.encodeAccessLogEnabled(),
+                new FailVisitor<Void>() {
+                    @Override
+                    public Void accessLogEnabled() {
                         return null;
                     }
                 });
@@ -228,6 +256,8 @@ public class LogsTest {
         var log=Log.noOp();
         log.close();
         log.access(1, 2, AccessType.LOAD_DATA);
+        log.accessLogDisabled();
+        log.accessLogEnabled();
         log.elapsedCycles(3);
         log.userData(4);
     }

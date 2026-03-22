@@ -1,6 +1,7 @@
 package dog.wiggler.memory;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.util.Objects;
@@ -14,6 +15,7 @@ import java.util.Objects;
  */
 public class MemoryLog implements Log, Memory {
     private boolean accessLogEnabled;
+    private @Nullable Long lastElapsedCycle;
     private final @NotNull Log log;
     private final @NotNull Memory memory;
 
@@ -27,9 +29,24 @@ public class MemoryLog implements Log, Memory {
     @Override
     public Void access(long address, int size, @NotNull AccessType type) throws Throwable {
         if (accessLogEnabled) {
+            logElapsedCycles();
             return log.access(address, size, type);
         }
         return null;
+    }
+
+    @Override
+    public Void accessLogDisabled() throws Throwable {
+        accessLogEnabled=false;
+        logElapsedCycles();
+        return log.accessLogDisabled();
+    }
+
+    @Override
+    public Void accessLogEnabled() throws Throwable {
+        accessLogEnabled=true;
+        logElapsedCycles();
+        return log.accessLogEnabled();
     }
 
     @Override
@@ -42,21 +59,15 @@ public class MemoryLog implements Log, Memory {
         }
     }
 
-    public void disableAccessLog() {
-        accessLogEnabled=false;
-    }
-
     @Override
     public Void elapsedCycles(long elapsedCycles) throws Throwable {
-        return log.elapsedCycles(elapsedCycles);
-    }
-
-    public void enableAccessLog() {
-        accessLogEnabled=true;
+        lastElapsedCycle=elapsedCycles;
+        return null;
     }
 
     @Override
     public Void end() throws Throwable {
+        logElapsedCycles();
         return log.end();
     }
 
@@ -99,6 +110,13 @@ public class MemoryLog implements Log, Memory {
     public byte loadInt8(long address) throws Throwable {
         access(address, 1, AccessType.LOAD_DATA);
         return memory.loadInt8(address);
+    }
+
+    private void logElapsedCycles() throws Throwable {
+        if (null!=lastElapsedCycle) {
+            log.elapsedCycles(lastElapsedCycle);
+            lastElapsedCycle=null;
+        }
     }
 
     @Override
@@ -145,6 +163,7 @@ public class MemoryLog implements Log, Memory {
     @Override
     public Void userData(long userData) throws Throwable {
         if (accessLogEnabled) {
+            logElapsedCycles();
             return log.userData(userData);
         }
         return null;

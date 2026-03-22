@@ -76,6 +76,14 @@ public class Logs {
                 |encode(TYPE_MASK, TYPE_SHIFT, type2.ordinal());
     }
 
+    public static long encodeAccessLogDisabled() {
+        return encode(TYPE_MASK, TYPE_SHIFT, LogType.ACCESS_LOG_DISABLED.ordinal());
+    }
+
+    public static long encodeAccessLogEnabled() {
+        return encode(TYPE_MASK, TYPE_SHIFT, LogType.ACCESS_LOG_ENABLED.ordinal());
+    }
+
     public static long encodeElapsedCycles(long elapsedCycles) {
         return encode(ELAPSED_CYCLES_MASK, ELAPSED_CYCLES_SHIFT, elapsedCycles)
                 |encode(TYPE_MASK, TYPE_SHIFT, LogType.ELAPSED_CYCLES.ordinal());
@@ -123,6 +131,8 @@ public class Logs {
                         size,
                         Objects.requireNonNull(type.accessType, "type.accessType"));
             }
+            case ACCESS_LOG_DISABLED -> visitor.accessLogDisabled();
+            case ACCESS_LOG_ENABLED -> visitor.accessLogEnabled();
             case ELAPSED_CYCLES -> {
                 long elapsedCycles=Logs.decodeElapsedCycles(log);
                 yield visitor.elapsedCycles(elapsedCycles);

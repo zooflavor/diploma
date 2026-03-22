@@ -1091,7 +1091,7 @@ public class EmulatorTests {
     }
 
     @Test
-    public void testMallocFailure() {
+    public void testMallocFailure() throws Throwable {
         emulator.reset();
         assertEquals(0L, emulator.heapAndStack.malloc(emulator.hart, 0L));
         assertEquals(0L, emulator.heapAndStack.malloc(emulator.hart, -1L));
@@ -1099,7 +1099,7 @@ public class EmulatorTests {
     }
 
     @Test
-    public void testMallocFreeDoesNothing() {
+    public void testMallocFreeDoesNothing() throws Throwable {
         emulator.reset();
         long address0=emulator.heapAndStack.malloc(emulator.hart, 1L);
         assertNotEquals(0L, address0);
@@ -1110,13 +1110,13 @@ public class EmulatorTests {
     }
 
     @Test
-    public void testMallocHasMemory() {
+    public void testMallocHasMemory() throws Throwable {
         emulator.reset();
         assertTrue((1L<<16)<emulator.heapAndStack.getStackPointer(emulator.hart)-emulator.heapStart);
     }
 
     @Test
-    public void testMallocOutOfMemory() {
+    public void testMallocOutOfMemory() throws Throwable {
         emulator.reset();
         long address0=0L;
         long size0=0L;
@@ -1164,12 +1164,12 @@ public class EmulatorTests {
             assertNotEquals(0L, p2);
             p3=emulator.heapAndStack.malloc(emulator.hart, 1);
             assertNotEquals(0L, p3);
-            emulator.memoryLog.disableAccessLog();
+            emulator.memoryLog.accessLogDisabled();
             emulator.memoryLog.storeInt16(p0, (short)0);
             emulator.memoryLog.storeInt32(p1, 0);
             emulator.memoryLog.storeInt64(p2, 0L);
             emulator.memoryLog.storeInt8(p3, (byte)0);
-            emulator.memoryLog.enableAccessLog();
+            emulator.memoryLog.accessLogEnabled();
             callFunction(
                     false,
                     "memory_access",
@@ -1178,13 +1178,22 @@ public class EmulatorTests {
                     PrimitiveType.uint64().value(p1),
                     PrimitiveType.uint64().value(p2),
                     PrimitiveType.uint64().value(p3));
-            emulator.memoryLog.disableAccessLog();
+            emulator.memoryLog.accessLogDisabled();
             assertEquals((short)28, emulator.memoryLog.loadInt16(p0));
             assertEquals(28, emulator.memoryLog.loadInt32(p1, false));
             assertEquals(28L, emulator.memoryLog.loadInt64(p2));
             assertEquals((byte)28, emulator.memoryLog.loadInt8(p3));
             emulator.close();
             try (LogInputStream logStream=LogInputStream.factory(logPath).get()) {
+                assertEquals(
+                        Logs.encodeAccessLogDisabled(),
+                        logStream.readNext());
+                assertEquals(
+                        Logs.encodeAccessLogDisabled(),
+                        logStream.readNext());
+                assertEquals(
+                        Logs.encodeAccessLogEnabled(),
+                        logStream.readNext());
                 assertEquals(
                         Logs.encodeAccess(
                                 emulator.elfHeader().symbolTable().get("memory_access").value(),
@@ -1203,7 +1212,7 @@ public class EmulatorTests {
                                 filtered.add(log);
                             }
                         }
-                        case ELAPSED_CYCLES -> {
+                        case ACCESS_LOG_DISABLED, ACCESS_LOG_ENABLED, ELAPSED_CYCLES -> {
                         }
                         case USER_DATA -> filtered.add(log);
                         default -> throw new IllegalStateException("unexpected type");

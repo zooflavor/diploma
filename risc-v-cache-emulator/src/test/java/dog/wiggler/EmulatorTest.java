@@ -35,7 +35,18 @@ public class EmulatorTest {
                             @Override
                             public Void access(
                                     long address,
-                                    int size,@NotNull AccessType type) {
+                                    int size,
+                                    @NotNull AccessType type) {
+                                return null;
+                            }
+
+                            @Override
+                            public Void accessLogDisabled() {
+                                return null;
+                            }
+
+                            @Override
+                            public Void accessLogEnabled() {
                                 return null;
                             }
 

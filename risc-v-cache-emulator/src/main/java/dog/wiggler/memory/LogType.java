@@ -14,6 +14,8 @@ import java.util.List;
 public enum LogType {
     ACCESS_LOAD_DATA(AccessType.LOAD_DATA),
     ACCESS_LOAD_INSTRUCTION(AccessType.LOAD_INSTRUCTION),
+    ACCESS_LOG_DISABLED(null),
+    ACCESS_LOG_ENABLED(null),
     ACCESS_STORE(AccessType.STORE),
     ELAPSED_CYCLES(null),
     USER_DATA(null);
