@@ -1,6 +1,8 @@
 package dog.wiggler;
 
+import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 
 import java.math.BigInteger;
 import java.util.List;
@@ -10,6 +12,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * Test casts between doubles and unsigned integers.
  */
+@TestMethodOrder(MethodOrderer.MethodName.class)
 public class CastsTest {
     @Test
     public void testDoubleToUint32() {

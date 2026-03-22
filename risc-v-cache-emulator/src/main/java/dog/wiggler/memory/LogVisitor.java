@@ -22,48 +22,6 @@ public interface LogVisitor<R> {
     R end() throws Throwable;
 
     /**
-     * Creates a new visitor that delegates log entries to the specified visitor,
-     * and collapses consecutive elapsed cycle entries.
-     */
-    static @NotNull LogVisitor<Void> mergeElapsedCycles(
-            @NotNull LogVisitor<Void> visitor) {
-        return new LogVisitor<>() {
-            private Long elapsedCycles;
-
-            @Override
-            public Void access(long address, int size, @NotNull AccessType type) throws Throwable {
-                flush();
-                return visitor.access(address, size, type);
-            }
-
-            @Override
-            public Void elapsedCycles(long elapsedCycles) {
-                this.elapsedCycles=elapsedCycles;
-                return null;
-            }
-
-            @Override
-            public Void end() throws Throwable {
-                flush();
-                return visitor.end();
-            }
-
-            private void flush() throws Throwable {
-                if (null!=elapsedCycles) {
-                    visitor.elapsedCycles(elapsedCycles);
-                    elapsedCycles=null;
-                }
-            }
-
-            @Override
-            public Void userData(long userData) throws Throwable {
-                flush();
-                return visitor.userData(userData);
-            }
-        };
-    }
-
-    /**
      * User data.
      */
     R userData(long userData) throws Throwable;

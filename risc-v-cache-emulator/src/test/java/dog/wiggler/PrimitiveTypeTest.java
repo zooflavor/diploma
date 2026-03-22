@@ -3,12 +3,15 @@ package dog.wiggler;
 import dog.wiggler.memory.MemoryMappedMemory;
 import dog.wiggler.riscv64.abi.PrimitiveType;
 import org.jetbrains.annotations.NotNull;
+import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.fail;
 
+@TestMethodOrder(MethodOrderer.MethodName.class)
 public class PrimitiveTypeTest {
     @Test
     public void testVoid() throws Throwable {

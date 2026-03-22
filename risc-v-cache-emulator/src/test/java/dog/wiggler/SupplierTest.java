@@ -2,7 +2,9 @@ package dog.wiggler;
 
 import dog.wiggler.function.Supplier;
 import org.jetbrains.annotations.NotNull;
+import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 
 import java.io.Serial;
 
@@ -11,6 +13,7 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
+@TestMethodOrder(MethodOrderer.MethodName.class)
 public class SupplierTest {
     private static class Test1Exception extends Exception {
         @Serial

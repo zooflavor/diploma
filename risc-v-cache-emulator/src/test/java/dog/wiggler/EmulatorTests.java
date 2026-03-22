@@ -24,11 +24,14 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.params.ParameterizedClass;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import java.io.EOFException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -53,6 +56,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 @ParameterizedClass
 @MethodSource("parameters")
+@TestMethodOrder(MethodOrderer.MethodName.class)
 public class EmulatorTests {
     public record MemorySettings(
             boolean allowMisalignedAccess,
@@ -402,7 +406,7 @@ public class EmulatorTests {
 
     private @NotNull Emulator emulator(
             @Nullable Input input,
-            @Nullable Supplier<@NotNull Log> logFactory,
+            @Nullable Supplier<? extends @NotNull Log> logFactory,
             @Nullable Output output)
             throws Throwable {
         if (null==input) {
@@ -1204,6 +1208,12 @@ public class EmulatorTests {
                         case USER_DATA -> filtered.add(log);
                         default -> throw new IllegalStateException("unexpected type");
                     }
+                }
+                try {
+                    logStream.readNext();
+                    fail();
+                }
+                catch (EOFException ignore) {
                 }
             }
         }

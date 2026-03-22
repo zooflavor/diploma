@@ -14,7 +14,7 @@ public interface Supplier<T> {
      */
     static <T extends AutoCloseable, U> @NotNull Supplier<U> factory(
             @NotNull Function<@NotNull T, U> function,
-            @NotNull Supplier<@NotNull T> supplier) {
+            @NotNull Supplier<? extends @NotNull T> supplier) {
         return ()->{
             T tt=supplier.get();
             try {
@@ -39,7 +39,7 @@ public interface Supplier<T> {
      */
     static <T extends AutoCloseable, U> @NotNull Supplier<U> factory2(
             @NotNull Function<@NotNull T, @NotNull Supplier<U>> function,
-            @NotNull Supplier<@NotNull T> supplier) {
+            @NotNull Supplier<? extends @NotNull T> supplier) {
         return factory(
                 (tt)->function.apply(tt).get(),
                 supplier);

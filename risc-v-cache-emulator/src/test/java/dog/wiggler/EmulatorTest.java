@@ -6,7 +6,9 @@ import dog.wiggler.memory.AccessType;
 import dog.wiggler.memory.Log;
 import dog.wiggler.memory.MemoryMappedMemory;
 import org.jetbrains.annotations.NotNull;
+import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 
 import java.io.EOFException;
 import java.io.IOException;
@@ -15,6 +17,7 @@ import java.io.Serial;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.fail;
 
+@TestMethodOrder(MethodOrderer.MethodName.class)
 public class EmulatorTest {
     @Test
     public void testCloseException() throws Throwable {
@@ -79,7 +82,7 @@ public class EmulatorTest {
                             "emulator-tests"));
             try {
                 emulator.loadELFAndReset(
-                        new MemoryByteChannel(new byte[0]),
+                        new ReadableMemoryChannel(new byte[0]),
                         elfHeader);
                 fail();
             }

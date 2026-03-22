@@ -122,8 +122,8 @@ public class Emulator implements AutoCloseable {
 
     public static @NotNull Supplier<@NotNull Emulator> factory(
             @NotNull Input input,
-            @Nullable Supplier<Log> logFactory,
-            @NotNull Supplier<Memory> memoryFactory,
+            @Nullable Supplier<? extends @NotNull Log> logFactory,
+            @NotNull Supplier<? extends @NotNull Memory> memoryFactory,
             @NotNull Output output) {
         return Supplier.factory2(
                 (log)->Supplier.factory(

@@ -3,7 +3,9 @@ package dog.wiggler;
 import dog.wiggler.memory.Log;
 import dog.wiggler.memory.MemoryMappedMemory;
 import org.jetbrains.annotations.NotNull;
+import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.params.ParameterizedClass;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -22,6 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  */
 @ParameterizedClass
 @MethodSource("parameters")
+@TestMethodOrder(MethodOrderer.MethodName.class)
 public class MatrixMultiplicationTest {
     private final @NotNull String executableImageOption;
     private final @NotNull String imageName;

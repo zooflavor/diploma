@@ -34,9 +34,15 @@ public class LogInputStream implements AutoCloseable {
     }
 
     public static @NotNull Supplier<@NotNull LogInputStream> factory(
-            @NotNull Path path) {
+            @NotNull Supplier<? extends @NotNull ReadableByteChannel> channelFactory) {
         return Supplier.factory(
                 LogInputStream::new,
+                channelFactory);
+    }
+
+    public static @NotNull Supplier<@NotNull LogInputStream> factory(
+            @NotNull Path path) {
+        return factory(
                 ()->Files.newByteChannel(
                         path,
                         StandardOpenOption.READ));

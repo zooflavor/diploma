@@ -2,7 +2,9 @@ package dog.wiggler;
 
 import dog.wiggler.function.Supplier;
 import org.jetbrains.annotations.NotNull;
+import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 
 import java.util.ArrayDeque;
 import java.util.List;
@@ -11,6 +13,7 @@ import java.util.NoSuchElementException;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 
+@TestMethodOrder(MethodOrderer.MethodName.class)
 public class InputTest {
     @Test
     public void testEmpty() throws Throwable {

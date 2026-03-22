@@ -3,14 +3,15 @@ package dog.wiggler;
 import org.jetbrains.annotations.NotNull;
 
 import java.nio.ByteBuffer;
+import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.SeekableByteChannel;
 import java.util.Objects;
 
-public class MemoryByteChannel implements SeekableByteChannel {
+public class ReadableMemoryChannel implements ReadableByteChannel, SeekableByteChannel {
     private final byte @NotNull [] array;
     private int position;
 
-    public MemoryByteChannel(byte @NotNull [] array) {
+    public ReadableMemoryChannel(byte @NotNull [] array) {
         this.array=Objects.requireNonNull(array, "array");
     }
 

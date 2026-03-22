@@ -1,10 +1,9 @@
 package dog.wiggler.riscv64;
 
-import dog.wiggler.memory.MisalignedMemoryAccessException;
-import dog.wiggler.riscv64.abi.HeapAndStack;
-import dog.wiggler.memory.IllegalMemoryAccessException;
 import dog.wiggler.memory.MemoryLog;
+import dog.wiggler.memory.MisalignedMemoryAccessException;
 import dog.wiggler.riscv64.abi.ABI;
+import dog.wiggler.riscv64.abi.HeapAndStack;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
@@ -45,7 +44,6 @@ public class Hart {
             @NotNull HeapAndStack heapAndStack,
             long returnAddress,
             long startAddress) {
-        IllegalMemoryAccessException.checkAccess(startAddress);
         elapsedCycles=0;
         setPc(startAddress);
         setReturnAddress(heapAndStack, returnAddress);
@@ -75,7 +73,6 @@ public class Hart {
             @NotNull MemoryLog memoryLog,
             @NotNull Map<@NotNull Long, @NotNull Trap> traps)
             throws Throwable {
-        IllegalMemoryAccessException.checkAccess(registerPc);
         if (0L!=(registerPc&3)) {
             throw new MisalignedMemoryAccessException(
                     "register pc %016x is not aligned to 4 bytes"

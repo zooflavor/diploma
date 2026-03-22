@@ -60,7 +60,7 @@ public class ELF {
             short type=buffer.getShort();
             if ((FileHeader.TYPE_EXECUTABLE!=type)
                     && (FileHeader.TYPE_SHARED_OBJECT!=type)) {
-                throw new IOException("file is not an shared object");
+                throw new IOException("file is not an executable, nor a shared object");
             }
             if (0xf3!=buffer.getShort()) {
                 throw new IOException("instruction set is not RISC-V");
@@ -73,10 +73,10 @@ public class ELF {
             long sectionHeaderOffset=buffer.getLong();
             int flags=buffer.getInt();
             if (64!=buffer.getShort()) {
-                throw new IOException("size is not 64");
+                throw new IOException("file header size is not 64");
             }
             if (56!=buffer.getShort()) {
-                throw new IOException("program header entry size is not 64");
+                throw new IOException("program header entry size is not 56");
             }
             int programHeaderEntryNumber=buffer.getShort()&0xffff;
             if (64!=buffer.getShort()) {

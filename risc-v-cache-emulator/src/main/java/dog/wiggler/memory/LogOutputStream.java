@@ -54,10 +54,16 @@ public class LogOutputStream implements Log {
         return null;
     }
 
-    public static @NotNull Supplier<@NotNull Log> factory(
-            @NotNull Path path) {
+    public static @NotNull Supplier<@NotNull LogOutputStream> factory(
+            @NotNull Supplier<@NotNull WritableByteChannel> channelFactory) {
         return Supplier.factory(
                 LogOutputStream::new,
+                channelFactory);
+    }
+
+    public static @NotNull Supplier<@NotNull LogOutputStream> factory(
+            @NotNull Path path) {
+        return factory(
                 ()->Files.newByteChannel(
                         path,
                         StandardOpenOption.CREATE,

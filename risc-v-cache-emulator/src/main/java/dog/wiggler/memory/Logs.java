@@ -47,8 +47,8 @@ public class Logs {
 
     public static @NotNull LogType decodeType(long log) {
         int type=(int)decode(log, TYPE_MASK, TYPE_SHIFT);
-        if ((0>type) || (LogType.TYPES.size()<=type)) {
-            throw new RuntimeException("unknown log type %x".formatted(type));
+        if (LogType.TYPES.size()<=type) {
+            throw new IllegalArgumentException("unknown log type %x".formatted(type));
         }
         return LogType.TYPES.get(type);
     }
@@ -59,7 +59,7 @@ public class Logs {
 
     private static long encode(long mask, int shift, long value) {
         if (value!=(value&mask)) {
-            throw new RuntimeException("invalid value %x".formatted(value));
+            throw new IllegalArgumentException("invalid value %x".formatted(value));
         }
         return value<<shift;
     }
@@ -69,7 +69,7 @@ public class Logs {
         @NotNull LogType type2=switch (type) {
             case LOAD_DATA -> LogType.ACCESS_LOAD_DATA;
             case LOAD_INSTRUCTION -> LogType.ACCESS_LOAD_INSTRUCTION;
-            case STORE -> LogType.ACCESS_STORE;
+            default -> LogType.ACCESS_STORE;
         };
         return encode(ADDRESS_MASK, ADDRESS_SHIFT, address)
                 |encode(SIZE_MASK, SIZE_SHIFT, shift)
@@ -86,7 +86,7 @@ public class Logs {
                 |encode(TYPE_MASK, TYPE_SHIFT, LogType.USER_DATA.ordinal());
     }
 
-    private static int log2(int value) {
+    public static int log2(int value) {
         if (0==value) {
             return -1;
         }
@@ -100,7 +100,7 @@ public class Logs {
     public static int log2Checked(int value) {
         int log2=log2(value);
         if (0>log2) {
-            throw new RuntimeException("%x is not a power of 2".formatted(value));
+            throw new IllegalArgumentException("%x is not a power of 2".formatted(value));
         }
         return log2;
     }
@@ -127,7 +127,7 @@ public class Logs {
                 long elapsedCycles=Logs.decodeElapsedCycles(log);
                 yield visitor.elapsedCycles(elapsedCycles);
             }
-            case USER_DATA -> {
+            default -> {
                 long userData=Logs.decodeUserData(log);
                 yield visitor.userData(userData);
             }

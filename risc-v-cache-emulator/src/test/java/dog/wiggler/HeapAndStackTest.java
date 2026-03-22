@@ -3,10 +3,13 @@ package dog.wiggler;
 import dog.wiggler.memory.MemoryMappedMemory;
 import dog.wiggler.riscv64.abi.HeapToLargeException;
 import dog.wiggler.riscv64.abi.MisalignedStackPointerException;
+import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 
 import static org.junit.jupiter.api.Assertions.fail;
 
+@TestMethodOrder(MethodOrderer.MethodName.class)
 public class HeapAndStackTest {
     @Test
     public void testHeapToLargeError() throws Throwable {
