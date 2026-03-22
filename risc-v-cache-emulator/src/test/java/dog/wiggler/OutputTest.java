@@ -15,6 +15,44 @@ import static org.junit.jupiter.api.Assertions.fail;
 @TestMethodOrder(MethodOrderer.MethodName.class)
 public class OutputTest {
     @Test
+    public void testAppendable() throws Throwable {
+        var sb=new StringBuilder();
+        var output=new AppendableOutput(sb);
+        output.writeDouble(1.0);
+        output.writeFloat(2.0f);
+        output.writeInt16((short)3);
+        output.writeInt32(4);
+        output.writeInt64(5L);
+        output.writeInt8((byte)6);
+        output.writeUint16((short)7);
+        output.writeUint32(8);
+        output.writeUint64(9L);
+        output.writeUint8((byte)10);
+        assertEquals(
+                "1.0"
+                        +System.lineSeparator()
+                        +"2.0"
+                        +System.lineSeparator()
+                        +"3"
+                        +System.lineSeparator()
+                        +"4"
+                        +System.lineSeparator()
+                        +"5"
+                        +System.lineSeparator()
+                        +"6"
+                        +System.lineSeparator()
+                        +"7"
+                        +System.lineSeparator()
+                        +"8"
+                        +System.lineSeparator()
+                        +"9"
+                        +System.lineSeparator()
+                        +"10"
+                        +System.lineSeparator(),
+                sb.toString());
+    }
+
+    @Test
     public void testConsumer() throws Throwable {
         var outputList=new ArrayList<@NotNull Number>();
         var output=Output.consumer(outputList::add);

@@ -6,6 +6,10 @@ import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 
+import java.io.ByteArrayInputStream;
+import java.io.EOFException;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayDeque;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -36,6 +40,45 @@ public class InputTest {
             catch (NoSuchElementException ex) {
                 assertEquals("no inputs", ex.getMessage());
             }
+        }
+    }
+
+    @Test
+    public void testInputStream() throws Throwable {
+        var input=new InputStreamInput(
+                new ByteArrayInputStream(
+                        "1.0\r\n2.0\n\r3\r4\n5\n\n6\n7\n8\n9\n10\n65536\n256\n11"
+                                .getBytes(StandardCharsets.UTF_8)));
+        assertEquals(1.0, input.readDouble());
+        assertEquals(2.0f, input.readFloat());
+        assertEquals((short)3, input.readInt16());
+        assertEquals(4, input.readInt32());
+        assertEquals(5L, input.readInt64());
+        assertEquals((byte)6, input.readInt8());
+        assertEquals((short)7, input.readUint16());
+        assertEquals(8, input.readUint32());
+        assertEquals(9L, input.readUint64());
+        assertEquals((byte)10, input.readUint8());
+        try {
+            input.readUint16();
+            fail();
+        }
+        catch (IOException ex) {
+            assertEquals("invalid uint16: 65536, 0x10000", ex.getMessage());
+        }
+        try {
+            input.readUint8();
+            fail();
+        }
+        catch (IOException ex) {
+            assertEquals("invalid uint8: 256, 0x100", ex.getMessage());
+        }
+        assertEquals(11L, input.readUint64());
+        try {
+            input.readUint64();
+            fail();
+        }
+        catch (EOFException ignore) {
         }
     }
 
