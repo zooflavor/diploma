@@ -1,6 +1,6 @@
 package dog.wiggler.riscv64.abi;
 
-import dog.wiggler.Emulator;
+import dog.wiggler.emulator.Emulator;
 import dog.wiggler.memory.Memory;
 import dog.wiggler.riscv64.Hart;
 import org.jetbrains.annotations.NotNull;

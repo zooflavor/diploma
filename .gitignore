@@ -4,5 +4,4 @@
 *.out
 *.synctex.gz
 *.toc
-memory.image
-memory.log
+*.image

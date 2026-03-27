@@ -1,5 +1,6 @@
 package dog.wiggler;
 
+import dog.wiggler.emulator.Input;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.EOFException;

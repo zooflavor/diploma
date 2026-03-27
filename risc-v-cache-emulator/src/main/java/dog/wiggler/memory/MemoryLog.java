@@ -1,7 +1,7 @@
 package dog.wiggler.memory;
 
+import dog.wiggler.function.Supplier;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.util.Objects;
@@ -14,38 +14,28 @@ import java.util.Objects;
  * The elapsed cycles are always logged.
  */
 public class MemoryLog implements Log, Memory {
-    private boolean accessLogEnabled;
-    private @Nullable Long lastElapsedCycle;
     private final @NotNull Log log;
     private final @NotNull Memory memory;
 
-    public MemoryLog(
+    private MemoryLog(
             @NotNull Log log,
             @NotNull Memory memory) {
-        this.log=Objects.requireNonNull(log, "log");
+        this.log=new SwitchableLog(new CollapseElapsedCyclesLog(log));
         this.memory=Objects.requireNonNull(memory, "memory");
     }
 
     @Override
     public Void access(long address, int size, @NotNull AccessType type) throws Throwable {
-        if (accessLogEnabled) {
-            logElapsedCycles();
-            return log.access(address, size, type);
-        }
-        return null;
+        return log.access(address, size, type);
     }
 
     @Override
     public Void accessLogDisabled() throws Throwable {
-        accessLogEnabled=false;
-        logElapsedCycles();
         return log.accessLogDisabled();
     }
 
     @Override
     public Void accessLogEnabled() throws Throwable {
-        accessLogEnabled=true;
-        logElapsedCycles();
         return log.accessLogEnabled();
     }
 
@@ -61,14 +51,23 @@ public class MemoryLog implements Log, Memory {
 
     @Override
     public Void elapsedCycles(long elapsedCycles) throws Throwable {
-        lastElapsedCycle=elapsedCycles;
-        return null;
+        return log.elapsedCycles(elapsedCycles);
     }
 
     @Override
     public Void end() throws Throwable {
-        logElapsedCycles();
         return log.end();
+    }
+
+    public static @NotNull Supplier<@NotNull MemoryLog> factory(
+            @NotNull Supplier<? extends @NotNull Log> logFactory,
+            @NotNull Supplier<? extends @NotNull Memory> memoryFactory) {
+        return Supplier.factory2(
+                (log)->Supplier.factory2(
+                        (memory)->
+                                ()->new MemoryLog(log, memory),
+                        memoryFactory),
+                logFactory);
     }
 
     @Override
@@ -110,13 +109,6 @@ public class MemoryLog implements Log, Memory {
     public byte loadInt8(long address) throws Throwable {
         access(address, 1, AccessType.LOAD_DATA);
         return memory.loadInt8(address);
-    }
-
-    private void logElapsedCycles() throws Throwable {
-        if (null!=lastElapsedCycle) {
-            log.elapsedCycles(lastElapsedCycle);
-            lastElapsedCycle=null;
-        }
     }
 
     @Override
@@ -162,10 +154,6 @@ public class MemoryLog implements Log, Memory {
 
     @Override
     public Void userData(long userData) throws Throwable {
-        if (accessLogEnabled) {
-            logElapsedCycles();
-            return log.userData(userData);
-        }
-        return null;
+        return log.userData(userData);
     }
 }

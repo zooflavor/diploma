@@ -1,5 +1,6 @@
 package dog.wiggler;
 
+import dog.wiggler.emulator.Output;
 import org.jetbrains.annotations.NotNull;
 
 public class AppendableOutput implements Output {

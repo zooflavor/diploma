@@ -7,7 +7,7 @@ import org.jetbrains.annotations.NotNull;
  */
 public interface LogVisitor<R> {
     /**
-     * Memory access.
+     * Memory access. The size is in bytes.
      */
     R access(long address, int size, @NotNull AccessType type) throws Throwable;
 

@@ -95,7 +95,7 @@ public class Logs {
     }
 
     public static int log2(int value) {
-        if (0==value) {
+        if (0>=value) {
             return -1;
         }
         int shift=Integer.numberOfTrailingZeros(value);

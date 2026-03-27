@@ -1,5 +1,9 @@
 package dog.wiggler;
 
+import dog.wiggler.emulator.Emulator;
+import dog.wiggler.emulator.EmulatorTests;
+import dog.wiggler.emulator.Input;
+import dog.wiggler.emulator.Output;
 import dog.wiggler.memory.Log;
 import dog.wiggler.memory.MemoryMappedMemory;
 import org.jetbrains.annotations.NotNull;

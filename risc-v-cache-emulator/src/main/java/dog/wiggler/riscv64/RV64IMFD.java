@@ -1,6 +1,5 @@
 package dog.wiggler.riscv64;
 
-import dog.wiggler.Casts;
 import org.jetbrains.annotations.NotNull;
 
 /**

@@ -1,6 +1,6 @@
 package dog.wiggler.memory;
 
-import dog.wiggler.EmulatorException;
+import dog.wiggler.emulator.EmulatorException;
 
 import java.io.Serial;
 
