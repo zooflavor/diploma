@@ -455,7 +455,7 @@ public class OPTCache {
                 }
 
                 @Override
-                public Void elapsedCycles(long elapsedCycles) throws Throwable {
+                public Void elapsedCycles(long elapsedCycles) {
                     return outputLog.elapsedCycles(elapsedCycles);
                 }
 

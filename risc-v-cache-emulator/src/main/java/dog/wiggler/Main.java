@@ -32,9 +32,7 @@ public class Main {
         }
         switch (args[1]) {
             case OPT -> cacheOpt(args);
-            default -> {
-                help();
-            }
+            default -> help();
         }
     }
 

@@ -583,7 +583,7 @@ public class OPTCacheTest {
                             }
 
                             @Override
-                            public Void elapsedCycles(long elapsedCycles) throws Throwable {
+                            public Void elapsedCycles(long elapsedCycles) {
                                 outputLog.elapsedCycles(elapsedCycles);
                                 return null;
                             }
