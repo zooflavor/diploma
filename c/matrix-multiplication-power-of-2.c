@@ -88,6 +88,8 @@ void start() {
 		return;
 	}
 	
+	memory_access_log_enable();
+	
 	// zero input matrices
 	zero(matrix0, size);
 	zero(matrix1, size);
@@ -104,8 +106,6 @@ void start() {
 		}
 	}
 	
-	memory_access_log_enable();
-	
 	// zero the result matrix
 	zero(matrix2, size);
 	
@@ -117,14 +117,14 @@ void start() {
 			size,
 			size);
 	
-	memory_access_log_disable();
-	
 	// print result
 	for (int rr=0; size0>rr; ++rr) {
 		for (int cc=0; size2>cc; ++cc) {
 			write_double(matrix2[rr*size+cc]);
 		}
 	}
+	
+	memory_access_log_disable();
 	
 	free(matrix2);
 	free(matrix1);

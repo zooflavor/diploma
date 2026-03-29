@@ -65,7 +65,7 @@ public class Logs {
     }
 
     public static long encodeAccess(long address, int size, @NotNull AccessType type) {
-        int shift=log2Checked(size);
+        int shift=log2Checked("access size", size);
         @NotNull LogType type2=switch (type) {
             case LOAD_DATA -> LogType.ACCESS_LOAD_DATA;
             case LOAD_INSTRUCTION -> LogType.ACCESS_LOAD_INSTRUCTION;
@@ -105,10 +105,11 @@ public class Logs {
         return shift;
     }
 
-    public static int log2Checked(int value) {
+    public static int log2Checked(@NotNull String name,  int value) {
         int log2=log2(value);
         if (0>log2) {
-            throw new IllegalArgumentException("%x is not a power of 2".formatted(value));
+            throw new IllegalArgumentException(
+                    "%s is not a power of 2, value: %d".formatted(name, value));
         }
         return log2;
     }

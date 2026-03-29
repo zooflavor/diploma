@@ -75,14 +75,14 @@ public class LogsTest {
         assertEquals(1, Logs.log2(2));
         assertEquals(2, Logs.log2(4));
         assertEquals(30, Logs.log2(1<<30));
-        assertEquals(0, Logs.log2Checked(1));
-        assertEquals(1, Logs.log2Checked(2));
-        assertEquals(2, Logs.log2Checked(4));
-        assertEquals(30, Logs.log2Checked(1<<30));
+        assertEquals(0, Logs.log2Checked("t1", 1));
+        assertEquals(1, Logs.log2Checked("t2", 2));
+        assertEquals(2, Logs.log2Checked("t3", 4));
+        assertEquals(30, Logs.log2Checked("t4", 1<<30));
         for (int value: List.of(0, 31, 1<<31)) {
             assertEquals(-1, Logs.log2(value));
             try {
-                Logs.log2Checked(value);
+                Logs.log2Checked("t5", value);
                 fail();
             }
             catch (IllegalArgumentException ignore) {

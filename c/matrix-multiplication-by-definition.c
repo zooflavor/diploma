@@ -31,6 +31,8 @@ void start() {
 		return;
 	}
 	
+	memory_access_log_enable();
+	
 	// read input matrices. row-major order
 	for (int ii=0; size0*size1>ii; ++ii) {
 		matrix0[ii]=read_double();
@@ -38,8 +40,6 @@ void start() {
 	for (int ii=0; size1*size2>ii; ++ii) {
 		matrix1[ii]=read_double();
 	}
-	
-	memory_access_log_enable();
 	
 	// compute result
 	for (int rr=0; size0>rr; ++rr) {
@@ -52,12 +52,12 @@ void start() {
 		}
 	}
 	
-	memory_access_log_disable();
-	
 	// print result
 	for (int ii=0; size0*size2>ii; ++ii) {
 		write_double(matrix2[ii]);
 	}
+	
+	memory_access_log_disable();
 	
 	free(matrix2);
 	free(matrix1);

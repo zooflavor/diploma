@@ -1,8 +1,17 @@
 package dog.wiggler;
 
 import dog.wiggler.cache.CacheType;
+import dog.wiggler.cache.FIFOPolicy;
+import dog.wiggler.cache.LFUPolicy;
+import dog.wiggler.cache.LRUPolicy;
+import dog.wiggler.cache.NWayAssociativeCache;
 import dog.wiggler.cache.OPTCache;
+import dog.wiggler.cache.RandomPolicy;
+import dog.wiggler.cache.ReplacementPolicy;
+import dog.wiggler.cache.WriteMiss;
+import dog.wiggler.cache.WritePolicy;
 import dog.wiggler.emulator.Emulator;
+import dog.wiggler.function.Supplier;
 import dog.wiggler.memory.AccessType;
 import dog.wiggler.memory.LogInputStream;
 import dog.wiggler.memory.LogOutputStream;
@@ -15,25 +24,88 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class Main {
+    private static final @NotNull String ALLOCATE="allocate";
+    private static final @NotNull String BACK="back";
     private static final @NotNull String BOTH="both";
     private static final @NotNull String CACHE="cache";
     private static final @NotNull String DATA="data";
+    private static final @NotNull String DONT_ALLOCATE="dont-allocate";
+    private static final @NotNull String FIFO="fifo";
     private static final @NotNull String HELP="help";
     private static final @NotNull String INSTRUCTION="instruction";
+    private static final @NotNull String LFU="lfu";
+    private static final @NotNull String LRU="lru";
     private static final @NotNull String NAME="run-emulator";
     private static final @NotNull String OPT="opt";
+    private static final @NotNull String RANDOM="random";
     private static final @NotNull String RUN="run";
     private static final @NotNull String STATISTICS="statistics";
+    private static final @NotNull String THROUGH="through";
 
     private static void cache(String[] args) throws Throwable {
-        if (8>args.length) {
+        if ((8>args.length) || (11<args.length)) {
             help();
             return;
         }
-        switch (args[1]) {
-            case OPT -> cacheOpt(args);
-            default -> help();
+        if (OPT.equals(args[1])) {
+            cacheOpt(args);
+            return;
         }
+        if (10>args.length) {
+            help();
+            return;
+        }
+        @NotNull Supplier<@NotNull ReplacementPolicy> replacementPolicyFactory;
+        switch (args[1]) {
+            case FIFO -> replacementPolicyFactory=FIFOPolicy::new;
+            case LFU -> replacementPolicyFactory=LFUPolicy::new;
+            case LRU -> replacementPolicyFactory=LRUPolicy::new;
+            case RANDOM -> {
+                if (10==args.length) {
+                    replacementPolicyFactory=RandomPolicy::new;
+                }
+                else {
+                    long randomSeed=Long.parseLong(args[10]);
+                    replacementPolicyFactory=()->new RandomPolicy(randomSeed);
+                }
+            }
+            default -> {
+                help();
+                return;
+            }
+        }
+        int cacheSize=Integer.parseInt(args[2]);
+        int associativity=Integer.parseInt(args[2]);
+        int lineSize=Integer.parseInt(args[4]);
+        @NotNull CacheType cacheType=cacheType(args[5]);
+        @NotNull WriteMiss writeMiss=switch (args[6]) {
+            case ALLOCATE -> WriteMiss.ALLOCATE;
+            case DONT_ALLOCATE -> WriteMiss.DON_T_ALLOCATE;
+            default -> {
+                help();
+                throw new RuntimeException();
+            }
+        };
+        @NotNull WritePolicy writePolicy=switch (args[7]) {
+            case BACK -> WritePolicy.WRITE_BACK;
+            case THROUGH -> WritePolicy.WRITE_THROUGH;
+            default -> {
+                help();
+                throw new RuntimeException();
+            }
+        };
+        @NotNull Path inputLogFile=Paths.get(args[8]).toAbsolutePath();
+        @NotNull Path outputLogFile=Paths.get(args[9]).toAbsolutePath();
+        NWayAssociativeCache.run(
+                associativity,
+                cacheSize,
+                cacheType,
+                inputLogFile,
+                lineSize,
+                outputLogFile,
+                replacementPolicyFactory,
+                writeMiss,
+                writePolicy);
     }
 
     private static void cacheOpt(String[] args) throws Throwable {
@@ -70,10 +142,13 @@ public class Main {
         System.out.printf("  %s %s%n", NAME, HELP);
         System.out.printf("    prints this screen%n");
         System.out.printf("  %s %s %s cache-size line-size instruction-type input-log-file output-log-file temp-file%n", NAME, CACHE, OPT);
-        System.out.printf("  %s %s replacement-policy cache-size line-size instruction-type input-log-file output-log-file policy-dependent parameters%n", NAME, CACHE);
+        System.out.printf("  %s %s replacement-policy cache-size associativity line-size instruction-type write-miss write-policy input-log-file output-log-file (random-seed)%n", NAME, CACHE);
         System.out.printf("    process memory log file through a cache%n");
-        System.out.printf("    replacement policy can be: opt, lru%n");
+        System.out.printf("    replacement policy can be: %s, %s, %s, %s, %s%n", FIFO, LFU, LRU, OPT, RANDOM);
         System.out.printf("    cache-size is in cache lines%n");
+        System.out.printf("    associativity is in cache lines%n");
+        System.out.printf("      associativity = 1 means a direct mapped cache%n");
+        System.out.printf("      associativity = cache-size means a fully associative cache%n");
         System.out.printf("    line-size is in bytes%n");
         System.out.printf("    instruction-type can be: %s, %s, %s%n", BOTH, DATA, INSTRUCTION);
         System.out.printf("      %s will process data loads, instruction loads, and stores%n", BOTH);
@@ -81,8 +156,11 @@ public class Main {
         System.out.printf("      %s will process instruction loads, leaves data loads and stores untouched%n", INSTRUCTION);
         System.out.printf("      input-log-file will be read, and fed to the cache%n");
         System.out.printf("      output-log-file will be fed the output of the cache algorithm%n");
-        System.out.printf("    parameters for %s policy:%n", OPT);
-        System.out.printf("      temp-file: temporary storage file to calculate forward distances%n");
+        System.out.printf("    write-miss can be: %s, %s%n", ALLOCATE, DONT_ALLOCATE);
+        System.out.printf("    write-policy can be: %s, %s%n", BACK, THROUGH);
+        System.out.printf("    temp-file: temporary storage file to calculate forward distances%n");
+        System.out.printf("    random-seed: initial seed for the random replacement policy%n");
+        System.out.printf("      when it's not specified the seed is calculated from system time%n");
         System.out.printf("  %s %s program-image log-file memory-size [memory-file]%n", NAME, RUN);
         System.out.printf("    runs program-image%n");
         System.out.printf("    logs the memory accesses to log-file%n");
