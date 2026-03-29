@@ -8,5 +8,5 @@ public enum WritePolicy {
     /**
      * write immediately to backing store
      */
-    WRITE_THROUGH;
+    WRITE_THROUGH
 }

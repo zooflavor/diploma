@@ -75,7 +75,7 @@ public class Main {
             }
         }
         int cacheSize=Integer.parseInt(args[2]);
-        int associativity=Integer.parseInt(args[2]);
+        int associativity=Integer.parseInt(args[3]);
         int lineSize=Integer.parseInt(args[4]);
         @NotNull CacheType cacheType=cacheType(args[5]);
         @NotNull WriteMiss writeMiss=switch (args[6]) {

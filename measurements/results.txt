@@ -1,0 +1,36 @@
+matrix multiplication, 100 * 100 * 100
+
+file: data/matrix-multiplication-by-definition.log, policy: no cache, data accesses 2040002
+file: data/matrix-multiplication-by-definition.log, policy: opt, cache lines: 128, line size: 8, data accesses 1047171
+file: data/matrix-multiplication-by-definition.log, policy: opt, cache lines: 1024, line size: 16, data accesses 450758
+file: data/matrix-multiplication-by-definition.log, policy: lru, cache lines: 128, associativity: 1, line size: 8, data accesses 1467475
+file: data/matrix-multiplication-by-definition.log, policy: lru, cache lines: 128, associativity: 2, line size: 8, data accesses 1506586
+file: data/matrix-multiplication-by-definition.log, policy: lru, cache lines: 128, associativity: 4, line size: 8, data accesses 1493732
+file: data/matrix-multiplication-by-definition.log, policy: lru, cache lines: 128, associativity: 128, line size: 8, data accesses 2040002
+file: data/matrix-multiplication-by-definition.log, policy: lru, cache lines: 1024, associativity: 1, line size: 16, data accesses 613968
+file: data/matrix-multiplication-by-definition.log, policy: lru, cache lines: 1024, associativity: 2, line size: 16, data accesses 540011
+file: data/matrix-multiplication-by-definition.log, policy: lru, cache lines: 1024, associativity: 4, line size: 16, data accesses 540099
+file: data/matrix-multiplication-by-definition.log, policy: lru, cache lines: 1024, associativity: 1024, line size: 16, data accesses 540116
+
+file: data/matrix-multiplication-halving.log, policy: no cache, data accesses 24974146
+file: data/matrix-multiplication-halving.log, policy: opt, cache lines: 128, line size: 8, data accesses 732008
+file: data/matrix-multiplication-halving.log, policy: opt, cache lines: 1024, line size: 16, data accesses 89164
+file: data/matrix-multiplication-halving.log, policy: lru, cache lines: 128, associativity: 1, line size: 8, data accesses 2911233
+file: data/matrix-multiplication-halving.log, policy: lru, cache lines: 128, associativity: 2, line size: 8, data accesses 1499126
+file: data/matrix-multiplication-halving.log, policy: lru, cache lines: 128, associativity: 4, line size: 8, data accesses 1228899
+file: data/matrix-multiplication-halving.log, policy: lru, cache lines: 128, associativity: 128, line size: 8, data accesses 1158278
+file: data/matrix-multiplication-halving.log, policy: lru, cache lines: 1024, associativity: 1, line size: 16, data accesses 300739
+file: data/matrix-multiplication-halving.log, policy: lru, cache lines: 1024, associativity: 2, line size: 16, data accesses 133253
+file: data/matrix-multiplication-halving.log, policy: lru, cache lines: 1024, associativity: 4, line size: 16, data accesses 128451
+
+file: data/matrix-multiplication-power-of-2.log, policy: no cache, data accesses 39326255
+file: data/matrix-multiplication-power-of-2.log, policy: opt, cache lines: 128, line size: 8, data accesses 1251599
+file: data/matrix-multiplication-power-of-2.log, policy: opt, cache lines: 1024, line size: 16, data accesses 184545
+file: data/matrix-multiplication-power-of-2.log, policy: lru, cache lines: 128, associativity: 1, line size: 8, data accesses 8212129
+file: data/matrix-multiplication-power-of-2.log, policy: lru, cache lines: 128, associativity: 2, line size: 8, data accesses 6292084
+file: data/matrix-multiplication-power-of-2.log, policy: lru, cache lines: 128, associativity: 4, line size: 8, data accesses 4698442
+file: data/matrix-multiplication-power-of-2.log, policy: lru, cache lines: 128, associativity: 128, line size: 8, data accesses 1800704
+file: data/matrix-multiplication-power-of-2.log, policy: lru, cache lines: 1024, associativity: 1, line size: 16, data accesses 1888476
+file: data/matrix-multiplication-power-of-2.log, policy: lru, cache lines: 1024, associativity: 2, line size: 16, data accesses 787070
+file: data/matrix-multiplication-power-of-2.log, policy: lru, cache lines: 1024, associativity: 4, line size: 16, data accesses 628871
+file: data/matrix-multiplication-power-of-2.log, policy: lru, cache lines: 1024, associativity: 1024, line size: 16, data accesses 248171
