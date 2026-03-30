@@ -39,6 +39,7 @@ function compile_gcc() {
   riscv64-linux-gnu-objdump -d "${OUTPUT_ELF}" > "${OUTPUT_DISASSEMBLY}"
 }
 
+compile "bucket-sieve-cache-oblivious"
 compile "emulator-tests"
 compile "matrix-multiplication-by-definition"
 compile "matrix-multiplication-halving"

@@ -2,19 +2,19 @@ ENTRY(start)
 
 SECTIONS
 {
-	. = 0x10000;
+    . = 0x10000;
 
     .text (READONLY) : ALIGN(4K)
     {
         *(.text*)
     }
- 
+
     .rodata (READONLY) : ALIGN(4K)
     {
         *(.rodata)
     }
 
-	. = ALIGN (CONSTANT (COMMONPAGESIZE));
+    . = ALIGN (CONSTANT (COMMONPAGESIZE));
 
     .data : ALIGN(4K)
     {
