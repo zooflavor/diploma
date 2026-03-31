@@ -163,21 +163,33 @@ public class Emulator implements AutoCloseable {
         }
         ByteBuffer buffer=ByteBuffer.allocate(4096);
         for (SectionHeader sectionHeader: elfHeader.sectionHeaders()) {
-            if (SectionHeader.TYPE_PROGRAM_DATA==sectionHeader.type()) {
-                channel.position(sectionHeader.offset());
-                long address=sectionHeader.address();
-                long size=sectionHeader.size();
-                heapStart=Math.max(heapStart, address+size);
-                while (0<size) {
-                    buffer.clear();
-                    if (0>channel.read(buffer)) {
-                        throw new EOFException();
-                    }
-                    buffer.flip();
-                    while (buffer.hasRemaining()) {
-                        memoryLog.storeInt8(address, buffer.get());
+            switch (sectionHeader.type()) {
+                case SectionHeader.TYPE_NO_BITS -> {
+                    long address=sectionHeader.address();
+                    long size=sectionHeader.size();
+                    heapStart=Math.max(heapStart, address+size);
+                    while (0<size) {
+                        memoryLog.storeInt8(address, (byte)0);
                         ++address;
                         --size;
+                    }
+                }
+                case SectionHeader.TYPE_PROGRAM_DATA -> {
+                    channel.position(sectionHeader.offset());
+                    long address=sectionHeader.address();
+                    long size=sectionHeader.size();
+                    heapStart=Math.max(heapStart, address+size);
+                    while (0<size) {
+                        buffer.clear();
+                        if (0>channel.read(buffer)) {
+                            throw new EOFException();
+                        }
+                        buffer.flip();
+                        while (buffer.hasRemaining()) {
+                            memoryLog.storeInt8(address, buffer.get());
+                            ++address;
+                            --size;
+                        }
                     }
                 }
             }

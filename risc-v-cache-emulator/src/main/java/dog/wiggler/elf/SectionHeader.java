@@ -1,11 +1,12 @@
 package dog.wiggler.elf;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.List;
 
 /**
  * Header for sections. Sections are parts of the ELF binary.
@@ -25,13 +26,13 @@ public record SectionHeader(
     public static final int SIZE=64;
     public static final int STRING_TABLE=3;
     public static final int SYMBOL_TABLE=2;
+    public static final int TYPE_NO_BITS=8;
     public static final int TYPE_PROGRAM_DATA=1;
 
-    public @NotNull Set<@NotNull String> flagNames() {
-        @NotNull Set<@NotNull String> names=new TreeSet<>();
-        long ff=flags;
-        for (int ii=63; 0<=ii; ff<<=1, --ii) {
-            if (0!=(ff&0x8000000000000000L)) {
+    public @NotNull List<@NotNull String> flagNames() {
+        @NotNull List<@NotNull String> names=new ArrayList<>();
+        for (int ii=0; 64>ii; ++ii) {
+            if (0!=(flags&(1L<<ii))) {
                 switch (ii) {
                     case 0 -> names.add("writeable");
                     case 1 -> names.add("allocate");
@@ -51,7 +52,24 @@ public record SectionHeader(
                 }
             }
         }
-        return Collections.unmodifiableSet(names);
+        return Collections.unmodifiableList(names);
+    }
+
+    public void print(@Nullable String name) {
+        System.out.printf("section header:%n");
+        if (null!=name) {
+            System.out.printf("  name:              %s%n", name);
+        }
+        System.out.printf("  name offset:       0x%08x%n", nameOffset);
+        System.out.printf("  type:              %s%n", typeName());
+        System.out.printf("  flags:             %s%n", flagNames());
+        System.out.printf("  address:           0x%016x%n", address);
+        System.out.printf("  offset:            0x%016x%n", offset);
+        System.out.printf("  size:              0x%016x%n", size);
+        System.out.printf("  link:              0x%08x%n", link);
+        System.out.printf("  info:              0x%08x%n", info);
+        System.out.printf("  address alignment: 0x%016x%n", addressAlignment);
+        System.out.printf("  entry size:        0x%016x%n", entrySize);
     }
 
     public static @NotNull SectionHeader read(
@@ -88,7 +106,7 @@ public record SectionHeader(
                 return "dynamic linking information";
             case 7:
                 return "notes";
-            case 8:
+            case TYPE_NO_BITS:
                 return "program space with no data (bss)";
             case 9:
                 return "relocation entries, no addends";
@@ -110,8 +128,8 @@ public record SectionHeader(
                 return "number of defined types";
         }
         if (0x60000000<=type) {
-            return "os specific";
+            return "os specific, value: %d".formatted(type);
         }
-        return "unknown";
+        return "unknown, value: %d".formatted(type);
     }
 }

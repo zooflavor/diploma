@@ -52,7 +52,7 @@ public class MemoryMappedMemory implements Memory {
         if ((0L>address)
                 || (this.size<=address+size-1L)) {
             throw new IllegalMemoryAccessException(
-                    "memory access is out of range, address: %016x, access size: %04x, memory size: %016x"
+                    "memory access is out of range, address: 0x%016x, access size: 0x%04x, memory size: 0x%016x"
                             .formatted(address, size, this.size));
         }
         if ((!allowMisalignedAccess)

@@ -1,7 +1,6 @@
 package dog.wiggler;
 
 import dog.wiggler.emulator.Emulator;
-import dog.wiggler.emulator.EmulatorTest;
 import dog.wiggler.emulator.EmulatorTests;
 import dog.wiggler.emulator.Input;
 import dog.wiggler.emulator.Output;
@@ -19,11 +18,9 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * Tests the bucket sieve C code.
@@ -32,25 +29,23 @@ import static org.junit.jupiter.api.Assertions.fail;
 @MethodSource("parameters")
 @TestMethodOrder(MethodOrderer.MethodName.class)
 public class BucketSieveTest {
+    private static final @NotNull String IMAGE_AWARE="bucket-sieve-cache-aware";
     private static final @NotNull String IMAGE_OBLIVIOUS="bucket-sieve-cache-oblivious";
 
     private final int base;
     private final @NotNull String executableImageOption;
     private final int height;
-    private final @NotNull String imageName;
-    private final boolean inputBase;
+    private final boolean oblivious;
 
     public BucketSieveTest(
             int base,
             @NotNull String executableImageOption,
             int height,
-            @NotNull String imageName,
-            boolean inputBase) {
+            boolean oblivious) {
         this.base=base;
         this.executableImageOption=executableImageOption;
         this.height=height;
-        this.imageName=imageName;
-        this.inputBase=inputBase;
+        this.oblivious=oblivious;
     }
 
     /**
@@ -82,7 +77,11 @@ public class BucketSieveTest {
         @NotNull List<@NotNull Arguments> result=new ArrayList<>();
         for (var executableImageOption: EmulatorTests.EXECUTABLE_IMAGE_OPTIONS) {
             for (var height: List.of(2, 4, 8, 10, 11)) {
-                result.add(Arguments.of(2, executableImageOption, height, IMAGE_OBLIVIOUS, false));
+                result.add(Arguments.of(2, executableImageOption, height, false));
+                result.add(Arguments.of(2, executableImageOption, height, true));
+            }
+            for (var height: List.of(2, 4, 8)) {
+                result.add(Arguments.of(3, executableImageOption, height, false));
             }
         }
         return result.stream();
@@ -91,11 +90,14 @@ public class BucketSieveTest {
     @Test
     public void test() throws Throwable {
         @NotNull Deque<@NotNull Number> input=new ArrayDeque<>();
-        if (inputBase) {
-            input.addLast((long)base);
+        if (oblivious) {
+            input.addLast((long)height);
+            input.addLast(1L<<23);
         }
-        input.addLast((long)height);
-        input.addLast(1L<<23);
+        else {
+            input.addLast((long)base);
+            input.addLast((long)height);
+        }
         var actualPrimes=new ArrayList<@NotNull Number>();
         try (var emulator=Emulator.factory(
                         Input.supplier(input::removeFirst),
@@ -103,7 +105,12 @@ public class BucketSieveTest {
                         MemoryMappedMemory.factory(false, 1L<<24),
                         Output.consumer(actualPrimes::add))
                 .get()) {
-            emulator.loadELFAndReset(EmulatorTests.imagePath(executableImageOption, imageName));
+            emulator.loadELFAndReset(
+                    EmulatorTests.imagePath(
+                            executableImageOption,
+                            oblivious
+                                    ?IMAGE_OBLIVIOUS
+                                    :IMAGE_AWARE));
             emulator.run();
             assertEquals(0, emulator.exit.code());
         }
