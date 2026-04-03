@@ -83,6 +83,10 @@ public class BucketSieveTest {
             for (var height: List.of(2, 4, 8)) {
                 result.add(Arguments.of(3, executableImageOption, height, false));
             }
+            for (var height: List.of(2, 4)) {
+                result.add(Arguments.of(5, executableImageOption, height, false));
+            }
+            result.add(Arguments.of(8, executableImageOption, 3, false));
         }
         return result.stream();
     }

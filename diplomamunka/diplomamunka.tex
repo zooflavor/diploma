@@ -109,8 +109,6 @@ hierarchiáját.
 
 \chapter{Cache modellje}
 
-{\color{red}Katasztrofális.}
-
 Az ideális gyorsítótár modell\cite{prokop} egy végrehajtó egységből,
 memóriából, és egy gyorsítótárból áll.
 A végrehajtó egység a memóriát csak a gyorsítótáron keresztül éri el.
@@ -122,9 +120,6 @@ Egy $(Z, L)$ gyorsítótár $L$ hosszú gyorsítótársorokból áll,
 Egy sor $L$ gépi szót tárol, ezek a memóriában folytonosan helyezkednek el.
 Egy sor címe a memóriába csak a sorhossz többszöröse lehet.
 A gyorsítótár a memóriát gyorsítótársoronként tárolja.
-Egy sor tipikusan több gépi szóból áll,
-és ezek a szavak folytonosan helyezkednek el a memóriában.
-Egy sor címe a memóriában csak a sorhossz többszöröse lehet.
 Egy sor a gyorsítótárban a memória bármelyik szakaszát tárolhatja.
 
 \begin{figure}[ht]
@@ -148,18 +143,19 @@ Egy sor a gyorsítótárban a memória bármelyik szakaszát tárolhatja.
 \end{figure}
 
 Amikor a végrehajtó egység el akar érni egy adott szót a memóriában,
-a gyorsítótárhoz fordul. Ha a tárban van olyan sor,
-ami tartalmazza a kért gépi szót, akkor az kérést azonnal kiszolgálja.
-Ez a cache hit.
+a gyorsítótárhoz fordul.
+Ha a tárban van olyan sor,
+ami tartalmazza a kért gépi szót, akkor a gyorsítótár a kérést azonnal kiszolgálja.
+Ezt gyorsítótár-találatnak nevezzük.
 Ha a tár egyik sora se tartalmazza a kért szót,
-akkor a szóhoz tartozó sort a tár be kell olvassa a tárba,
+akkor a szóhoz tartozó sort a tár be kell olvassa a memóriából,
 majd ezután tudja teljesíteni a kérést.
-Ez a cache miss.
+Ezt gyorsítótár-hibának nevezzük.
 
 Ha a tárban nincs üres sor amikor egy új sort be kell olvasni,
 akkor először egy sort ki kell ürítsen.
 Ha az ürítésre kiválasztott sor módosult a hozzá tartozó memóriához képest,
-akkor azt vissza kell írnia a memóriába.
+akkor azt először vissza kell írnia a memóriába.
 Miután a sort szinkronizálta a memóriával,
 az új sorral felülírja az ürített sort.
 
@@ -176,15 +172,13 @@ az algoritmus futása alatt végzett elemi műveletek száma,
 a memóriaelérésekkel együtt.
 A gyorsítótár-bonyolultság a futás alatti találati hibák száma.
 
-Egy algoritmus gyorsítót-tudatos, ha van olyan fordítási vagy futási
+Egy algoritmus gyorsítótár-tudatos, ha van olyan fordítási vagy futási
 idejű paramétere, ami a gyorsítótár méretétől függ.
 Ha nincs ilyen paramétere, akkor az algoritmus gyorsítótár-független.
 
 \section{Csere stratégiák}
 
-{\color{red}Katasztrófális.}
-
-Több csere startégia is ismert:
+Több csere stratégia is ismert:
 \begin{itemize}
 \item
 MIN, minimális, OPT, optimális, vagy Bélády algoritmusa:
@@ -218,18 +212,17 @@ ami az S stratégiát használja,
 
 \subsection{Online algoritmusok}
 
-{\color{red}Katasztrofális.}
-
 A gyakorlatban megvalósítható gyorsítótár-csere stratégiák online algoritmusok.
 Az online algoritmusok a bemenetüket sorban, egyesével kell feldolgozzák,
 a teljes bementet nem látják egyszerre.
 Egy gyorsítótár-csere algoritmusnak minden memóriaeléréskor
-úgy kell döntést hoznia a cseréről, hogy csak a múltbeli
+úgy kell döntést hozzon a cseréről, hogy csak a múltbeli
 elérések sorozatát ismeri.
 
 Egy offline algoritmus a teljes bemenethez hozzáfér a teljes futása során.
 
 A stratégiák elemzését egy egyszerűbb modellben\cite{stack-algorithm} végezzük.
+Ezek a szabályok az igény szerinti lapozást írják le.
 Legyen $A = [1, 2, ..., n]$ az elérhető elemek halmaza.
 Legyen $X$ egy $A$ feletti véges sorozat, az elérések sorozata.
 Legyen $B_t(k)$ az $S(k)$ gyorsítótár tartalma $X$ $t$ hosszú prefixének
@@ -237,18 +230,18 @@ feldolgozása után.
 Minden $k$-ra:
 \begin{itemize}
 \item
-Legyen $B_0(k) = \emptyset$.
+Legyen $B_0(k) = \emptyset$. Tehát a gyorsítótár üres az algoritmus futása előtt.
 \item
 Ha $t > 0$, és $X_t \in B_{t-1}(k)$,
-akkor legyen $B_t{k} = B_{t-1}(k)$. Ez egy találat.
+akkor legyen $B_t{k} = B_{t-1}(k)$. Azaz találat esetén a gyorsítótár nem változtatja meg, hogy mely elemeket tartalmazza.
 \item
 Ha $t > 0$, $X_t \notin B_{t-1}(k)$, és $|B_{t-1}(k)| < k$,
 akkor legyen $B_t{k} = B_{t-1}(k) \cup \{X_t\}$.
-Ez egy találati hiba, ürítés nélkül.
-Ha $t > 0$, $X_t \notin B_{t-1}(k)$, és $|B_{t-1}(k)| = k$,
-akkor legyen $y_t \in B_{t-1}(k)$, és $B_t{k} = B_{t-1}(k) \setminus {y_t} \cup \{X_t\}$.
-Ez egy találati hiba, ürítéssel.
-$y_t$ az $S(k)$ stratégiája választja ki, ez az ürített elem.
+Ha van szabad hely a gyorsítótárban, akkor találati hiba esetén csere nélkül hozza be a memóriaelemet a tárba.
+\item Ha $t > 0$, $X_t \notin B_{t-1}(k)$, és $|B_{t-1}(k)| = k$,
+akkor legyen $y_t \in B_{t-1}(k)$, és $B_t(k) = B_{t-1}(k) \setminus {y_t} \cup \{X_t\}$.
+Találati hiba esetén ha nincs üres sor a tárban, akkor egy elemet kicserél, hogy behozhassa az elérni kívántat.
+A cserélendő elem az $y_t$, ezt a csere stratégia választja ki.
 \end{itemize}
 
 Ebben a modellben a gyorsítótárban nem sorok vannak, hanem $A$ elemei.
@@ -258,11 +251,10 @@ Valamint az elérésben nem különböztetjük meg az olvasást és az írást.
 
 \subsection{Verem stratégiák}
 
-{\color{red}Katasztrofális.}
-
 Egy $S$ gyorsítótár-csere stratégiát verem algoritmusnak\cite{stack-algorithm} nevezünk,
 ha teljesíti a következő feltételt.
-$S$ verem algoritmus, ha minden $t \in [0, 1, ..., |X|]$,
+Legyen X egy memória-elérési sorozat.
+$S$ verem algoritmus, ha minden $t \in {1, 2, ..., |X|}$,
 és minden $k \in \mathbb{N}$-re
 \begin{align*}
 B_t(k) \subset B_t(k+1)
@@ -270,52 +262,68 @@ B_t(k) \subset B_t(k+1)
 Azaz ha minden időpontban egy nagyobb gyorsítótár tartalmazza
 az összes kisebb gyorsítótár elemeit.
 
-A verem algoritmusnak ekvivalens definíciója az,
-ha $S$ $X$ futtatása közben minden $t$ időpontra ad egy egyértelmű
-preferencialistát az $X$-ben előforduló elemekre, a gyorsítótár méretétől függetlenül,
-és egy $S(k)$ gyorsítótár csere esetén mindig az éppen tartalmazott elemei
-közül a legkisebb precedenciájút üríti.
+A verem algoritmusnak egy ekvivalens definíciója,
+ha $S$ $X$ futtatása közben minden $t \in {1, 2, ..., |X|}$
+időpontra ad egy egyértelmű
+preferencialistát az $\{X_1, X_2, ..., X_t\}$-ben előforduló elemekre,
+a gyorsítótár méretétől függetlenül,
+és egy $S(k)$ gyorsítótár csere esetén $B_t(k)$ elemei
+közül a legkisebb precedenciájút cseréli.
+A precedencialista nem feltétlen kell megegyezzen minden időpontban.
 
 Egy verem algoritmust használva a gyorsítótár
 méretét növelve a találtai hibák száma nem nő.
 Nézzünk $t$ időpontban egy gyorsítótár találatot $S(k)$-ban.
 Mivel $B_t(k) \subset B_t(k+1)$,
 ezért az elérés $S(k+1)$-ben is találat.
-Ez indukcióval implikálja, hogy minden $k$-nál nagyobb gyorsítótárban is
-találat az elérés.
+Tehát minden $k$-nál nagyobb gyorsítótárban is találat az elérés.
 
 Az LRU verem algoritmus.
 
 Az OPT verem algoritmus.
-{\color{red} Lehetne példákat adni, hogy a demand paging elhagyásával jobb eredményt ér el az OPT. A store is másmilyen, ha nem kell a cache-be tenni, hanem no-allocate is lenne. Példa/ábra.}
 
 Az LFU verem algoritmus, feltéve,
-hogy az egyenlő frekvenciájú elemekre létezik egy egyértelmű precedencia.
+hogy az egyenlő frekvenciájú elemekre
+minden időpontban létezik egy egyértelmű precedencia.
 
 A FIFO nem verem algoritmus.
 
 A véletlen startégi nem feltétlen verem algoritmus.
-Ha egyenletesen véletlenül választjuk ki egy $S(k)$ gyorsítótár elemét ürítésre,
+Ha egyenletesen véletlenül választjuk ki egy $S(k)$ gyorsítótár elemét cserére,
 akkor pozitív a valószínűsége annak, hogy az $S(k+1)$ tár egy másik elemet választ.
-Ha a tár méretétől egyenletes véletlenül $X$ egyedi elemeinek egy permutációját,
-és ezt a precedencialistát használjuk az ürített elem kiválasztására,
-akkor a véletlen stratégia verem algoritmus. Ez az RR startégia.
+Ha a $t$ időpontban a tár méretétől függetlenül egyenletes véletlenül
+kiválasztjuk ${X_1, X_2, ..., X_t}$ egyedi elemeinek egy permutációját,
+és ezt precedencialistaként használjuk a cserélt elem kiválasztására,
+akkor a véletlen stratégia verem algoritmus.
+Ez az RR stratégia.
 Egy adott $RR(k)$ gyorsítótárban egy elem ürítésének esélye $1/k$, tehát egyenletes eloszlású.
 
-\subsection{FIFO}
+\subsection{OPT}
 
-{\color{red}Katasztrofális.}
+Az optimális stratégiánál jobb eredményt lehet elérni,
+ha nem követeljük meg, hogy egy elérést csak a gyorsítótárból lehet kiszolgálni.
+Nézzük a $X=(1, 2, 3, 1, 2)$ elérési sorozatot, a $t=3$ időpontot,
+és egy kételemű gyorsítótárat.
+A gyorsítótár ekkor tele van, és $B_2(2) = \{1, 2\}$.
 
-Bélády\cite{belady-anomaly} megmutatta,
-hogy FIFO stratégiára létezik olyan $k$ és $K$, $k < K$,
-és egy elérési sorozat, hogy ezen az elérési sorozaton a FIFO(K) több
-találati hibát eredményez, mint a FIFO(k)-n.
-Fornai és Iványi megmutatta\cite{fifo-anomaly-unbounded},
-hogy a hiba arányának nincs felső korlátja.
+Nézzük az $OPT(2)$ stratégiát.
+A $3$ tárba hozatalához egy elemet ki kell cserélnie.
+Cserére a $2$-t választja, mert ez az elem lesz legkésőbb újra elérve.
+Így $B_3(2) = \{1, 3\}$.
+$t=4$-ben az elérés találat,
+de $t=5$-ben $2$ már nincs a tárban, és találati hibát okoz.
+Tehát X kiszolgálásához $4$ memóriaműveletre volt szükség,
+a $t \in \{1, 2, 3, 5\}$ időpontokban.
+
+Nézzünk egy olyan optimális stratégiát,
+ahol csere nélkül, közvetlenül a memóriából is
+ki lehet szolgálni egy elérést.
+Ez a stratégia $t=3$-ban a $3$ elérést a memóriából közvetlenül szolgálja ki,
+és $B_3(2) = B_2(2) = \{1, 2\}$.
+Ekkor X kiszolgálásához elég $3$ memóriaművelet,
+a $t \in \{1, 2, 3\}$ időpontokban.
 
 \subsection{LRU}
-
-{\color{red}Katasztrofális. k-competetive hivatkozás.}
 
 Egy adott problémára a versenyképességi analízisben
 egy $A$ online algoritmust hasonlítunk össze 
@@ -323,11 +331,12 @@ az $O$ optimális offline algoritmussal.
 Legyen $X$ egy inputsorozat,
 $A(X)$ az $A$ műveletigénye $X$-en,
 és $O(X)$ az $O$ műveletigénye $X$-en.
-Ekkor $A$ k-versenyképes, ha létezik egy $C$ konstans,
+Ekkor $A$ $k$-versenyképes\cite{competetive-analysis}, ha létezik egy $C$ konstans,
 hogy minden $X$ inputsorozatra
 \begin{align*}
 A(X) \le kO(X)+C
 \end{align*}
+Ha $C=0$, akkor $A$ szigorúan $k$-versenyképes. A legkisebb ilyen $k$ az $A$ versenyképességi aránya.
 
 Slater és Tarjan\cite{lru-k-competetive} megmutatta,
 hogy az LRU($k$) az OPT($k^*$)-hoz képest $k/(k-k^*+1)$ versenyképes.
@@ -361,12 +370,19 @@ Tehát
 LRU(n, L, Z) = \Theta(OPT(n, L, Z)
 \end{align*}
 
+\subsection{FIFO}
+
+Bélády\cite{belady-anomaly} megmutatta,
+hogy FIFO stratégiára létezik olyan $k$ és $K$, $k < K$,
+és egy elérési sorozat, hogy ezen az elérési sorozaton a FIFO(K) több
+találati hibát eredményez, mint a FIFO(k).
+Fornai és Iványi megmutatta\cite{fifo-anomaly-unbounded},
+hogy a hiba arányának nincs felső korlátja.
+
 \section{Asszociativitás}
 
-{\color{red}Katasztrofális.}
-
 Az ideális gyorsítótár modellben a memória egy sorát a gyorsítótár bármelyik sorába
-be lehet hozni. Ezt hívják teljesen asszociatív gyorsítótárnak.
+be lehet hozni. Ezt hívják teljesen asszociatív gyorsítótárnak\cite{computer-architecture}.
 
 A gyakorlatban egy teljesen asszociatív gyorsítótár csak kevés sorra
 valósítható meg hatékonyan,
@@ -393,10 +409,10 @@ hogy tárolja-e az elérni kívánt sort.
 \label{fig:fully-associative-cache}
 \end{figure}
 
-Közvetlen leképezésű gyorsítótárban a memória egy sora a tárban
+Közvetlen leképezésű gyorsítótárban\cite{computer-architecture} a memória egy sora a tárban
 csak egyetlen sorba hozható be.
-Ez csere stratégiát is meghatározza,
-a beolvasni kívánt sor címe meghatározza az ürített sort.
+Ez a csere stratégiát is meghatározza,
+a beolvasni kívánt sor címe meghatározza a cserélt sort.
 Általában egy sor címét a gyorsítótárban a sor címének alsó bitjei határozzák meg,
 így a gyorsítótárba lehet hozni a memória egy egybefüggő szakaszát.
 
@@ -421,12 +437,14 @@ a beolvasni kívánt sor címe meghatározza az ürített sort.
 \label{fig:direct-mapped-cache}
 \end{figure}
 
-Csoport-asszociatív gyorsítótárban a memória egy sora
+Csoport-asszociatív gyorsítótárban\cite{computer-architecture} a memória egy sora
 a gyorsítótár több sorába is behozható, de nem az összesbe.
 A gyorsítótár több, egymástól független teljesen asszociatív gyorsítótárból
-áll. A memória sor címe meghatározza, hogy a sor melyik asszociatív tárba
+áll. A memóriasor címe meghatározza, hogy a sor melyik asszociatív tárba
 kerül, és az asszociatív táron belül a csere stratégia alapján
 kerül elhelyezésre.
+Ha egy memóriasor $A$ különböző gyorsítótár sorba kerülhet,
+akkor azt $A$-utas gyorsítótárnak nevezzük.
 
 \begin{figure}[ht]
 \centering
@@ -450,56 +468,255 @@ kerül elhelyezésre.
 \label{fig:set-associative-cache}
 \end{figure}
 
-{\color{red}Ide lehetne tenni részleteket a cím bitjeiről, meg helykitöltő ábrákat.
-Talán van haszna a szimulátor tárgyalásánál.}
+Tegyük fel, hogy a gyorsítótár paraméterei kettő-hatványok.
+A cache $Z=2^z$ bájt, egy sor $L=2^l$ bájt, és a cache $A=2^a$ asszociatív,
+azaz egy memóriasor $A$ gyorsítótár sorba kerülhet.
+Ekkor egy memóriabájt címének bitjeit egy lehetséges felosztása:
+\begin{itemize}
+\item Az $l$ darab legkisebb helyi-értékű bit a bájt címe az őt befoglaló sorban.
+\item A következő $z-a$ helyi-értékű bit határozza meg,
+hogy a memóriasor a $C/(AL)$ darab
+teljesen asszociatív gyorsítótár közül melyikhez tartozik.
+\item A cím maradék bitjei meghatározzák,
+hogy egy teljesen asszociatív gyorsítótárhoz hány különböző sor tartozik.
+\item Ha $A=C/L$, akkor a gyorsítótár teljesen asszociatív.
+\item Ha $A=1$, akkor a gyorsítótár közvetlen leképezésű.
+\item Ha $1<A<C/L$, akkor a gyorsítótár $A$-utas.
+\end{itemize}
 
 \section{Írási stratégia}
 
-{\color{red}Katasztrofális.
-Bele lehet ebbe keverni a memória tényleges címezhetőségét.
-Nem tudom, hogy ide akarom-e másolni a wikipedia-ról a hivatkozást a tipikus
-write back-write allocate és write through-no write allocate-re.}
+A gyorsítótáraknak az írási műveleteket is kezelniük kell.
+Erre több különböző megoldás ismert\cite{computer-architecture}.
 
-A gyorsítótár az írásokat többféleképpen is kezelheti.
+Egy ha az írás olyan sort érint, amit a gyorsítótár tartalmaz,
+akkor az írási találat. Ilyenkor két megoldás közül lehet választani.
+\begin{itemize}
+\item A visszaírási (write back) stratégia az írást csak a gyorsítótárban végzi el,
+és az érintett sort megjelöli módosítottnak.
+Egy módosított sort a csere előtt a memóriába ki kell írni.
+Ezzel a megoldással memóriaműveletet lehet spórolni,
+ha ugyanarra a memóriasorra rövid időn belül több írás is történik.
+Ez a lehetséges hatékonyságnövelés növeli a megvalósítás áramköri komplexitását.
+\item A átmenő (write through) stratégia az írást a gyorsítótárban és a memóriában is elvégzi.
+A stratégia megvalósítása egyszerűbb, de minden írási művelet
+memóriaművelettel jár.
+\end{itemize}
 
-A {\color{red} write back} stratégia az írást csak a gyorsítótárban végzi el.
-Ebben az esetben a gyorsítótárnak a sorok módosítottságát is nyilván kell tartani,
-és egy módosított sort ürítés előtt a memóriába kell írnia.
+Ha az írási találati hibát is kétféleképpen kezelheti a gyorsítótár.
+\begin{itemize}
+\item Foglalással (write allocate) a gyorsítótár sorcserével
+a tárban is elhelyezi az írt sort.
+Ha az írás nem fedi le az egész memóriasort, akkor a gyorsítótár
+először az egész sort ki kell olvassa a memóriából,
+az olvasási találati hibához hasonló módon.
+\item Foglalás nélkül (no write allocate) a gyorsítótár az írást
+közvetlenül a memóriában végzi el, a saját tárát megkerülve.
+Ha a gyorsítótár ki kell tudjon szolgáljon olyan írásokat,
+amik nem a teljes memóriasort módosítják,
+akkor a memóriának támogatnia kell a memóriasornál finomabb elérési műveleteket.
+\end{itemize}
 
-A {\color{red} write through} stratégia az írást a gyorsítótárban is elvégzi,
-és a memóriában is.
-
-Írási találtai hiba esetén további két stratágiát lehet választani.
-A {\color{red} write allocate} startégia találati hiba esetén a módosítandó sort
-a gyorsítótárba tölti, szükség esetén egy sort ürítve.
-A {\color{red} no-write allocate} az írást közvetlenül a memóriában végzi el.
+Ezeknek a lehetőségeknek minden kombinációja megvalósítható, különböző bonyolultsággal.
+\begin{itemize}
+\item A módosított gyorsítótár sorok megnövelik a gyorsítótár állapotainak számát,
+és a műveletek állapotgépeinek állapotait is.
+\item A közvetlen memóriaírás a gyorsítótár megkerülésével szükségessé teszi,
+hogy a memóriát ténylegesen olyan finomsággal lehessen címezni,
+amilyen finoman a végrehajtó egység logikailag tudja címezni.
+\item Ha vannak párhuzamos gyorsítótárak,
+akkor ezek a megoldások a gyorsítótár koherenciára adott megoldást is befolyásolják.
+Párhuzamos gyorsítótárak előfordulhatnak egy végrehajtó egységgel is,
+például külön adat és utasítás gyorsítótár,
+és több végrehajtó egységgel rendelkező rendszerben is.
+\end{itemize}
 
 \chapter{Gyorsítótár független algoritmusok}
 
 \section{Lista}
 
-{\color{red}Katasztrofális.}
+Legyen $A$ egy $n$ elemű, $N$ bájt hosszú tömb.
+A tömb elemei a memóriában folytonosan legyenek elrendezve.
+A feladat a tömb minden elemét sorban egyszer elérni.
+Ez az elérés lehet olvasás vagy írás is.
 
-Ha a memóriában nem túl sok egybefüggő részen vannak sorban a lista elemei, akkor az cache-oblivious végigolvasni.
-A cache line méretével oszthatjuk a sebességet.
+Tegyük fel, hogy a gyorsítótár mérete $(Z, L)$,
+és létezik legalább egy gyorsítótársor, $Z \ge L$.
+
+Ekkor a tömb minden elemeinek elérésének gyorsítótár bonyolultsága $O(1+N/L)$.
+Az tömb eléréséhez legfeljebb $2$ olyan memóriasort kell elérni,
+ahol a tömb nem fedi le az egész sort, a tömb elején és a tömb végén.
+A tömb többi eleme legfeljebb $N/L$ memóriasort fed le teljesen.
 
 \subsection{Másolás}
 
+Legyen $A$ egy $n$ elemű, $N$ bájt hosszú tömb.
+A tömb elemei a memóriában folytonosan legyenek elrendezve.
+A feladat a tömb minden elemét egy új memóriacímre másolni.
+A másolás történhet a tömbben előre és hátrafele is,
+attól függően, hogy a tömb régi és új helye hogyan fed át.
+
+Tegyük fel, hogy a $(Z, L)$ méretű gyorsítótárban
+legalább $2$ gyorsítótársor van.
+
+Ekkor az egyik gyorsítótársort az írásra használva,
+és a másik sort az olvasásra használva a másolás elvégezhető
+$2O(1+N/Z)=O(1+N/Z)$ memóriaművelettel.
+
 \subsection{Partíció}
 
-\subsection{Megszámlálásos rendezés}
+Legyen $A$ egy $n$ elemű, $N$ bájt hosszú tömb.
+A tömb elemei a memóriában folytonosan legyenek elrendezve.
+Legyen $T$ eldönthető tulajdonság,
+ami értelmezett a tömb minden elemére.
+
+Rendezzük át helyben a tömböt úgy,
+hogy az összes olyan elem, amire a $T$ tulajdonság hamis,
+a tömb elejére kerül,
+és azok az elemek, amikre a $T$ tulajdonság igaz,
+a tömb végére kerülnek.
+A felosztás eredménye legyen a hamis tulajdonságú elemek száma.
+
+A feladat a gyorsrendezés egy részfeladata,
+ahol a rendezendő tömb elemeit egy tengelyelem szerint
+két részre osztja,
+a tengelynél nem-nagyobbakra, és a tengelynél nagyobbakra.
+\cite{algoritmusok}
+
+\begin{algorithm}
+\floatname{algorithm}{Algoritmus}
+\caption{Az $A[0:n-1]$ tömb felosztása a $T$ tulajdonság szerint}
+\label{alg:partition}
+\begin{algorithmic}[1]
+\Require $A$: a felosztandó tömb
+\Require $n$: a tömb hossza
+\Require $T$: egy eldönthető tulajdonság
+\Ensure $m$: a hamis tulajdonságú elemek száma
+\Ensure $A[0:m-1]$ minden eleme hamis tulajdonságú $T$ szerint
+\Ensure $A[m:n-1]$ minden eleme igaz tulajdonságú $T$ szerint
+\Ensure az $A$ kimenet az $A$ bemenet permutációja
+\Function{Felosztás}{$A, n, T$} $\rightarrow m$
+	\State $l \leftarrow 0$
+	\State $r \leftarrow 0$
+	\While{true}
+		\While {$(l+r<n) \land (\lnot T(A[l]))$}
+			\State $l \leftarrow l+1$
+		\EndWhile
+		\While {$(l+r<n) \land T(A[l])$}
+			\State $r \leftarrow r+1$
+		\EndWhile
+		\If{$l+r \ge n$}
+			\State \Return $l$
+		\EndIf
+		\State $t \leftarrow A[l]$
+		\State $A[l] \leftarrow A[r]$
+		\State $A[r] \leftarrow t$
+		\State $l \leftarrow l+1$
+		\State $r \leftarrow r+1$
+	\EndWhile
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+Tegyük fel, hogy a gyorsítótár mérete $(Z, L)$,
+és $Z/L$ legalább akkor, hogy $3$ tömb-elemet a gyorsítótárban lehessen tartani,
+a memória bárhol elhelyezkedve. Mindig tároljuk a gyorsítótárban
+\begin{itemize}
+\item az $l$ által vizsgált elemet,
+\item az $r$ által vizsgált elemet,
+\item a cserénél használt ideiglenes $t$ elemet.
+\end{itemize}
+
+Ekkor a felosztást legfeljebb $O(1+N/L)$ memóriaművelettel el lehet végezni.
+\begin{itemize}
+\item Növekvő indexekkel legfeljebb a tömb összes memóriasorait egyszer járjuk be.
+Ez $O(1+N/L)$ memóriaművelet.
+\item Csökkenő indexekkel legfeljebb a tömb összes memóriasorait egyszer járjuk be.
+Ez $O(1+N/L)$ memóriaművelet.
+\item Az ideiglenes változóhoz tartozó memóriasorokat legfeljebb egyszer kell
+a gyorsítótárba hozni. Ez $O(1)$ memóriaművelet.
+\end{itemize}
+
+\subsection{Leszámláló rendezés}
+
+A leszámláló rendezés egy lineáris műveletigényű,
+nem összehasonlításon alapuló rendezés.\cite{algoritmusok}
+
+Legyen $A$ egy $n$ elemű, $N$ bájt hosszú tömb.
+Legyen $K$ egy kiszámítható függvény, ami a tömb minden elemét
+a $\{0, 1, ..., k-1\}$ halmazba képzi.
+$k$ legalább $2$.
+Tipikusan $k$ lényegesen kisebb, mint $n$.
+$K$ az elemek kulcsát adja meg, ami szerint a tömböt rendezni szeretnénk.
+
+A feladat a tömböt úgy átrendezni helyben,
+hogy sorban először az összes $0$ kulcsú elem legyen,
+majd ezeket sorban kövesse az összes $1$ kulcsú elem, és így tovább,
+végül a tömb végén a $k-1$ kulcsú elemek helyezkedjenek el.
+A kimenetben adjuk meg minden lehetséges kulcsra azt is,
+hogy a tömbben hol helyezkednek el az adott kulcsú elemek.
+
+A megoldás a tömb kétszeri bejárásával megadható.
+\begin{itemize}
+\item Inicializáljunk a $C[0:k-1]$ tömböt nullákkal,
+majd a tömb egyszeri bejárásával számoljuk meg az előforduló kulcsok frekvenciáját.
+Ez a $C$ tömb a kimenet része is.
+\item Az $S[0:k-1]$ tömbben számítsuk ki a kulcsokhoz tartozó kezdőelemek indexeit.
+$S[0] = 0$, és $\forall i \in \{1, 2, ... k-1\}: S[i] = S[i-1]+C[i-1]$.
+Ez az $C$ és $S$ egyszeri bejárásával kiszámítható.
+$S$ a kimenet része.
+\item Másoljuk le $S$-t $T$-be.
+A következő dupla-ciklusban a $T$ invariánsa a következő.
+Minden $k' \in \{0, 1, ..., k-1\}: \forall i \in [S[k'], T[k']) \rightarrow K[A[i]]=k'$,
+azaz $S[k']$ és $T[k']$ között minden elem a helyén van.
+\item Járjuk be sorra $k'$-vel a $\{0, 1, ..., k-1\}$ kulcsokat.
+Minden $k'$ kulcsra biztosítsuk, hogy a $k'$-höz tartozó szakasz
+minden eleme a megfelelő helyen van.
+Amíg $T[k']-S[k']$ nem egyenlő $C[k']$-vel, addig vegyük az $i=T[k']$ elemet.
+Ha $K[A[i]]=k'$, akkor az $i$-dik elem a helyén van, növeljük meg $T[k']$-t.
+Különben cseréljük meg $A[i]$-t és $A[K(A[i])]$-t.
+\end{itemize}
+
+A megoldásban az utolsó ciklus minden lépésben egy elemet a helyére tesz,
+a ciklus invariánsa szerint, és egy elemet legfeljebb kétszer vizsgál meg.
+
+Tegyük fel, hogy a gyorsítótár mérete $(Z, L)$.
+Tegyük fel, hogy $k$ számláló $K'$ bájttal leírható.
+Valamint tegyük fel, hogy $Z/L$ legalább akkora,
+hogy $2k$ számlálót, és $k$ tömbelemet, és egy ideiglenes elemet
+a csérhez mindig a gyorsítótárban lehet tartani,
+függetlenül a elhelyezésüktől a memóriában.
+Ekkor:
+\begin{itemize}
+\item $C$ kiszámításához $k$ számlálót kell a gyorsítótárban tartani,
+miközben a $A$-t sorban bejárjuk.
+Ez legfeljebb $O(k+K'/L+N/L)$ memória műveletet igényel.
+\item $S$ kiszámításához $k$ számlálót kell összesíteni.
+Ez legfeljebb $O(1+K'/L)$ memória műveletet igényel.
+\item $T$ előállítása $S$ másolása,
+legfeljebb $O(1+K'/L)$ memória művelet.
+\item Minden kulcs bejárása nem rosszabb, mint a teljes tömb bejárása,
+hiszen kulcsok szerint is sorba járjuk be, legfeljebb kihagyásokkal.
+A résztömbök végeit legfeljebb $O(k)$ memóriaművelettel a gyorsítótárba
+lehet hozni, és a köztes elemek bejárása legfeljebb $O(N/L)$ memóriaműveletet
+igényel.
+Feltettük, hogy a kulcsokhoz tartozó számlálók végig
+a gyorsítótárban vannak.
+\end{itemize}
+Tehát összesen a memóriaműveletek száma legfeljebb
+$O(1+k+K'/L+N/L)$.
+
+\section{Mátrix szorzás}
+
+{\color{red}Katasztrofális. Tall cache.}
+
+Oszd meg és uralkodj.
 
 \section{Rendezés}
 
 {\color{red}Katasztrofális.}
 
 Oszd meg és uralkodj. 2 algoritmus is van. Az alsó korlát elérhető, de a papír nem az igazi erről. Tall cache assumption. A tall cache assumption lényegesen befolyásolja a műveletigényt.
-
-\section{Mátrix szorzás}
-
-{\color{red}Katasztrofális.}
-
-Oszd meg és uralkodj.
 
 \section{FFT}
 
@@ -907,8 +1124,17 @@ Fornai, P., Iványi, A.: FIFO anomaly is unbounded.  (2010) arXiv preprint arXiv
 \bibitem{stack-algorithm}
 Mattson, R.L., Gecsei, J., Slutz, D.R., Traiger, I.L.: Evaluation Techniques for Storage Hierarchies. IBM Syst. J., 9, (1970) 78-117.
 
+\bibitem{competetive-analysis}
+Aspnes, J. (1998). Competitive analysis of distributed algorithms. In: Fiat, A., Woeginger, G.J. (eds) Online Algorithms. Lecture Notes in Computer Science, vol 1442. Springer, Berlin, Heidelberg. https://doi.org/10.1007/BFb0029567
+
 \bibitem{lru-k-competetive}
 Daniel D. Sleator and Robert E. Tarjan.: Amortized efficiency of list update and paging rules. Commun. ACM 28, 2 (Feb. 1985), 202–208.
+
+\bibitem{computer-architecture}
+Hennessy, John L.; Patterson, David A. (2011). Computer Architecture: A Quantitative Approach. ISBN 978-0-12-383872-8.
+
+\bibitem{algoritmusok}
+Cormen, Thomas A.; Leiserson, Charles E.; Rivest, Ronald L. (2001). Algoritmusok. ISBN 963-16-3029-3.
 
 \end{thebibliography}
 
