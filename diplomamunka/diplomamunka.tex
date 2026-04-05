@@ -659,7 +659,7 @@ hogy a tömbben hol helyezkednek el az adott kulcsú elemek.
 A megoldás a tömb kétszeri bejárásával megadható.
 \begin{itemize}
 \item Inicializáljunk a $C[0:k-1]$ tömböt nullákkal,
-majd a tömb egyszeri bejárásával számoljuk meg az előforduló kulcsok frekvenciáját.
+majd a tömb egyszeri bejárásával számoljuk meg a kulcsok frekvenciáját.
 Ez a $C$ tömb a kimenet része is.
 \item Az $S[0:k-1]$ tömbben számítsuk ki a kulcsokhoz tartozó kezdőelemek indexeit.
 $S[0] = 0$, és $\forall i \in \{1, 2, ... k-1\}: S[i] = S[i-1]+C[i-1]$.
@@ -672,28 +672,32 @@ azaz $S[k']$ és $T[k']$ között minden elem a helyén van.
 \item Járjuk be sorra $k'$-vel a $\{0, 1, ..., k-1\}$ kulcsokat.
 Minden $k'$ kulcsra biztosítsuk, hogy a $k'$-höz tartozó szakasz
 minden eleme a megfelelő helyen van.
-Amíg $T[k']-S[k']$ nem egyenlő $C[k']$-vel, addig vegyük az $i=T[k']$ elemet.
-Ha $K[A[i]]=k'$, akkor az $i$-dik elem a helyén van, növeljük meg $T[k']$-t.
-Különben cseréljük meg $A[i]$-t és $A[K(A[i])]$-t.
+Amíg $T[k']-S[k']$ nem egyenlő $C[k']$-vel,
+addig legyen $i=T[k']$,
+és $k^*=K(A[i])$.
+Ha $k^*=k'$, akkor az $A[i]$ elem a helyén van, növeljük meg eggyel $T[k']$-t.
+Különben cseréljük meg $A[i]$-t és $A[T[k^*]]$-ot
+és növeljük meg eggyel $T[k^*]$-ot.
 \end{itemize}
 
 A megoldásban az utolsó ciklus minden lépésben egy elemet a helyére tesz,
 a ciklus invariánsa szerint, és egy elemet legfeljebb kétszer vizsgál meg.
 
 Tegyük fel, hogy a gyorsítótár mérete $(Z, L)$.
-Tegyük fel, hogy $k$ számláló $K'$ bájttal leírható.
+Tegyük fel, hogy $k$ darab számláló $K'$ bájttal leírható.
 Valamint tegyük fel, hogy $Z/L$ legalább akkora,
-hogy $2k$ számlálót, és $k$ tömbelemet, és egy ideiglenes elemet
-a csérhez mindig a gyorsítótárban lehet tartani,
+hogy $2k$ darab számlálót, $k$ darab tömbelemet,
+és egy ideiglenes elemet
+a cseréhez mindig a gyorsítótárban lehet tartani,
 függetlenül a elhelyezésüktől a memóriában.
 Ekkor:
 \begin{itemize}
 \item $C$ kiszámításához $k$ számlálót kell a gyorsítótárban tartani,
 miközben a $A$-t sorban bejárjuk.
-Ez legfeljebb $O(k+K'/L+N/L)$ memória műveletet igényel.
+Ez legfeljebb $O(1+K'/L+N/L)$ memória műveletet igényel.
 \item $S$ kiszámításához $k$ számlálót kell összesíteni.
 Ez legfeljebb $O(1+K'/L)$ memória műveletet igényel.
-\item $T$ előállítása $S$ másolása,
+\item $T$ előállítása $S$ másolásával,
 legfeljebb $O(1+K'/L)$ memória művelet.
 \item Minden kulcs bejárása nem rosszabb, mint a teljes tömb bejárása,
 hiszen kulcsok szerint is sorba járjuk be, legfeljebb kihagyásokkal.
@@ -708,9 +712,338 @@ $O(1+k+K'/L+N/L)$.
 
 \section{Mátrix szorzás}
 
-{\color{red}Katasztrofális. Tall cache.}
+Legyen $A$ egy $m \times n$ dimenziós mátrix,
+$B$ egy $n \times p$ dimenziós mátrix,
+és legyen a feladat a $C=AB$ mátrix szorzat kiszámítása.
 
-Oszd meg és uralkodj.
+$C$ definíció szerint
+$\forall i \in \{1, 2, ..., m\}: \forall j \in \{1, 2, ..., p\}: C_{i, j} = \sum_{k=1}^n: A_{i,k} B_{k,j}$.
+
+A definíció szerinti implementáció három egymásba ágyazott ciklus,
+a külső az eredmény sorait járja be,
+a középső az eredmény oszlopait,
+és a belső ciklus a vektorszorzatot számolja ki.
+Ez a megoldás $\Theta(n^3)$ összeadást, szorzást, és memóriaműveletet igényel.
+
+Tegyük fel, hogy a mátrixokat sorfolytonosan tároljuk.
+Tegyük fel, hogy $m=n=p$, és a gyorsítótár mérete $(Z, L)$.
+Legyen $n$ olyan nagy, hogy a gyorsítótár egy sora a mátrixok legfeljebb egy teljes sorát
+tárolja.
+Valamint legyen $n$ legalább kétszer akkora, mint a gyorsítótár sorainak száma, $Z/L$.
+
+Nézzük a definíció szerinti megoldás futtatásának azokat a memóriaeléréseit,
+ami a $B$ mátrix elemeit olvassák.
+Ez $n^2$ alkalommal beolvassa a $B$ mátrix egy-egy teljes oszlopát.
+Minden oszlop-beolvasás $n$ értéket olvas be,
+és a feltevések szerint ehhez legalább $n$ memóriasort kell beolvasni.
+Az oszlop beolvasásának az elején a gyorsítótár legfeljebb $n/2$ memóriasort tartalmaz.
+Így a teljes oszlop beolvasása legalább $n/2$ memóriaműveletet igényel.
+Tehát a definíció szerinti megoldás elegendően nagy mátrixok esetén
+legalább $n^3/2$ memóriaműveletet vált ki.
+Tehát a megoldás $\Theta(n^3)$ memóriaművelet bonyolultságú.
+
+A definíció szerinti megoldás oszlopfolytonosan elrendezett mátrixot
+esetén is $\Theta(n^3)$ gyorsítótár bonyolultságú,
+a fenti érveléshez hasonlóan az $A$ mátrix elérését vizsgálva.
+
+\subsection{Gyorsítótár tudatos}
+
+A mátrix szorzást block mátrixokkal is elvégezhetjük.
+Például legyen $A$ és $B$ egy-egy $2n \times 2n$ dimenziós mátrix,
+és osszuk fel mindkettőt $4$ $n \times n$ dimenziós blokkokra.
+\begin{align*}
+A=\left(
+\begin{array}{c c}  
+A_{1,1} & A_{1,2} \\
+A_{2,1} & A_{2,2}
+\end{array}
+\right) \\
+B=\left(
+\begin{array}{c c}  
+B_{1,1} & B_{1,2} \\
+B_{2,1} & B_{2,2}
+\end{array}
+\right) \\
+C=\left(
+\begin{array}{c c}  
+C_{1,1} & C_{1,2} \\
+C_{2,1} & C_{2,2}
+\end{array}
+\right)
+\end{align*}
+Ekkor $\forall i \in \{1, 2\}: \forall j \in \{1, 2\}: C_{i,j} = \sum_{k=1}^2 A_{i,k} B_{k,j}$.
+
+Legyen $s$ a program egy paramétere.
+A mátrixok méretei legyenek $s$ többszörösei,
+szükség esetén nullákkal kiegészítve a mátrixokat,
+és legyen $m=n=p$.
+A mátrixok legyen sorfolytonosan tárolva.
+
+Tegyük fel, hogy a gyorsítótár magas\cite{prokop}, $Z=\Omega(L^2)$,
+
+Legyen $(Z, L)$ a gyorsítótár mérete,
+és $s$-t válasszuk a lehető legnagyobbnak úgy,
+hogy három darab $s \times s$ dimenziós mátrix befér a gyorsítótárba.
+Egy $s \times s$ mátrix $\Theta(s+s^2/L)$ gyorsítótár sorban fér el.
+A magas gyorsítótár feltétel miatt $s=\Theta(\sqrt{Z})$.
+
+A blokkonkénti szorzást végezzük el a következőképpen:
+\begin{itemize}
+\item Nullázzuk a $C$ mátrixot.
+Ez legfeljebb $O(n+n^2/L)$ memóriaművelettel jár.
+$n$ sor van, és egy sor bejárása legfeljebb $O(1+n/L)$ memóriaművelet.
+\item Járjuk be 3 ciklussal a rész-szorzatok blokk mátrixait. $i, j, k = 1, 2, ..., n/s$.
+\item Adjuk hozzá $C$ részblokkjához a bemeneti részblokkok szorzatát. \\
+$C_{i,j} \leftarrow C_{i,j} + A_{i,k} B_{k,j}$. \\
+A három mátrix gyorsítótára hozatala legfeljebb $Z/L$ memóriaműveletet igényel,
+az $s$ megválasztása miatt.
+\end{itemize}
+Összesen, nagy $n$-ekre,
+$\Theta(n+n^2/L+(n/\sqrt{Z})^3(Z/L)) = \Theta(n+n^2/L+n^3/L\sqrt{Z})$
+
+\subsection{Kettő-hatvány négyzetes mátrixok}
+
+Tegyük fel, hogy a mátrixok kettő-hatvány négyzetes mátrixok,
+$m=n=p=2^k$.
+Legyenek a mátrixok sorfolytonosan elrendezve a memóriában.
+
+A megoldásban rekurzívan osszuk a mátrixokat 4 felé.
+Legyen a rekurzió neve $Szorzat(A, B, C, n)$.
+\begin{itemize}
+\item Nullázzuk a $C$ mátrixot.
+Ez legfeljebb $O(n+n^2/L)$ memóriaművelettel jár.
+\item Hívjuk meg a rekurzív függvényt, $Szorzat(A, B, C, n)$.
+\item A rekurzió alapesete az $n=1$. \\
+$C_{1,1} \leftarrow C_{1,1} + A_{1,1} B_{1,1}$.
+\item Az általános eset $n > 1$.
+Osszuk mindhárom mátrixot négy-négy négyzetes blokkra.
+\begin{align*}
+A=\left(
+\begin{array}{c c}  
+A_{1,1} & A_{1,2} \\
+A_{2,1} & A_{2,2}
+\end{array}
+\right) \\
+B=\left(
+\begin{array}{c c}  
+B_{1,1} & B_{1,2} \\
+B_{2,1} & B_{2,2}
+\end{array}
+\right) \\
+C=\left(
+\begin{array}{c c}  
+C_{1,1} & C_{1,2} \\
+C_{2,1} & C_{2,2}
+\end{array}
+\right)
+\end{align*}
+Hívjuk meg nyolcszor a rekurziót.
+\begin{itemize}
+\item $Szorzat(A_{1,1}, B_{1,1}, C_{1,1}, n/2)$.
+\item $Szorzat(A_{1,2}, B_{2,1}, C_{1,1}, n/2)$.
+\item $Szorzat(A_{1,1}, B_{1,2}, C_{1,2}, n/2)$.
+\item $Szorzat(A_{1,2}, B_{2,2}, C_{1,2}, n/2)$.
+\item $Szorzat(A_{2,1}, B_{1,1}, C_{2,1}, n/2)$.
+\item $Szorzat(A_{2,2}, B_{2,1}, C_{2,1}, n/2)$.
+\item $Szorzat(A_{2,1}, B_{1,2}, C_{2,2}, n/2)$.
+\item $Szorzat(A_{2,2}, B_{2,2}, C_{2,2}, n/2)$.
+\end{itemize}
+\end{itemize}
+
+A rekurzió műveletbonyolultságát leírja a következő rekurzív összefüggés.
+\begin{align*}
+T(1) &= \Theta(1) \\
+T(1) &= 8 T(n/2) + \Theta(1)
+\end{align*}
+A mester tétel\cite{algoritmusok} felhasználásával $T(n)=\Theta(n^3)$.
+
+Tegyük fel, hogy a gyorsítótár mérete $(Z, L)$.
+Tegyük fel, hogy a gyorsítótár magas.
+Legyen $t$ a legnagyobb olyan szám, hogy három darab $2^t$ méretű négyzetes mátrix
+elfér a gyorsítótárban.
+Legyen $s=2^t$.
+Egy $s \times s$ mátrix $\Theta(s+s^2/L)$ gyorsítótár sorban fér el.
+A magas gyorsítótár feltétel miatt $s=\Theta(\sqrt{Z})$.
+A rekurzív fában az $s$ méretű négyzetes mátrixok gyorsítótárba
+hozatala $\Theta((2^{k-t})^3 Z/L) = \Theta(n^3Z/\sqrt{Z}^3L) = \Theta(n^3/\sqrt{Z}L)$ memóriaműveletet igényel.
+
+Az eredmény mátrix nullázásával együtt a memóriaműveletek száma
+a gyorsítótárral $\Theta(n+n^2/L+n^3/\sqrt{Z}L)$.
+Ez megegyezik a gyorsítótár tudatos megoldás gyorsítótár bonyolultságával,
+explicit gyorsítótár paraméter használata nélkül.
+
+\subsection{Gyorsítótár független}
+
+Általános méretű mátrixokra hasonló gyorsítótár független
+megoldást lehet adni, mint a kettő-hatvány négyzetes mátrixokra.
+
+Legyen $A$ egy $m \times n$ dimenziós mátrix, és $B$ egy $n \times p$ dimenziós mátrix.
+Legyenek $A$, $B$, és $C$ sorfolytonosan tárolva a memóriában.
+Legyen a rekurzió neve $Szorzat(A, B, C, m, n, p)$.
+\begin{itemize}
+\item Nullázuk a $C$ mátrixot.
+
+\item Hívjuk meg a $Szorzat(A, B, C, m, n, p)$ mátrixot.
+
+\item A rekurzió alapesete az $m=n=p=1$. \\
+$C_{1,1} \leftarrow C_{1,1} + A_{1,1} B_{1,1}$.
+
+\item Ha $m \ge \max(n, p)$,
+akkor legyen $m'=\lfloor m/2 \rfloor$,
+és osszuk fel $A$-t, és $C$-t,
+\begin{align*}
+A&=\left(
+\begin{array}{c}  
+A_{1} \\
+A_{2}
+\end{array}
+\right) \\
+C&=\left(
+\begin{array}{c}  
+C_{1} \\
+C_{2}
+\end{array}
+\right)
+\end{align*}
+úgy, hogy $A_1$ és $C_1$ $m'$ sorból áll.
+Hívjuk meg rekurzívan a függvényt:
+\begin{itemize}
+\item $Szorzat(A_1, B, C_1, m', n, p)$
+\item $Szorzat(A_2, B, C_2, m-m', n, p)$
+\end{itemize}
+
+\item Ha $p \ge \max(m, n)$,
+akkor legyen $p'=\lfloor p/2 \rfloor$,
+és osszuk fel $B$-t, és $C$-t,
+\begin{align*}
+B&=\left(
+\begin{array}{c c}  
+B_{1} & B_{2}
+\end{array}
+\right) \\
+C&=\left(
+\begin{array}{c c}  
+C_{1} & C_{2}
+\end{array}
+\right)
+\end{align*}
+úgy, hogy $B_1$ és $C_1$ $p'$ oszlopból áll.
+Hívjuk meg rekurzívan a függvényt:
+\begin{itemize}
+\item $Szorzat(A, B_1, C_1, m, n, p')$
+\item $Szorzat(A, B_2, C_2, m, n, p-p')$
+\end{itemize}
+
+\item Ha $n \ge \max(m, p)$,
+akkor legyen $n'=\lfloor n/2 \rfloor$,
+és osszuk fel $A$-t, és $B$-t,
+\begin{align*}
+A&=\left(
+\begin{array}{c c}  
+A_{1} & A_{2}
+\end{array}
+\right) \\
+B&=\left(
+\begin{array}{c}  
+B_{1} \\
+B_{2}
+\end{array}
+\right)
+\end{align*}
+úgy, hogy $A_1$ $n'$ oszlopból és $B_1$ $n'$ sorból áll.
+Hívjuk meg rekurzívan a függvényt:
+\begin{itemize}
+\item $Szorzat(A_1, B_1, C, m, n', p)$
+\item $Szorzat(A_2, B_2, C, m, n-n', p)$
+\end{itemize}
+\end{itemize}
+
+A megoldás időbonyolultsága $\Theta(mnp)$.
+
+Tegyük fel, hogy a gyorsítótár mérete $(Z, L)$.
+Tegyük fel, hogy a gyorsítótár magas.
+Ekkor a megoldás gyorsítótár bonyolultsága\cite{prokop}
+$\Theta(m+n+p+(mn+mp+np)/L+mnp/LZ)$.
+
+\subsection{Strassen algoritmus}
+
+A Strassen algoritmus\cite{strassen} a kettő-hatvány négyzetmátrixok szorzásához
+hasonlóan a mátrixokat négy-négy részre osztja,
+de az eredményt mindössze hét rekurzióval számolja ki.
+\begin{align*}
+A&=\left(
+\begin{array}{c c}  
+A_{1,1} & A_{1,2} \\
+A_{2,1} & A_{2,2}
+\end{array}
+\right) \\
+B&=\left(
+\begin{array}{c c}  
+B_{1,1} & B_{1,2} \\
+B_{2,1} & B_{2,2}
+\end{array}
+\right) \\
+C&=\left(
+\begin{array}{c c}  
+C_{1,1} & C_{1,2} \\
+C_{2,1} & C_{2,2}
+\end{array}
+\right) \\
+M_1 &=(A_{1,1}+A_{2,2})(B_{1,1}+B_{2,2}) \\
+M_2 &=(A_{2,1}+A_{2,2})B_{1,1} \\
+M_3 &=A_{1,1}(B_{1,2}-B_{2,2}) \\
+M_4 &=A_{2,2}(B_{2,1}-B_{1,1}) \\
+M_5 &=(A_{1,1}+A_{1,2})B_{2,2} \\
+M_6 &=(A_{2,1}-A_{1,1})(B_{1,1}+B_{1,2}) \\
+M_7 &=(A_{1,2}-A_{2,2})(B_{2,1}+B_{2,2}) \\
+C_{1,1} &= M_1+M_4-M_5+M_7 \\
+C_{1,2} &= M_3+M_5 \\
+C_{2,1} &= M_2+M_4 \\
+C_{2,2} &= M_1-M_2+M_3+M_6
+\end{align*}
+
+A rekurzív szorzások az $M$ mátrixok kiszámításához szükségesek.
+
+A Strassen algoritmus időbonyolultsága\cite{strassen} $\Theta(n^{\log_2{7}})$.
+
+Legyen a gyorsítótár mérete $(Z, L)$.
+Ekkor a Strassen algoritmus gyorsítótár bonyolultsága\cite{prokop}
+$\Theta(n+n^2/L+n^{\log_2{7}}/L\sqrt{Z})$.
+
+\subsection{Z-sorrend}
+
+Legyen $A$ egy kettő-hatvány méretű négyzetes mátrix,
+és osszuk fel egyenlő méretű blokkokra.
+\begin{align*}
+A=\left(
+\begin{array}{c c}  
+A_{1,1} & A_{1,2} \\
+A_{2,1} & A_{2,2}
+\end{array}
+\right)
+\end{align*}
+A memóriában úgy helyezzük el az $A$ mátrixot,
+hogy először $A_{1,1}$ összes értékét tároljuk el, majd $A_{1,2}$-t,
+$A_{2,1}$-et, végül $A_{2,2}$-t.
+A blokkokat rekurzívan osszuk fel, ha nagyobbak mint egy,
+és azokat is ilyen sorrendben tároljuk.
+Például egy $4 \times 4$ dimenziós mátrix elemeinek sorrendje a memóriában:
+\begin{align*}
+A=\left(
+\begin{array}{c c c c c c c c}  
+1  & 2  & 5  & 6 \\
+3  & 4  & 7  & 8 \\
+9  & 10 & 13 & 14 \\
+11 & 12 & 15 & 16
+\end{array}
+\right)
+\end{align*}
+
+Ebben az elrendezésben a magas gyorsítótár feltételezés helyett elég a gyengébb feltétel is,
+hogy a a gyorsítótár sorainak száma egy elegendően nagy konstans.\cite{prokop}
+Ha egy $s \times s$ méretű részmátrix $O(1)$ gyorsítótár sorban tárolható,
+akkor elég ha a gyorsítótárnak $3O(1)=O(1)$ sora van,
+hogy egy $s \times s$ méretű részfeladatot a gyorsítótárba egyszer beolvasva megoldjunk.
 
 \section{Rendezés}
 
@@ -1105,6 +1438,8 @@ Asszociativitás. Több szint. Több mag osztozik. Léteznek egészen speciális
 \item egymás után akár több is
 \end{itemize}
 
+\section{Tesztek}
+
 \chapter{Mérési eredmények}
 
 \begin{thebibliography}{9}
@@ -1135,6 +1470,10 @@ Hennessy, John L.; Patterson, David A. (2011). Computer Architecture: A Quantita
 
 \bibitem{algoritmusok}
 Cormen, Thomas A.; Leiserson, Charles E.; Rivest, Ronald L. (2001). Algoritmusok. ISBN 963-16-3029-3.
+
+\bibitem{strassen}
+Strassen , V. Gaussian elimination is not optimal. Numerische Mathematik 13
+(1969), 354–356.
 
 \end{thebibliography}
 
