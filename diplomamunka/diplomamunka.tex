@@ -1071,8 +1071,6 @@ Van Emde Boas fák. Dinamikus eset szuperbonyolult, asszem.
 
 \section{Edénysor szita}
 
-{\color{red}Katasztrofális.}
-
 Az edénysor szitát a szakdolgozatomban írtam le.
 Ez egy eratoszthenészi rekurzívan szegmentált szita.
 
@@ -1080,7 +1078,7 @@ Az eratoszthenészi sziták prímek többszöröseit jelölik meg
 egy adott intervallumon,
 és egy-egy prím többszöröseinek megjelöléseit
 a többi prímtől függetlenül végzik.
-A szitát lehet használni prímek keresésére is,
+A szita alkalmas prímek keresésére is,
 és az intervallum számainak prím-faktorizációjára is.
 
 Egy szegmentált szita a teljes intervallumot kisebb intervallumokra osztja,
@@ -1088,44 +1086,46 @@ ezek a szegmensek, és a szegmensekben külön-külön végzi el a megjelölése
 A szegmensek átfedés nélkül lefedik a teljes intervallumot.
 A szegmens méretet úgy választják meg,
 hogy szitáláshoz használt prímek és egy szegmens a gyorsítótárban elférjen.
-Egy szegmentált szita cache-aware.
+Ha a szegmensek mérete a program bemeneti paramétere,
+akkor a szita gyorsítótár tudatos.
 
 A rekurzív edényszita egy $a^h$ hosszú intervallumot szitál,
 ahol $a$ és $h$ természetes számok, $a \ge 2$.
 Ha $h > 0$, akkor az intervallumot $a$ darab ugyanolyan hosszú részre osztja,
 és ezeket rekurzívan szitálja.
-A prímek listáját előszűri, hogy egy szegmensbe csak olyan prím kerüljön,
-ami ténylegesen szitál is a szegmensben.
+A prímek listáját előszűri, hogy egy szegmensbe csak olyan prímeket vizsgáljon,
+amiknek ténylegesen van többszöröse a szegmensben.
 
 \subsection{A rekurzív fa}
 
 Vegyük a $[u, u+a^h)$ intervallumot, $u$ természetes szám.
-és egy $p$ prímet, aminek van nullánál nagyobb többszöröse az intervallumban.
+és egy $p$ prímet, aminek van többszöröse az intervallumban.
 Tegyük fel, hogy $h>0$.
-Ekkor az $i$. részintervallum $[u+ia^{h-1}, u+(i+1)a^{h-1}), (i \in {0, ..., a-1})$
+Ekkor az $i$. részintervallum $[u+ia^{h-1}, u+(i+1)a^{h-1})$,
+minden $i \in {0, ..., a-1}$-re.
 \begin{itemize}
-\item Ha $p \ge a^h$, akkor $p$ pontosan egy részintervallumban szitál.
-\item Ha $a^{h-1} < p < a^h$, akkor $p$ legalább egy részintervallumban szitál,
+\item Ha $p \ge a^h$, akkor $p$-nek pontosan egy részintervallumban van többszöröse.
+\item Ha $a^{h-1} < p < a^h$, akkor $p$-nek legalább egy részintervallumban van többszöröse,
 de nem feltétlen mindegyikben.
-\item Ha $p \le a^{h-1}$, akkor $p$ minden részintervallumban szitál.
+\item Ha $p \le a^{h-1}$, akkor $p$-nek minden részintervallumban van többszöröse.
 \end{itemize}
 
 Példának nézzük meg, hogy az $5$ milyen utat jár be a rekurzív fában
 a $[0, 2^4)$ intervallum szitálásakor.
 Az ábrán a prím $0$-t is bejárja, ami prímek keresésekor nem következik be.
-\begin{figure}[h]
+\begin{figure}[ht]
 \centering
 \begin{tikzpicture}[level distance=50pt, sibling distance=5pt]
 \Tree
-[.\node[draw,dashed,red]{$0-15$}; 
-	\edge[dashed,red] node[auto=right] {$0$};
-	[.\node[draw,dashed,red]{$0-7$};
-		\edge[dashed,red] node[auto=right] {$0$};
-		[.\node[draw,dashed,red]{$0-3$};
-			\edge[dashed,red] node[auto=right] {$0$};
-			[.\node[draw,dashed,red]{$0-1$};
-				\edge[dashed,red] node[auto=right] {$0$};
-				[.\node[draw,dashed,red]{$0$}; ]
+[.\node[draw,dashed]{$0-15$}; 
+	\edge[dashed] node[auto=right] {$0$};
+	[.\node[draw,dashed]{$0-7$};
+		\edge[dashed] node[auto=right] {$0$};
+		[.\node[draw,dashed]{$0-3$};
+			\edge[dashed] node[auto=right] {$0$};
+			[.\node[draw,dashed]{$0-1$};
+				\edge[dashed] node[auto=right] {$0$};
+				[.\node[draw,dashed]{$0$}; ]
 				\edge[] node[auto=left] {$1$};
 				[.\node[draw]{$1$}; ]
 			]
@@ -1137,14 +1137,14 @@ Az ábrán a prím $0$-t is bejárja, ami prímek keresésekor nem következik b
 				[.\node[draw]{$3$}; ]
 			]
 		]
-		\edge[dashed,red] node[auto=left] {$1$};
-		[.\node[draw,dashed,red]{$4-7$};
-			\edge[dashed,red] node[auto=right] {$0$};
-			[.\node[draw,dashed,red]{$4-5$};
+		\edge[dashed] node[auto=left] {$1$};
+		[.\node[draw,dashed]{$4-7$};
+			\edge[dashed] node[auto=right] {$0$};
+			[.\node[draw,dashed]{$4-5$};
 				\edge[] node[auto=right] {$0$};
 				[.\node[draw]{$4$}; ]
-				\edge[dashed,red] node[auto=left] {$1$};
-				[.\node[draw,dashed,red]{$5$}; ]
+				\edge[dashed] node[auto=left] {$1$};
+				[.\node[draw,dashed]{$5$}; ]
 			]
 			\edge[] node[auto=left] {$1$};
 			[.\node[draw]{$6-7$};
@@ -1155,10 +1155,10 @@ Az ábrán a prím $0$-t is bejárja, ami prímek keresésekor nem következik b
 			]
 		]
 	]
-	\edge[dashed,red] node[auto=left] {$1$};
-	[.\node[draw,dashed,red]{$8-15$};
-		\edge[dashed,red] node[auto=right] {$0$};
-		[.\node[draw,dashed,red]{$8-11$};
+	\edge[dashed] node[auto=left] {$1$};
+	[.\node[draw,dashed]{$8-15$};
+		\edge[dashed] node[auto=right] {$0$};
+		[.\node[draw,dashed]{$8-11$};
 			\edge[] node[auto=right] {$0$};
 			[.\node[draw]{$8-9$};
 				\edge[] node[auto=right] {$0$};
@@ -1166,16 +1166,16 @@ Az ábrán a prím $0$-t is bejárja, ami prímek keresésekor nem következik b
 				\edge[] node[auto=left] {$1$};
 				[.\node[draw]{$9$}; ]
 			]
-			\edge[dashed,red] node[auto=left] {$1$};
-			[.\node[draw,dashed,red]{$10-11$};
-				\edge[dashed,red] node[auto=right] {$0$};
-				[.\node[draw,dashed,red]{$10$}; ]
+			\edge[dashed] node[auto=left] {$1$};
+			[.\node[draw,dashed]{$10-11$};
+				\edge[dashed] node[auto=right] {$0$};
+				[.\node[draw,dashed]{$10$}; ]
 				\edge[] node[auto=left] {$1$};
 				[.\node[draw]{$11$}; ]
 			]
 		]
-		\edge[dashed,red] node[auto=left] {$1$};
-		[.\node[draw,dashed,red]{$12-15$};
+		\edge[dashed] node[auto=left] {$1$};
+		[.\node[draw,dashed]{$12-15$};
 			\edge[] node[auto=right] {$0$};
 			[.\node[draw]{$12-13$};
 				\edge[] node[auto=right] {$0$};
@@ -1183,12 +1183,12 @@ Az ábrán a prím $0$-t is bejárja, ami prímek keresésekor nem következik b
 				\edge[] node[auto=left] {$1$};
 				[.\node[draw]{$13$}; ]
 			]
-			\edge[dashed,red] node[auto=left] {$1$};
-			[.\node[draw,dashed,red]{$14-15$};
+			\edge[dashed] node[auto=left] {$1$};
+			[.\node[draw,dashed]{$14-15$};
 				\edge[] node[auto=right] {$0$};
 				[.\node[draw]{$14$}; ]
-				\edge[dashed,red] node[auto=left] {$1$};
-				[.\node[draw,dashed,red]{$15$}; ]
+				\edge[dashed] node[auto=left] {$1$};
+				[.\node[draw,dashed]{$15$}; ]
 			]
 		]
 	]
@@ -1198,12 +1198,45 @@ Az ábrán a prím $0$-t is bejárja, ami prímek keresésekor nem következik b
 \label{fig:F25}
 \end{figure}
 
-\subsection{Feladat}
+\pagebreak
 
-Jelöljük meg az $[u, u+a^h)$ intervallumban az összes olyan számot,
-amik többszörösei valamelyik $p \le m$ prímnek.
+\subsection{Rekurzív szita}
 
-\subsection{A megoldás}
+Járjuk be a $[u, u+a^h)$ intervallumhoz tartozó rekurzív fát.
+A prímek listáján legyen minden olyan prím, ami kisebb $u$-nál.
+Minden levelet jelöljünk meg azokkal a prímekkel,
+amik a levélhez tartozó számot osztják.
+Ha egy levelet egyetlen prím sem oszt a listán,
+akkor az a szám prím, jelöljük meg magával,
+és adjuk a listához.
+A fa bejárásánál minden csúcsban előfeltétel,
+hogy a prímek listáján minden prím legalább egy levélhez tartozó számot oszt.
+
+Egy belső csúcsban a gyerekeket sorban bejárjuk,
+és a prímek listáját előszűrjük, hogy megfeleljen a gyerekekre vonatkozó előfeltételnek.
+Azt az előszűrést kétféleképpen is elvégezhessük.
+\begin{itemize}
+\item A prímek listájában csak a prímeket tároljuk,
+és egy részintervallum végpontjainak ismeretében maradékos osztással eldöntjük,
+hogy van-e egy prímnek többszöröse.
+Ekkor a memóriaigényt számítási igényre cseréljük.
+\item A prímek listájában minden prím mellé eltároljuk,
+hogy melyik szám a következő többszöröse,
+és ezt hasonlítjuk össze az éppen következő részintervallummal.
+Ekkor a számítási igény memória igényre cseréljük.
+\end{itemize}
+
+A $[0, a^h)$ intervallum prím-faktorizációját a
+RekurzívSzita$(a, h, a^h, 0, \emptyset)$
+hívással lehet elvégezni.
+A hívás után az intervallum egy száma prím, ha nincs megjelölve,
+és összetett, ha meg van jelölve, és az összes prímosztója megjelölte.
+
+Prímek keresését a $[0, a^h)$ intervallumban a
+RekurzívSzita$(a, h, \left\lfloor \sqrt{a^h} \right\rfloor, 0, \emptyset)$
+hívás lehet elvégezni.
+Az eredménylista tartalmazza a prímeket.
+Ebben az esetben a levelek megjelölése nem szükséges.
 
 \begin{algorithm}
 \floatname{algorithm}{Algoritmus}
@@ -1223,12 +1256,10 @@ amik többszörösei valamelyik $p \le m$ prímnek.
 			\If{$u \le m$}
 				\State $P \leftarrow P \cup \{u\}$
 			\EndIf
-		\Else
-			\State jelöljük meg $u$-t
-			\Comment $u$ összetett szám
 		\EndIf
+		\State jelöljük meg $u$-t $P$ minden elemével
 	\Else
-		\State Legyenek a részintervallumok
+		\State legyenek a részintervallumok
 			$I_i = [u+ia^{h-1}, u+(i+1)a^{h-1}$, $i \in [0, a)$
 		\State $Q$ legyen listák egy $a$ elemű tömbje, és legyen minden lista üres
 		\For{$p \in P$}
@@ -1242,7 +1273,7 @@ amik többszörösei valamelyik $p \le m$ prímnek.
 				\Call{RekurzívSzita}{$a, h-1, m, u+ia^{h-1}, Q[i]$}
 			\For{$p \in Q[i]$}
 				\If{$p$-nek van többszöröse $I_{i+1}, ..., I_{a-1}$-ben}
-					\State Legyen $j$ a legkisebb olyan szám,
+					\State legyen $j$ a legkisebb olyan szám,
 					\State hogy $p$-nek van többszöröse $I_{i+1}, ..., I_{a-1}$-ben
 					\State $Q[j] \leftarrow Q[j] \cup \{p\}$
 				\Else
@@ -1257,31 +1288,6 @@ amik többszörösei valamelyik $p \le m$ prímnek.
 \end{algorithmic}
 \end{algorithm}
 
-Azt, hogy egy adott $p$ prím melyik részintervallumban fog szitálni legközelebb,
-meghatározhatjuk maradékos osztással.
-Legyen $u$ a szóba jöhető legkisebb intervallum kezdőpontja.
-Legyen $m = u \bmod p$. Ekkor $p$ következő többszöröse
-\begin{equation}
-\begin{cases*}
-      u		& ha m = 0 \\
-      u-m+p	& különben
-\end{cases*}
-\end{equation}
-Az is megoldás, ha minden prím mellé tároljuk a legutolsó megtalált többszörösét is,
-és ezt frissítjük, amikor a prímet megjelölésre használjuk.
-Ezzel az osztás időigényét memóriaigényre cseréljük.
-
-Prímek keresését a $[0, a^h)$ intervallumban a
-RekurzívSzita$(a, h, \lfloor \sqrt(a^h) \rfloor, a^h, \emptyset)$
-hívás után az intervallum végigolvasásával lehet elvégezni.
-Azok a számok a prímek, amik nincsenek megjelölve.
-
-A $[0, a^h)$ intervallum prím-faktorizációját a
-RekurzívSzita$(a, h, a^h, a^h, \emptyset)$
-hívással lehet elvégezni.
-A hívás után az intervallum egy száma prím, ha nincs megjelölve,
-és összetett, ha meg van jelölve, és az összes prímosztója megjelölte.
-
 \subsection{Műveletigény gyorsítótár nélkül}
 
 Tegyük fel, hogy a $[0, a^h)$ intervallumot szitáljuk.
@@ -1291,78 +1297,75 @@ Legyen $p \le m$ egy prím.
 Nézzük a rekurzív fában az összes $a^k$ hosszú részintervallumot,
 $k \le h$.
 \begin{itemize}
-\item Ha $p > a^k$, akkor $p$-nek legfeljebb egy többszöröse van egy adott részintervallumban, és összesen $\lfloor a^h \rfloor$ többszöröse van,
+\item Ha $p > a^k$, akkor $p$-nek legfeljebb egy többszöröse van egy adott részintervallumban, és összesen $\lfloor n/p \rfloor$ többszöröse van,
 és ennyi $a^k$ hosszú részintervallumot jár be.
-\item Ha $p \le a^{k}$, akkor $p$ minden részintervallumban szitál.
+\item Ha $p \le a^{k}$, akkor $p$-nek minden részintervallumban van többszöröse.
 \end{itemize}
 
-\begin{align*}
-p \le a^k \Leftrightarrow log_{a}{p} \le k
-\end{align*}
-
-Így a rekurzív fában $p$ legfeljebb a felső
+Mivel $p \le a^k \Leftrightarrow log_{a}{p} \le k$,
+így a rekurzív fában $p$ legfeljebb a felső
 $h - \lfloor log_{a}{p} \rfloor + 1$ szinten jár be minden csúcsot.
-Az alsó $\lfloor log_{a}{p} \rfloor$ szinten szintenként $\lfloor a^h/p \rfloor$
+Az alsó $\lfloor log_{a}{p} \rfloor$ szinten szintenként $\lfloor n/p \rfloor$
 csúcsot jár be.
-Tehát $p$ legfeljebb
+Legyen $C_p$ azon csúcsok száma, amit $p$ bejár.
 \begin{align*}
-C_p &\le \sum_{k=0}^{h - \lfloor \log_{a}{p} \rfloor} a^k + \sum_{k=0}^{\lfloor log_{a}{p} \rfloor} \left\lfloor \frac{a^h}{p} \right\rfloor \\
-\
-&\le \sum_{k=0}^{h - \lfloor \log_{a}{p} \rfloor} a^k + \sum_{k=0}^{\lfloor log_{a}{p} \rfloor} \frac{a^h}{p} \\
-\
-&= \sum_{k=0}^{h - \lfloor \log_{a}{p} \rfloor} a^k + \frac{(\lfloor log_{a}{p} \rfloor+1)a^h}{p} \\
-\
-&\le \sum_{k=0}^{h - \lfloor \log_{a}{p} \rfloor} a^k + \frac{(log_{a}{p}+1)a^h}{p} \\
-\
-&= \sum_{k=0}^{h - \lfloor \log_{a}{p} \rfloor} a^k + n\left(\frac{log_{a}{p}}{p} + \frac{1}{p} \right) \\
-\
-&= \sum_{k=0}^{h - \lfloor \log_{a}{p} \rfloor} a^k + \frac{n}{\ln{a}} \frac{ln{p}}{p} + n \frac{1}{p} \\
-\
-&= \frac{a^{h - \lfloor \log_{a}{p} \rfloor + 1}-1}{a-1} + \frac{n}{\ln{a}} \frac{ln{p}}{p} + n \frac{1}{p} \\
-\
-&< \frac{a^{h - \lfloor \log_{a}{p} \rfloor + 1}}{a-1} + \frac{n}{\ln{a}} \frac{ln{p}}{p} + n \frac{1}{p} \\
-\
-&\le \frac{2a^{h - \lfloor \log_{a}{p} \rfloor + 1}}{a} + \frac{n}{\ln{a}} \frac{ln{p}}{p} + n \frac{1}{p} \\
-&= 2a^{h - \lfloor \log_{a}{p} \rfloor} + \frac{n}{\ln{a}} \frac{ln{p}}{p} + n \frac{1}{p} \\
-&= \frac{2a^h}{a^{\lfloor \log_{a}{p} \rfloor}} + \frac{n}{\ln{a}} \frac{ln{p}}{p} + n \frac{1}{p} \\
-\
-&\le \frac{2a^h}{a^{\log_{a}{p} - 1}} + \frac{n}{\ln{a}} \frac{ln{p}}{p} + n \frac{1}{p} \\
-\
-&= \frac{2a^{h+1}}{a^{\log_{a}{p}}} + \frac{n}{\ln{a}} \frac{ln{p}}{p} + n \frac{1}{p} \\
-\
-&= \frac{2a^{h+1}}{p} + \frac{n}{\ln{a}} \frac{ln{p}}{p} + n \frac{1}{p} \\
-\
-&= 2an\frac{1}{p} + \frac{n}{\ln{a}} \frac{ln{p}}{p} + n \frac{1}{p} \\
-\
-&= (2an+1)\frac{1}{p} + \frac{n}{\ln{a}} \frac{ln{p}}{p} 
+C_p &\le \sum_{k=\lfloor \log_{a}{p} \rfloor + 1}^h a^{h-k} + \sum_{k=0}^{\lfloor log_{a}{p} \rfloor} \left\lfloor \frac{n}{p} \right\rfloor
 \end{align*}
-csúcsot jár be a rekurzív fában.
 
-Az összes prím által meglátogatott csúcsok számának becsléséhez felhasználjuk Mertens két tételét. {\color{red} Hivatkozás: wikipedia.}
+Vizsgáljuk az összeg bal oldalát:
+\begin{align*}
+\sum_{k=\lfloor \log_{a}{p} \rfloor + 1}^h a^{h-k}
+&= \sum_{k=0}^{h-\lfloor \log_{a}{p} \rfloor - 1} a^k \\
+&= \frac{a^{h-\lfloor \log_{a}{p} \rfloor}-1}{a-1} \\
+&< \frac{a^{h-\lfloor \log_{a}{p} \rfloor}}{a-1} \\
+&\le \frac{2a^{h-\lfloor \log_{a}{p} \rfloor}}{a} \\
+&= \frac{2a^h}{a^{\lfloor \log_{a}{p} \rfloor +1}} \\
+&= \frac{2n}{a^{\lfloor \log_{a}{p} \rfloor +1}} \\
+&< \frac{2n}{a^{\log_{a}{p}}} \\
+&= \frac{2n}{p}
+\end{align*}
+
+Vizsgáljuk az összeg jobb oldalát:
+\begin{align*}
+\sum_{k=0}^{\lfloor \log_{a}{p} \rfloor} \left\lfloor \frac{n}{p} \right\rfloor
+&= (\lfloor \log_{a}{p} \rfloor + 1) \left\lfloor \frac{n}{p} \right\rfloor \\
+&\le (\log_{a}{p} + 1) \left\lfloor \frac{n}{p} \right\rfloor \\
+&\le (\log_{a}{p} + 1) \frac{n}{p} \\
+&= \left( \frac{\ln{p}}{\ln{a}} + 1 \right) \frac{n}{p} \\
+&= \frac{n \ln{p}}{p \ln{a}} + \frac{n}{p}
+\end{align*}
+
+Az összegre vonatkozó két becslést egyesítve:
+\begin{align*}
+C_p &= \frac{2n}{p} + \frac{n \ln{p}}{p \ln{a}} + \frac{n}{p} \\
+&= \frac{3n}{p} + \frac{n \ln{p}}{p \ln{a}}
+\end{align*}
+
+Az összes prím által meglátogatott csúcsok számának becsléséhez felhasználjuk Mertens két tételét.\cite{mertens}
 
 \begin{align*}
 \sum_{p \le n} \frac{\ln{p}}{p} = \ln{n} + O(1) \\
 \sum_{p \le n} \frac{1}{p} = \ln{\ln{n}} + O(1) \\
 \end{align*}
 
-Így az összes prím által meglátogatott összes csúcs száma
+Így az összes prím által meglátogatott csúcsok száma multiplicitással:
 \begin{align*}
-C &\le \sum_{p \le m} C_p \\
-\
-&= \sum_{p \le m} \left( (2an+1)\frac{1}{p} + \frac{n}{\ln{a}} \frac{ln{p}}{p} \right) \\
-\
-&= \sum_{p \le m} (2an+1)\frac{1}{p} + \sum_{p \le m} \frac{n}{\ln{a}} \frac{ln{p}}{p} \\
-\
-&= (2an+1)\sum_{p \le m} \frac{1}{p} + \frac{n}{\ln{a}} \sum_{p \le m} \frac{ln{p}}{p} \\
-\
-&= (2an+1) \left(\ln{\ln{n}} + O(1)\right) + \frac{n}{\ln{a}} \left( \ln{n} + O(1) \right) \\
-&= (2an+1)\ln{\ln{n}} + (2an+1)O(1) + \frac{n}{\ln{a}}\ln{n} + \frac{n}{\ln{a}}O(1) \\
-\
-&= \frac{n \ln{n}}{\ln{a}} + (2an+1)\ln{\ln{n}} + (2an+1)O(1) + \frac{n}{\ln{a}}O(1) \\
-\
-&= \frac{n \ln{n}}{\ln{a}} + (2an+1)\ln{\ln{n}} + O(an) + O(\frac{n}{\ln{a}}) \\
-\
-&= \frac{n \ln{n}}{\ln{a}} + (2an+1)\ln{\ln{n}} + O(an)
+C &= \sum_{p \le m} C_p \\
+&< \sum_{p \le m} \left( \frac{3n}{p} + \frac{n \ln{p}}{p \ln{a}} \right) \\
+&= \sum_{p \le m} \frac{3n}{p} + \sum_{p \le m} \frac{n \ln{p}}{p \ln{a}} \\
+&= 3n \sum_{p \le m} \frac{1}{p} + \frac{n}{\ln{a}} \sum_{p \le m} \frac{\ln{p}}{p} \\
+&= 3n (\ln{\ln{m}}+O(1)) + \frac{n}{\ln{a}} (\ln{m}+O(1)) \\
+&= \frac{n \ln{m}}{\ln{a}} + 3n \ln{\ln{m}} + O(n)
+\end{align*}
+
+Tegyük fel, hogy $m = n^q$, $ 0 < q \le 1$ konstansra.
+Tipikusan $q \in \{\frac{1}{2}, 1\}$.
+Ekkor:
+\begin{align*}
+C &< \frac{n \ln{n^q}}{\ln{a}} + 3n \ln{\ln{n^q}} + O(n) \\
+&= \frac{n q \ln{n}}{\ln{a}} + 3n \ln{(q\ln{n})} + O(n) \\
+&= \frac{n q \ln{n}}{\ln{a}} + 3n \ln{q} + 3n \ln{\ln{n}} + O(n) \\
+&= O \left( \frac{n \ln{n}}{\ln{a}} + n \ln{\ln{n}} \right)
 \end{align*}
 
 A RekurzívSzita program egy adott belső csúcsában egy adott prímmel többször is foglalkozik.
@@ -1373,7 +1376,7 @@ A RekurzívSzita program egy adott belső csúcsában egy adott prímmel többsz
 Valamint vannak $a$-tól függő inicializálási lépések, $O(a)$ időben.
 Egy levél csúcsban minden prímmel $O(1)$ időt foglalkozik.
 
-Az összesítéshez számoljuk el a a részintervallumra kiosztás költségét a részintervallum csúcsában. Igy
+Az összesítéshez számoljuk el a a részintervallumra kiosztás költségét a részintervallum csúcsában. Így
 \begin{itemize}
 \item Egy levélben minden prímmel $O(1)$ időt foglalkozik.
 \item Egy belső csúcsban $O(a)$ időt tölt karbantartással, és prímenként $O(1)$ időt azzal,
@@ -1381,32 +1384,307 @@ hogy rá osztották, vagy visszatér vele.
 \end{itemize}
 Tehát a teljes időigény
 \begin{align*}
-T &= \frac{a^h-1}{a-1} O(a) + C O(1) \\
-&= \frac{a^h-1}{a-1} O(a) + O\left(\frac{n \ln{n}}{\ln{a}}\right) \\
-&= O(a^h) + O\left(\frac{n \ln{n}}{\ln{a}}\right) \\
-&= O(n) + O\left(\frac{n \ln{n}}{\ln{a}}\right) \\
-&= O\left(\frac{n \ln{n}}{\ln{a}}\right) \\
+T &= \sum_{k=1}^h a^{h-k} O(a) + C O(1) \\
+&= \sum_{k=0}^{h-1} a^k O(a) + C O(1) \\
+&= \frac{a^h-1}{a-1} O(a) + C O(1) \\
+&= O(a^h) + C O(1) \\
+&= O(n) + C O(1) \\
+&= O(n) + O \left( \frac{n \ln{n}}{\ln{a}} + n \ln{\ln{n}} \right) \\
+&= O \left( \frac{n \ln{n}}{\ln{a}} + n \ln{\ln{n}} \right)
 \end{align*}
 
-\subsection{Cache-oblivious edényszita}
+\subsection{A műveletigény alsó korlátja}
 
-{\color{red} Cache oblivious talán csak $a=2$-re.
-A c program nem szép most tetszőleges $a$-ra.
-Lesz midly cache aware is, mert könnyű.}
+Legyen a feladat a $[2, n)$ intervallumban minden szám prímfaktorizációja,
+$n=a^h$.
+Minden szám mellé írjuk fel az összes prímosztóját, egy $a$ elemű ábécé felett.
+Minden ilyen feljegyzést az összes többitől függetlenül végezzünk el,
+azaz egy egy bejegyzés önmagában legyen értelmezhető.
 
-Megadunk egy konkrét implementációt a fenti RekurzívSzitára,
-ahol a listák egybefüggő memóriatartományok.
+Legyen $f_p = \left\lfloor \frac{n}{p} \right\rfloor$ a $p$ prímet leíró szó
+frekvenciája a megoldásban.
+Legyen $F = \sum_{p \le n} f_p$ az összesen leírt szavak száma.
+Mertens tétele\cite{mertens} alapján alsó becsléseket adunk $F$-re.
+\begin{align*}
+F &= \sum_{p \le n} f_p \\
+&= \sum_{p \le n} \left\lfloor \frac{n}{p} \right\rfloor \\
+&> \sum_{p \le n} \left( \frac{n}{p} - 1 \right) \\
+&= \sum_{p \le n} \frac{n}{p} - \sum_{p \le n} 1 \\
+&= \sum_{p \le n} \frac{n}{p} - \Pi(n) \\
+&= \sum_{p \le n} \frac{n}{p} + \Theta\left(\frac{n}{\ln{n}}\right) \\
+&= n \sum_{p \le n} \frac{1}{p} + \Theta\left(\frac{n}{\ln{n}}\right) \\
+&= n \left( \ln{\ln{n} + O(1)} \right) + \Theta\left(\frac{n}{\ln{n}}\right) \\
+&= n \ln{\ln{n}} + O(n)
+\end{align*}
+Tehát a megoldás legalább $\Omega(n \ln{\ln{n}})$ szó leírásával jár.
 
-Az algoritmus a prímeket, amik egynél több, de nem minden részintervallumban szitálnak,
-minden rekurzív hívásnál újrarendezi.
+Adjunk $F$-re egy durvább alsó becslést.
+Válasszuk $N_1$-et olyan nagyra, hogy minden $n \ge N_1$-re:
+\begin{align*}
+F &> n \ln{\ln{n}} + O(n) \ge n
+\end{align*}
 
-\subsection{Műveletigénye gyorsítótárral}
+Mertens tétele\cite{mertens} alapján
+\begin{align*}
+\sum_{p \ge n} \frac{\ln{p}}{p} = \ln{n} + R(n) \text{, ahol } |R(n)| < 2
+\end{align*}
+Ez alapján válasszuk meg úgy $N_2$-t,
+hogy minden $n \ge N_2$-re
+\begin{align*}
+\sum_{p \ge n} \frac{\ln{p}}{p} = \frac{\ln{n}}{2}
+\end{align*}
 
-{\color{red} Itt szégyenérzet nélkül fel fogom tenni,
-hogy egy intervallumban szitáló prímek száma
-az az egy-egy prím szitálásának várható értékének összege.
-Ami nem igaz, de senki se tud jobbat, és ad valami "elméletit",
-amivel össze lehet hasonlítani méréseket.}
+Tegyük fel, hogy $n \ge \max(N_1, N_2)$.
+
+Legyen $P_p$ a $p$ prím relatív gyakorisága.
+$P_p$-re egy felső becslést adunk.
+\begin{align*}
+P_p &= \frac{f_p}{F}
+= \frac{\left\lfloor \frac{n}{p} \right\rfloor}{F}
+\le \frac{\frac{n}{p}}{F}
+< \frac{\frac{n}{p}}{n}
+= \frac{1}{p}
+\end{align*}
+
+Tudjuk\cite{info-theory}, hogy egy $a$ elemű ábécé feletti
+optimális prefix kód esetén egy $P$ relatív gyakoriságú szó
+hossza legalább $- \log_{a}{P}$.
+Legyen $O$ egy optimális kód a feladat megoldására.
+Legyen $l_p$ a $p$ prímhez tartozó kódszó hossza $O$-ban.
+$l_p$-re alsó becslést adunk.
+\begin{align*}
+l_p &\ge -\log_{a}{P_p} 
+> - \log_{a}{\frac{1}{p}}
+= \log_{a}{p}
+\end{align*}
+
+Legyen $L$ az $O$ kóddal leírt megoldás hossza.
+$L$-ra alsó becslést adunk.
+\begin{align*}
+L &\ge \sum_{p \le n} f_p l_p \\
+&> \sum_{p \le n} f_p \log_{a}{p} \\
+&= \frac{1}{\ln{a}} \sum_{p \le n} f_p \ln{p} \\
+&= \frac{1}{\ln{a}} \sum_{p \le n} \left\lfloor \frac{n}{p} \right\rfloor \ln{p} \\
+&> \frac{1}{\ln{a}} \sum_{p \le n} \left( \frac{n}{p} - 1 \right) \ln{p} \\
+&\ge \frac{1}{\ln{a}} \sum_{p \le \frac{n}{2}} \left( \frac{n}{p} - 1 \right) \ln{p} \\
+&\ge \frac{1}{\ln{a}} \sum_{p \le \frac{n}{2}} \frac{n}{2p} \ln{p} \\
+&= \frac{n}{2 \ln{a}} \sum_{p \le \frac{n}{2}} \frac{\ln{p}}{p} \\
+&\ge \frac{n \ln{\frac{n}{2}}}{4 \ln{a}} \\
+&= \frac{n (\ln{n} - \ln{2})}{4 \ln{a}} \\
+&= \frac{n \ln{n}}{4 \ln{a}} - \frac{n \ln{2}}{4 \ln{a}} \\
+&= \Omega \left( \frac{n \ln{n}}{\ln{a}} \right)
+\end{align*}
+
+A prímfaktorizálás fenti definíciója nem tökéletesen egyezik
+a rekurzív szitával.
+A faktorizálásban megköveteltük, hogy egy véges ábécé felett kell
+megadni a prímfaktorokat.
+A rekurzív szitában a számokat egy véges ábécé felett jártuk be,
+de a megjelöléshez használt prímek listájában feltettük,
+hogy a prímek $n$-től függetlenül $O(1)$ memóriával leírhatóak,
+és $O(1)$ műveletigénnyel manipulálhatóak.
+
+\subsection{Gyorsítótár független edény szita}
+
+Megadjuk a RekurzívSzita egy gyorsítótár független implementációját, $a=2$-re.
+
+A RekurzívSzita programban a lista implementációját nem adtuk meg.
+A lista legyen a memória egy összefüggő része.
+A memória legyen elég nagy, hogy a futás során az összes prímet tárolni tudja.
+A memóriát a futás során 3 részre osztjuk.
+\begin{itemize}
+\item A lista elején azok a prímek vannak, amiknek az adott csúcsban nincs többszörösük.
+Ez a szakasz tovább fel van osztva,
+a rekurzív hívások vermének minden szintjéhez tartozik egy egybefüggő szakasz,
+ahol azok a prímek vannak, amiknek a híváshoz tartozó csúcsban van többszörösük,
+de a gyerek-hívás csúcsában nincs többszörösük.
+A lista legelején a legelső híváshoz tartozó prímek vannak.
+\item a lista közepén azok a prímek vannak, amiknek az adott csúcsban van többszörösük.
+\item a lista végén a nem használt memóriahelyek vannak.
+\end{itemize}
+
+A RekurzívSzita hívásnál bemenő paraméter a lista három pontja.
+\begin{itemize}
+\item A cím, ahonnan kezdve azok a prímek vannak a listában,
+amiknek ebben a csúcsban van többszöröse.
+\item A cím, ameddig a többszörössel rendelkező prímek tartanak,
+és a szabad helyek kezdődnek.
+\item Opcionálisan, a cím, amíg a szabad helyek tartanak.
+Ezt lehet használni annak detektálására, hogy elfogyott a hely a listában.
+\end{itemize}
+A kimenő paraméter a cím a listában, ameddig a csúcsban többszörössel rendelkező prímek
+tartanak. Ez lehet nagyobb a bemenő paraméternél, ha a szita új prímet talált.
+
+Egy belső csúcsban a listát két particionálással elő lehet készíteni a rekurzív hívásra.
+\begin{itemize}
+\item Tegyük fel, $L$ a lista, és a három cím a listában $i \le j \le k$.
+$A[i:j]$ tartalmazza a prímeket, amiknek van többszöröse a csúcsban.
+$A[j:k]$ a szabad helyek.
+\item Particionáljuk az $A[i:j]$ listát, úgy, hogy azokat a prímeket,
+amiknek nincs a bal gyerekben többszörösük,
+azokat a lista elejére helyezzük.
+A partíciókat elválasztó cím legyen $l$.
+Ekkor az $A[l:j$] tartalmazza a bal gyerekben többszörössel rendelkező prímeket,
+és $A[j:k]$ a szabad elemek.
+\item Hívjuk meg rekurzívan a szitát a bal gyerekre, a három cím legyen $l$, $j$, és $k$.
+\item Az eredmény címmel írjuk felül $j$-t.
+Ezzel bekerül a hívás ezen szintjén is a listába minden új prím.
+\item Particionáljuk az $A[i:j]$ listát, úgy, hogy azokat a prímeket,
+amiknek nincs a jobb gyerekben többszörösük,
+azokat a lista elejére helyezzük.
+A partíciókat elválasztó cím legyen $l$.
+Ekkor az $A[l:j$] tartalmazza a jobb gyerekben többszörössel rendelkező prímeket,
+és $A[j:k]$ a szabad elemek.
+\item Hívjuk meg rekurzívan a szitát a jobb gyerekre, a három cím legyen $l$, $j$, és $k$.
+\item Az eredmény címmel írjuk felül $j$-t.
+Ezzel bekerül a hívás ezen szintjén is a listába minden új prím.
+\item Adjuk vissza $j$-t.
+\end{itemize}
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}
+\draw[->, thick] (-2, 1) -- (-2, 0.5);
+\node at (2.5, 0.75) {i};
+\node at (7.5, 0.75) {j};
+\node at (12.5, 0.75) {k};
+\node at (0, 0) [draw,rectangle,minimum width=5cm,minimum height=1.0cm] {Szülő csúcsok};
+\node at (5, 0) [draw,rectangle,minimum width=5cm,minimum height=1.0cm] {Ez a csúcs};
+\node at (10, 0) [draw,rectangle,minimum width=5cm,minimum height=1.0cm] {Szabad};
+
+\draw[->, thick] (-2, -0.5) -- (-2, -1.5);
+\node at (2.5, -1.25) {i};
+\node at (5, -1.25) {l};
+\node at (7.5, -1.25) {j};
+\node at (12.5, -1.25) {k};
+\node at (0, -2) [draw,rectangle,minimum width=5cm,minimum height=1.0cm] {Szülő csúcsok};
+\node at (3.75, -2) [draw,rectangle,minimum width=2.5cm,minimum height=1.0cm] {Nem bal};
+\node at (6.25, -2) [draw,rectangle,minimum width=2.5cm,minimum height=1.0cm] {Bal};
+\node at (10, -2) [draw,rectangle,minimum width=5cm,minimum height=1.0cm] {Szabad};
+
+\draw[->, thick] (-2, -2.5) -- (-2, -3.5);
+\node at (2.5, -3.25) {i};
+\node at (8.5, -3.25) {j};
+\node at (12.5, -3.25) {k};
+\node at (0, -4) [draw,rectangle,minimum width=5cm,minimum height=1.0cm] {Szülő csúcsok};
+\node at (3.75, -4) [draw,rectangle,minimum width=2.5cm,minimum height=1.0cm] {Nem bal};
+\node at (6.25, -4) [draw,rectangle,minimum width=2.5cm,minimum height=1.0cm] {Bal};
+\node at (8, -4) [draw,rectangle,minimum width=1cm,minimum height=1.0cm] {Új};
+\node at (10.5, -4) [draw,rectangle,minimum width=4cm,minimum height=1.0cm] {Szabad};
+
+\draw[->, thick] (-2, -4.5) -- (-2, -5.5);
+\node at (2.5, -5.25) {i};
+\node at (8.5, -5.25) {j};
+\node at (12.5, -5.25) {k};
+\node at (0, -6) [draw,rectangle,minimum width=5cm,minimum height=1.0cm] {Szülő csúcsok};
+\node at (5.5, -6) [draw,rectangle,minimum width=6cm,minimum height=1.0cm] {Ez a csúcs};
+\node at (10.5, -6) [draw,rectangle,minimum width=4cm,minimum height=1.0cm] {Szabad};
+
+\draw[->, thick] (-2, -6.5) -- (-2, -7.5);
+\node at (2.5, -7.25) {i};
+\node at (5.5, -7.25) {l};
+\node at (8.5, -7.25) {j};
+\node at (12.5, -7.25) {k};
+\node at (0, -8) [draw,rectangle,minimum width=5cm,minimum height=1.0cm] {Szülő csúcsok};
+\node at (4, -8) [draw,rectangle,minimum width=3cm,minimum height=1.0cm] {Nem jobb};
+\node at (7, -8) [draw,rectangle,minimum width=3cm,minimum height=1.0cm] {Jobb};
+\node at (10.5, -8) [draw,rectangle,minimum width=4cm,minimum height=1.0cm] {Szabad};
+
+\draw[->, thick] (-2, -8.5) -- (-2, -9.5);
+\node at (2.5, -9.25) {i};
+\node at (9.5, -9.25) {j};
+\node at (12.5, -9.25) {k};
+\node at (0, -10) [draw,rectangle,minimum width=5cm,minimum height=1.0cm] {Szülő csúcsok};
+\node at (4, -10) [draw,rectangle,minimum width=3cm,minimum height=1.0cm] {Nem jobb};
+\node at (7, -10) [draw,rectangle,minimum width=3cm,minimum height=1.0cm] {Jobb};
+\node at (9, -10) [draw,rectangle,minimum width=1cm,minimum height=1.0cm] {Új};
+\node at (11, -10) [draw,rectangle,minimum width=3cm,minimum height=1.0cm] {Szabad};
+
+\draw[->, thick] (-2, -10.5) -- (-2, -11.5);
+\node at (2.5, -11.25) {i};
+\node at (9.5, -11.25) {j};
+\node at (12.5, -11.25) {k};
+\node at (0, -12) [draw,rectangle,minimum width=5cm,minimum height=1.0cm] {Szülő csúcsok};
+\node at (6, -12) [draw,rectangle,minimum width=7cm,minimum height=1.0cm] {Ez a csúcs};
+\node at (11, -12) [draw,rectangle,minimum width=3cm,minimum height=1.0cm] {Szabad};
+
+\draw[->, thick] (-2, -12.5) -- (-2, -13);
+\end{tikzpicture}
+\caption{Gyorsítótár független particionálás}
+\label{fig:oblivious-partitioning}
+\end{figure}
+
+\subsection{Műveletigény gyorsítótárral}
+
+Tegyük fel, hogy a gyorsítótár mérete $(Z, L)$.
+
+Tegyük fel, hogy egy csúcs bejárásakor a prímek kimeneti listája
+$P$ memóriasorban fér el.
+Ekkor a particionálásokat legfeljebb $O(1+P/L)$ memóriaművelettel
+el lehet végezni.
+
+Tegyük fel, hogy egy $k$ magas csúcs bejárásakor
+a prímek kimeneti listája $P$ memóriasorban elfér.
+Tegyük fel, hogy a prímek teljes listája, és a rekurzív hívás $k+1$-szer ismételt
+lokális változói is elférnek a gyorsítótárban.
+Ekkor az összes lokális változó helye, és a prímek listája
+legfeljebb $O(k+P/L)$ memóriaművelettel
+a gyorsítótárba hozható, és a csúcs és minden gyerekének bejárása
+nem vált ki további memóriaműveletet.
+
+Tegyük fel, hogy a $[0, n)$ intervallumot szitáljuk, $n = a^h$,
+és egy $a^k$ hosszú részintervallumhoz tartozó csúcsban járunk.
+Legyen $p$ egy prím, $p < n$.
+Láttuk, hogy:
+\begin{itemize}
+\item Ha $p \le a^k$, akkor $p$-nek minden $a^k$ hosszú részintervallumban van többszöröse.
+\item Ha $p > a^k$, akkor $p$-nek nem minden $a^k$ hosszú intervallumban van többszöröse.
+Összesen $\frac{n}{a^k} = a^{h-k}$ darab $a^k$ hosszú részintervallum van.
+A $p$ prímnek
+\begin{align*}
+\left\lfloor \frac{n}{p} \right\rfloor
+= \left\lfloor \frac{a^h}{p} \right\rfloor
+< \left\lfloor \frac{a^h}{a^k} \right\rfloor
+= \left\lfloor a^{h-k} \right\rfloor
+= a^{h-k}
+\end{align*}
+többszöröse van.
+\end{itemize}
+
+Ahhoz, hogy megbecsüljük a rekurzív szita viselkedését,
+feltesszük, hogy a prímek többszörösei teljesen egyenletesen oszlanak el
+a részintervallumok között, akár töredék súllyal is.
+Nézzük egy $a^k$ hosszú részintervallumban a többszörösök súlyozott számát.
+\begin{itemize}
+\item Egy $p \le a^k$ prímnek egy a súlya.
+A prímszám tétel\cite{selberg-pnt} szerint ezek összesen
+\begin{align*}
+\Pi(a^k) = \Theta\left(\frac{a^k}{\ln{a^k}}\right)
+= \Theta\left(\frac{a^k}{k \ln{a}}\right)
+\end{align*}
+\item Egy $p > a^k$ prím súlya
+\begin{align*}
+\frac{\frac{n}{p}}{\frac{n}{a^k}} = \frac{a^k}{p}
+\end{align*}
+Mertens tétele\cite{mertens} szerint ekkor az összes ilyen prím összesített súlya
+\begin{align*}
+\sum_{a^k < p \le a^h} \frac{a^k}{p}
+&= a^k \sum_{a^k < p \le a^h} \frac{1}{p} \\
+&= a^k \left( \sum_{p \le a^h} \frac{1}{p} - \sum_{p \le a^k} \frac{1}{p} \right) \\
+&= a^k \left( \ln{\ln{a^h}} - \ln{\ln{a^k}} + O(1) \right) \\
+&= a^k \left( \ln{(h \ln{a})} - \ln{(k \ln{a})} + O(1) \right) \\
+&= a^k \left( \ln{h} + \ln{\ln{a}} - \ln{k} - \ln{\ln{a}} + O(1) \right) \\
+&= a^k \left( \ln{h} - \ln{k} + O(1) \right) \\
+&= a^k \left( \ln{\frac{h}{k}} + O(1) \right) \\
+&= a^k \ln{\frac{h}{k}} + O(a^k)
+\end{align*}
+\end{itemize}
+Összesen tehát egy $a^k$ hosszú részintervallum súlyozott osztóinak a száma
+$O(a^k \ln{\frac{h}{k}})$
+
+{\color{red}Nincs vége.}
+
+\subsection{Cache-aware edényszita}
 
 \subsection{Feltételek a gyorsítótár méretére}
 
@@ -1474,6 +1752,15 @@ Cormen, Thomas A.; Leiserson, Charles E.; Rivest, Ronald L. (2001). Algoritmusok
 \bibitem{strassen}
 Strassen , V. Gaussian elimination is not optimal. Numerische Mathematik 13
 (1969), 354–356.
+
+\bibitem{mertens}
+Villarino, Mark. (2005). Mertens' Proof of Mertens' Theorem. Arxiv.
+
+\bibitem{selberg-pnt}
+Selberg, Atle. An Elementary Proof of the Prime-Number Theorem. Annals of Mathematics 50, no. 2 (1949): 305–13. https://doi.org/10.2307/1969455.
+
+\bibitem{info-theory}
+Cover, T. M., Thomas, J. A. (2006). Elements of Information Theory (2nd ed.). Wiley-Interscience. ISBN: 978-0-471-24195-9. p.111.
 
 \end{thebibliography}
 
