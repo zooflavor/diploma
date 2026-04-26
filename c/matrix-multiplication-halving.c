@@ -112,7 +112,7 @@ void start() {
 	double *matrix1=malloc(size1*size2*sizeof(double));
 	if (0==matrix1) {
 		free(matrix0);
-		exit(2);
+		exit(1);
 		return;
 	}
 	// allocate result matrix
@@ -120,7 +120,7 @@ void start() {
 	if (0==matrix2) {
 		free(matrix1);
 		free(matrix0);
-		exit(3);
+		exit(1);
 		return;
 	}
 	

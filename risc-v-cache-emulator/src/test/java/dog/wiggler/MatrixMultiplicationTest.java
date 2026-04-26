@@ -49,7 +49,8 @@ public class MatrixMultiplicationTest {
             for (var imageName: List.of(
                     "matrix-multiplication-by-definition",
                     "matrix-multiplication-halving",
-                    "matrix-multiplication-power-of-2")) {
+                    "matrix-multiplication-power-of-2",
+                    "matrix-multiplication-power-of-2-strassen")) {
                 for (var seed: LongStream.range(1, 17).toArray()) {
                     result.add(Arguments.of(executableImageOption, imageName, seed));
                 }
@@ -72,14 +73,14 @@ public class MatrixMultiplicationTest {
         double[][] matrix1=new double[size1][size2];
         for (int rr=0; size0>rr; ++rr) {
             for (int cc=0; size1>cc; ++cc) {
-                double dd=128.0*random.nextDouble()-64.0;
+                double dd=((long)(4096.0*random.nextDouble()))/128.0-64.0;
                 matrix0[rr][cc]=dd;
                 input.add(dd);
             }
         }
         for (int rr=0; size1>rr; ++rr) {
             for (int cc=0; size2>cc; ++cc) {
-                double dd=128.0*random.nextDouble()-64.0;
+                double dd=((long)(4096.0*random.nextDouble()))/128.0-64.0;
                 matrix1[rr][cc]=dd;
                 input.add(dd);
             }

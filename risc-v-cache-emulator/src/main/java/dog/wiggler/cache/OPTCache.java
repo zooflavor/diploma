@@ -1,5 +1,6 @@
 package dog.wiggler.cache;
 
+import dog.wiggler.Progress;
 import dog.wiggler.memory.AccessType;
 import dog.wiggler.memory.CollapseElapsedCyclesLog;
 import dog.wiggler.memory.Log;
@@ -99,6 +100,7 @@ public class OPTCache {
     private final @NotNull Path inputLogPath;
     private final int lineSizeInBytes;
     private final @NotNull Path outputLogPath;
+    private final @NotNull Progress progress;
     private final @NotNull ByteBuffer tempBuffer
             =ByteBuffer.allocateDirect(PAGE_SIZE)
             .order(ByteOrder.LITTLE_ENDIAN);
@@ -113,6 +115,7 @@ public class OPTCache {
             @NotNull Path inputLogPath,
             int lineSizeInBytes,
             @NotNull Path outputLogPath,
+            @NotNull Progress progress,
             @NotNull Path tempPath) {
         if (0>=cacheSizeInLines) {
             throw new IllegalArgumentException(
@@ -124,12 +127,14 @@ public class OPTCache {
         this.inputLogPath=Objects.requireNonNull(inputLogPath, "inputLogPath");
         this.lineSizeInBytes=lineSizeInBytes;
         this.outputLogPath=Objects.requireNonNull(outputLogPath, "outputLogPath");
+        this.progress=Objects.requireNonNull(progress, "progress");
         this.tempPath=Objects.requireNonNull(tempPath, "tempPath");
     }
 
     private void preprocess(
             @NotNull SeekableByteChannel tempChannel)
             throws Throwable {
+        long entries=LogInputStream.entries(inputLogPath);
         try (var inputLog=LogInputStream.factory(inputLogPath)
                 .get();
              var outputLog=new CachePreprocessorLog(
@@ -138,10 +143,12 @@ public class OPTCache {
                      true,
                      new CollapseElapsedCyclesLog(
                              new TempLog(tempChannel)))) {
-            while (inputLog.hasNext()) {
+            for (long entry=0; inputLog.hasNext(); ++entry) {
+                progress.progress("preprocess", 100L*entry/entries);
                 inputLog.readNext(outputLog);
             }
             outputLog.end();
+            progress.progress("preprocess", 100L);
         }
     }
 
@@ -221,12 +228,14 @@ public class OPTCache {
         }
         var stackIndexVisitor=new StackIndexVisitor();
         for (long entryIndex=tempEntries-1L; 0L<=entryIndex; --entryIndex) {
+            progress.progress("backward", 100L*(tempEntries-1-entryIndex)/tempEntries);
             long logData=tempRead(tempChannel, 2L*entryIndex);
             long stackIndex=Logs.visit(logData, stackIndexVisitor);
             tempWrite(tempChannel, 2L*entryIndex+1L, stackIndex);
         }
         // noinspection ResultOfMethodCallIgnored
         stackIndexVisitor.end();
+        progress.progress("backward", 100L);
     }
 
     private void processForward(
@@ -471,12 +480,14 @@ public class OPTCache {
             }
             var visitor=new OPTCacheVisitor();
             for (long entryIndex=0L; tempEntries>entryIndex; ++entryIndex) {
+                progress.progress("forward", 100L*entryIndex/tempEntries);
                 long logData=tempRead(tempChannel, 2L*entryIndex);
                 visitor.forwardDistance=tempRead(tempChannel, 2L*entryIndex+1L);
                 Logs.visit(
                         logData,
                         visitor);
             }
+            progress.progress("forward", 100L);
             visitor.end();
         }
     }
@@ -503,9 +514,10 @@ public class OPTCache {
             @NotNull Path inputLogPath,
             int lineSizeInBytes,
             @NotNull Path outputLogPath,
+            @NotNull Progress progress,
             @NotNull Path tempPath)
             throws Throwable {
-        new OPTCache(cacheSizeInLines, cacheType, inputLogPath, lineSizeInBytes, outputLogPath, tempPath)
+        new OPTCache(cacheSizeInLines, cacheType, inputLogPath, lineSizeInBytes, outputLogPath, progress, tempPath)
                 .run();
     }
 

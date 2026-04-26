@@ -1,5 +1,6 @@
 package dog.wiggler.cache;
 
+import dog.wiggler.Progress;
 import dog.wiggler.ReadableMemoryChannel;
 import dog.wiggler.WritableMemoryChannel;
 import dog.wiggler.memory.AccessType;
@@ -90,6 +91,7 @@ public class OPTCacheTest {
                 inputLogPath,
                 8,
                 outputLogPath1,
+                Progress.NO_OP,
                 tempPath);
         testOPTCache(
                 3,
@@ -157,6 +159,7 @@ public class OPTCacheTest {
                 inputLogPath,
                 8,
                 outputLogPath1,
+                Progress.NO_OP,
                 tempPath);
         testOPTCache(
                 2,
@@ -212,6 +215,7 @@ public class OPTCacheTest {
                 inputLogPath,
                 8,
                 outputLogPath1,
+                Progress.NO_OP,
                 tempPath);
         testOPTCache(
                 2,
@@ -257,6 +261,7 @@ public class OPTCacheTest {
                 inputLogPath,
                 8,
                 outputLogPath1,
+                Progress.NO_OP,
                 tempPath);
         testOPTCache(
                 1,
@@ -297,6 +302,7 @@ public class OPTCacheTest {
                 inputLogPath,
                 8,
                 outputLogPath1,
+                Progress.NO_OP,
                 tempPath);
         testOPTCache(
                 2,
@@ -344,6 +350,7 @@ public class OPTCacheTest {
                 inputLogPath,
                 8,
                 outputLogPath1,
+                Progress.NO_OP,
                 tempPath);
         testOPTCache(
                 3,
@@ -393,6 +400,7 @@ public class OPTCacheTest {
                 inputLogPath,
                 8,
                 outputLogPath1,
+                Progress.NO_OP,
                 tempPath);
         testOPTCache(
                 3,
@@ -430,6 +438,7 @@ public class OPTCacheTest {
                     inputLogPath,
                     8,
                     outputLogPath1,
+                    Progress.NO_OP,
                     tempPath);
             fail();
         }
@@ -646,6 +655,7 @@ public class OPTCacheTest {
                                     inputLogPath,
                                     lineSize,
                                     outputLogPath1,
+                                    Progress.NO_OP,
                                     tempPath);
                             testOPTCache(
                                     cacheSize,

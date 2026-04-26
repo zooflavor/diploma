@@ -1,5 +1,6 @@
 package dog.wiggler.cache;
 
+import dog.wiggler.Progress;
 import dog.wiggler.function.Supplier;
 import dog.wiggler.memory.AccessType;
 import dog.wiggler.memory.CollapseElapsedCyclesLog;
@@ -32,6 +33,7 @@ public class NWayAssociativeCache {
             @NotNull Path inputLogPath,
             int lineSizeInBytes,
             @NotNull Path outputLogPath,
+            @NotNull Progress progress,
             @NotNull Supplier<? extends @NotNull ReplacementPolicy> replacementPolicyFactory,
             @NotNull WriteMiss writeMiss,
             @NotNull WritePolicy writePolicy)
@@ -45,6 +47,7 @@ public class NWayAssociativeCache {
                     "cache size is not a multiple of the associativity, cache size: %d, associativity: %d"
                             .formatted(cacheSizeInLines, associativity));
         }
+        long entries=LogInputStream.entries(inputLogPath);
         try (var inputLog=LogInputStream.factory(inputLogPath)
                 .get();
              var outputLog=CollapseElapsedCyclesLog.factory(
@@ -102,10 +105,12 @@ public class NWayAssociativeCache {
                             return outputLog.userData(userData);
                         }
                     });
-            while (inputLog.hasNext()) {
+            for (long entry=0; inputLog.hasNext(); ++entry) {
+                progress.progress("forward", 100L*entry/entries);
                 inputLog.readNext(visitor);
             }
             visitor.end();
+            progress.progress("forward", 100L);
         }
     }
 }

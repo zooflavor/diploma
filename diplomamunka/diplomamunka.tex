@@ -26,6 +26,7 @@
 \usepackage{float}
 \usepackage{listings}
 \usepackage{moresize}
+\usepackage{moreverb}
 \usepackage{multirow}
 \usepackage{pgfplots}
 %\usepackage{siunitx}
@@ -2091,27 +2092,926 @@ megegyezik a RekurzívSzita bonyolultságával.
 
 \chapter{Szimulátor}
 
-\section{Igazi cache}
-
-Asszociativitás. Több szint. Több mag osztozik. Léteznek egészen speciális cache-ek, TLB, decoded microcode, trace cache, ...
-
-\section{Megoldás}
-
-\section{Választható cache-ek}
-
+A gyorsítótár-független algoritmusok valódi viselkedésének
+ellenőrzéséhez szimulátort készítettem.
+Ennek több része van.
 \begin{itemize}
-\item utasítás/adat/mindkettő
-\item MIN/OPT.
-\item LRU
-\item FIFO, LIFO, LFU, ..., kevésbé izgalmasak
-\item teljes/1-2-3...-n asszociativitás
-\item mindenféle méretben
-\item egymás után akár több is
+\item A megvizsgált algoritmusok C-ben írt programok.
+\item Egy RISC-V emulátor, ami egy program futtatása közben elmenti
+a memória hozzáféréseket.
+\item Egy gyorsítótár szimulátor, ami egy memória-hozzáférés sorozatot
+a gyorsítótáron visszajátszva egy új memória-hozzáférés sorozatot készít.
+\item Egy összesítő, ami egy memória-hozzáférés sorozatból
+statisztikákat készít.
 \end{itemize}
+
+\section{C programok}
+
+A C programokban a nyelv minden konstrukciója használható,
+de a sztenderd nyelvi könyvtár helyett csak néhány egyszerűsített
+funkció támogatott.
+\begin{itemize}
+\item A programot függőségek nélkül, statikusan, egy önálló programként kell fordítani.
+\begin{itemize}
+\item A kimenet egy futtatható ELF (Executable and Linkable Format) formátumú
+bináris fájl kell legyen.
+\item Az architektúra RV64IMFD\cite{riscv-isa} kell legyen.
+\item A hívási konvenció LP64D\cite{riscv-abi} kell legyen.
+\item A programszerkesztésnél a szegmenseket a $0x10000$ címtől kell
+folytonosan elrendezni.
+\end{itemize}
+
+\item A belépési pont egy paraméterek nélküli függvény kell legyen.
+A program futása véget ér, ha ez a függvény vissza tér.
+Ekkor a kilépési kód nulla.
+
+\item A környezettel a következő funkciókkal lehet kommunikálni.
+\begin{itemize}
+\item \texttt{void exit(int)}: \\
+befejezi a program futását, és a megadott paramétert adja vissza kilépési kódként.
+
+\item \texttt{void *malloc(uint64\_t)}: \\
+a memóriából lefoglal egy, a megadott méretű, darabot.
+Hiba esetén \texttt{NULL}-t ad vissza.
+
+\item \texttt{void free(void*)}: \\
+felszabadítja a megadott, \texttt{malloc} által lefoglalt memóriát.
+
+\item \texttt{void memory\_access\_log\_disable()}: \\
+letiltja a memória-műveletek naplózását.
+
+\item \texttt{void memory\_access\_log\_enable()}: \\
+engedélyezi a memória-műveletek naplózását.
+
+\item \texttt{void memory\_access\_log\_user\_data(uint64\_t)}: \\
+a memória-műveletek naplójába írja a megadott értéket.
+
+\item Műveletek a sztenderd bemenetről olvasáshoz:
+\begin{itemize}
+\item \texttt{double read\_double()}
+\item \texttt{float read\_float()}
+\item \texttt{int16\_t read\_int16()}
+\item \texttt{int8\_t read\_int8()}
+\item \texttt{int32\_t read\_int32()}
+\item \texttt{int64\_t read\_int64()}
+\item \texttt{uint16\_t read\_uint16()}
+\item \texttt{uint8\_t read\_uint8()}
+\item \texttt{uint32\_t read\_uint32()}
+\item \texttt{uint64\_t read\_uint64()}
+\end{itemize}
+
+\item Műveletek a sztenderd bemenetre íráshoz:
+\begin{itemize}
+\item \texttt{write\_double(double)}
+\item \texttt{write\_float(float)}
+\item \texttt{write\_int16(int16\_t)}
+\item \texttt{write\_int8(int8\_t)}
+\item \texttt{write\_int32(int32\_t)}
+\item \texttt{write\_int64(int64\_t)}
+\item \texttt{write\_uint16(uint16\_t)}
+\item \texttt{write\_uint8(uint8\_t)}
+\item \texttt{write\_uint32(uint32\_t)}
+\item \texttt{write\_uint64(uint64\_t)}
+\end{itemize}
+\end{itemize}
+\end{itemize}
+
+\subsection{Mátrix szorzás}
+
+A mátrixszorzások bemenete a következő.
+\begin{itemize}
+\item Három egész. Az első a bal mátrix sorainak száma.
+A második a bal mátrix oszlopainak és a jobb mátrix sorainak száma.
+A harmadik a jobb mátrix oszlopainak száma.
+\item A bal mátrix elemei sorfolytonosan felsorolva. Az értékek lebegőpontosak.
+\item A jobb mátrix elemei sorfolytonosan felsorolva. Az értékek lebegőpontosak.
+\end{itemize}
+A programok kimenetei az eredménymátrix elemei sorfolytonosan felsorolva.
+
+Például egy szorzat kiszámításának bemenete és kimenete a következő.
+Az első hat sor a bement. A utolsó két sor a kimenet.
+A példában az új-sor karakterek szóközzel vannak helyettesítve
+a jobb értelmezhetőség kedvéért.
+\begin{table}[ht]
+\centering
+\caption{A mátrixszorzás futtatásának példája}
+\label{table-mm-example-run}
+\begin{boxedverbatim}
+matrix-multiplication-by-definition.native-gcc-O2.elf 
+2 3 2
+1 2 3
+4 5 6
+7 8
+9 10
+11 12
+58.000000 64.000000
+139.000000 154.000000
+\end{boxedverbatim}
+\end{table}
+
+Egy mátrixszorzás kilépési kódja a következőek egyike lehet.
+\begin{itemize}
+\item $0$: Siker.
+\item $1$: Nincs elég szabad memória.
+\item $2$: A mátrixok egyik dimenziója nagyobb, mint $2^{63}$.
+\end{itemize}
+
+\subsection{RekurzívSzita}
+
+A gyorsítótár-független RekurzívSzita bemenete két egész szám.
+\begin{itemize}
+\item Az első a rekuzív fa magassága.
+Ha ez a szám $h$,
+akkor a rekurzív fa a $[0, 2^h)$ intervallumot fedi le.
+\item A második paraméter a prímek tárolására használandó tömb mérete, bájtban.
+\end{itemize}
+
+A gyorsítótár-tudatos RekurzívSzita bemenete három egész szám.
+\begin{itemize}
+\item
+Az első a számrendszer alapja, azaz egy belső csúcs gyerekeinek száma a rekurzív fában.
+Legyen ez a paraméter $a$.
+\item Az második a rekuzív fa magassága.
+Ha ez a szám $h$,
+akkor a rekurzív fa a $[0, a^h)$ intervallumot fedi le.
+\item A harmadik paraméter a láncolt lista elemeinek lapmérete.
+\end{itemize}
+
+A RekurzívSzita kimenete a prímek listája
+a szitált intervallumban, növekvő sorrendben.
+
+Például a gyorsítótár-független RekurzívSzita bemenete és kimenete a következő.
+A példában az új-sor karakterek szóközzel vannak helyettesítve
+a jobb értelmezhetőség kedvéért.
+\begin{table}[ht]
+\centering
+\caption{A gyorsítótár-független RekurzívSzita futtatásának példája}
+\label{table-bucket-sieve-oblivious-example-run}
+\begin{boxedverbatim}
+bucket-sieve-cache-oblivious.native-gcc-O2.elf
+5 10000
+2 3 5 7 11 13 17 19 23 29 31
+\end{boxedverbatim}
+\end{table}
+
+A következő egy példa a gyorsítótár-tudatos RekurzívSzita be- és kimenetére.
+\begin{table}[ht]
+\centering
+\caption{A gyorsítótár-tudatos RekurzívSzita futtatásának példája}
+\label{table-bucket-sieve-aware-example-run}
+\begin{boxedverbatim}
+bucket-sieve-cache-aware.native-gcc-O2.elf 
+3 3 4096
+2 3 5 7 11 13 17 19 23
+\end{boxedverbatim}
+\end{table}
+
+Egy RekurzívSzita kilépési kódja a következőek egyike lehet.
+\begin{itemize}
+\item $0$: Siker.
+\item $1$: Nincs elég szabad memória.
+\item $2$: A fa magassága nagyobb, mint 63.
+\item $3$: A számrendszer alapja kisebb, mint 2.
+\item $4$: A lapméret kisebb, mint 32.
+\end{itemize}
+
+\section{RISC-V szimulátor}
+
+A szimulátor egy Java nyelven írt parancssori program.
+Ez tartalmazza a RISC-V szimulátort,
+a gyorsítótár szimulátort,
+és az összesített statisztikai adatok előállítását.
+
+A szimulátor képes futtatni egy RISC-V programot egy egyszerűsített
+számítógépben.
+\begin{itemize}
+\item Szimulálja a RISC-V végrehajtóegység működését.
+\item A memóriát a gazdarendszer virtuális memóriájával szimulálja.
+\item Naplózza a memória-hozzáféréseket.
+\item Implementálja egy egyszerűsített operációs rendszer funkcióit.
+\begin{itemize}
+\item Betölti a programot.
+\item Futtatja a program, a terminálási feltétel eléréséig.
+\item Kezeli a memóriafoglalásokat, és a vermet.
+\item Kezeli a be-, és kimenetet.
+\end{itemize}
+\end{itemize}
+
+A végrehajtó egység az RV64IMFD\cite{riscv-isa} architektúrát implementálja.
+Ez 64 bites RISC-V architektúra, szorzással, osztással,
+valamint egyszeres-, és kétszeres-pontosságú lebegőpontos számokkal.
+Ez elegendő egyszálas felhasználói programok futtatására.
+
+A szimulált memória háttere lehet java heap memória,
+és a gazda operációs rendszer virtuális memóriája is,
+memória-leképzett fájlon keresztül.
+A memóriacímek 48 legkisebb helyiértékű bitjei használhatóak,
+így a memória maximális mérete 256TB lehet.
+
+A memória-hozzáférésekről napló készül.
+A napló egy idősoros bináris fájl,
+melyben minden bejegyzés 64 bit.
+A következő bejegyzések lehetségesek:
+\begin{itemize}
+\item Memória-hozzáférés. Tartalmazza:
+\begin{itemize}
+\item A hozzáférés címét.
+\item A hozzáférés méretét, bájtokban.
+\item A hozzáférés típusát, ami lehet utasítás betöltés, adat betöltés, és adat tárolás.
+\end{itemize}
+
+\item A hozzáférési naplózás leállításának vagy elindításának kérését.
+\item Az eddig futtatott gépi kódú utasítások számát.
+Ez az érték a szimulált időnek felel meg.
+\item Felhasználó által generált bejegyzés, 61 bit adattartalommal.
+\end{itemize}
+
+A memóriát a szimulátor 5 összefüggő részre osztja. Ezek sorrendben:
+\begin{itemize}
+\item A szimulátor számára fenntartott rész, $0x0-0x10000$ intervallumban.
+\item Az objektumkód számára fenntartott rész.
+A szimulátor ide tölti be a programot. $0x10000$ címen kezdődik,
+és a vége a programszegmensek végeinek legnagyobbika.
+\item A \texttt{malloc()}-kal allokált memória.
+\item A szabad memória.
+\item A verem, ami a memória végén kezdődik,
+és lefelé nő.
+\end{itemize}
+
+A \texttt{malloc()} a szabad memória elejéről foglal,
+az allokált terület megnövelésével.
+A \texttt{free()} nem csinál semmit.
+A verem a szabad terület végéről foglal,
+a veremmutató csökkentésével.
+Ha nincs elegendő szabad memória,
+akkor a \texttt{malloc()} \texttt{NULL}-t ad vissza,
+míg a verem növelése veremtúlcsordulás hibával megállítja a szimulációt.
+
+A szimulált operációs-rendszer hívások megszakításokkal vannak implementálva.
+A megszakításkezelők előre rögzített címekhez vannak kötve,
+és a végrehajtó egység utasítás-dekódere
+ezeken a címeken a memóriában tárolt utasítás helyett
+a megszakításkezelőre bízza a végrehajtást.
+A megszakításkezelők a hívási konvenció szerinti függvényként viselkednek.
+A paramétereket és a visszatérési értéket a regisztereken és a vermen keresztül
+adják át, és a művelet elvégzése után függvényként visszatérnek.
+\begin{itemize}
+\item \texttt{void exit(int)}, \texttt{void exit\_ok()}:
+A szimulátor a program indításakor a kilépési kódot üresre állítja,
+és a programot addig futtatja,
+amíg be nem állítja az \texttt{exit} függvényekkel a kilépési kódot.
+Az \texttt{exit()} a paraméterként megadott számot állítja be kilépési kódnak,
+még a \texttt{exit\_ok()} mindig nullát.
+A \text{exit\_ok()} címét a program indításakor a belépési pont
+visszatérési címeként állítja be a szimulátor,
+így a belépési pont függvényéből
+visszatérve nullára állítódik a kilépési kód.
+
+\item \texttt{void memory\_access\_log\_disable()}, \\
+\texttt{void memory\_access\_log\_enable()}:
+Letiltja és engedélyezi a memóriahozzáférések és a felhasználói adatok
+naplózását a napló fájlba.
+Kezdetben le van tiltva.
+
+\item \texttt{memory\_access\_log\_user\_data(uint64\_t)}:
+Naplózza a megadott felhasználói adatot a napló fájlba,
+ha a naplózás engedélyezve van.
+
+\item \texttt{void *malloc(uint64\_t)}:
+Lefoglal a szabad memóriából egy legalább akkor darabot,
+mint a megadott paraméter.
+A szabad memória a szabad memória mutató és a veremmutató
+közötti memóriaszakasz.
+Ha nincs elég szabad memória, akkor \texttt{NULL}-lal tér vissza.
+Ha van elég szabad memória, akkor a lefoglalt memóriaszakasz elejére
+mutató mutatóval.
+A memóriát mindig a szabad memória szakasz elején foglalja le,
+és megnöveli szabad memória mutatót.
+
+\item \texttt{void free(void*)}: Nem csinál semmit.
+
+\item A beolvasó is kiíró műveletek a szimulátor parancssorának
+sztenderd ki és bemenetét használják.
+A kiírás minden értéket egy új sorba ír,
+és a formázáshoz java alapértelmezett primitív-érték formázóit használja.
+A beolvasás mindig egész sorokat olvas,
+és egy sorból egy értéket próbál értelmezni,
+java alapértelmezett primitív-érték elemzőivel.
+\end{itemize}
+
+A RISC-V szimulátort a mellékelt script-tel lehet elindítani:
+\begin{verbatim}
+run-emulator.sh \
+	run \
+	program-image \
+	log-file \
+	memory-size \
+	[memory-file]
+\end{verbatim}
+A paraméterek a következőek.
+\begin{itemize}
+\item \texttt{program-image}: elérési út kell a futtatni kívánt ELF bináris fájlhoz.
+\item \texttt{log-file}: elérési út a memória-hozzáférés naplóhoz.
+A fájlt a szimulátor minden futtatásnál felülírja.
+\item \texttt{memory-size}: A szimulált memória mérete.
+Mértékegység nélkül bájtban értendő.
+Lehetséges mértékegységek a \texttt{kb}, \texttt{mb}, és \texttt{gb},
+ahol a szorzók sorra $2^{10}$, $2^{20}$, és $2^{30}$.
+A mértékegységet elválasztás nélkül közvetlenül
+egy szám után kell írni, például \texttt{"16mb"}.
+\item \texttt{memory-file}:
+Elérési út a szimulált memória hátterének memória-leképzett fájljához.
+A szimulátor induláskor a fájl méretét megnöveli a kívánt
+memóriaméretre, ha az annál kisebb.
+Ha a paraméter meg van adva, akkor a szimulátor
+a java heap memória helyett a gazda operációs rendszer virtuális
+memóriáját használja.
+\end{itemize}
+
+\section{Gyorsítótár szimulátor}
+
+A gyorsítótár szimulátor egy memória-elérési naplót
+visszajátszik egy szimulált gyorsítótáron,
+és a gyorsítótár által generált memória-eléréseket
+egy új naplóba írja.
+A szimulációt minden esetben egy üres gyorsítótárral kezdi.
+A szimuláció a napló azon bejegyzéseit, amik nem memória-elérések,
+az új naplóba másolja.
+
+Egy OPT gyorsítótár szimulációját a következő paranccsal lehet elindítani.
+\begin{verbatim}
+run-emulator.sh \
+  cache \
+  opt \
+  cache-size \
+  line-size \
+  access-type \
+  input-log-file \
+  output-log-file \
+  temp-file
+\end{verbatim}
+Az OPT gyorsítótár teljesen asszociatív.
+A paraméterek a következőek.
+\begin{itemize}
+\item \texttt{cache-size}: A gyorsítótár mérete gyorsítótár-sorokban.
+
+\item \texttt{line-size}: Egy gyorsítótár-sor mérete bájtokban.
+Az érték csak kettő hatványa lehet.
+
+\item \texttt{access-type}: A memória-elérés típusa. A következő értékek lehetnek.
+\begin{itemize}
+\item \texttt{both}:
+Az utasítás betöltéseket, valamint az adat betöltéseket és tárolásokat
+is visszajátssza a gyorsítótárnak.
+\item \texttt{data}:
+Az adat betöltéseket és tárolásokat visszajátssza a gyorsítótárnak,
+az utasítás betöltéseket átmásolja az új naplóba másolja.
+\item \texttt{instruction}:
+Az utasítás betöltéseket visszajátssza a gyorsítótárnak,
+az adat betöltéseket és tárolásokat az új naplóba másolja.
+\end{itemize}
+
+\item \texttt{input-log-file}: Elérési út a bemeneti naplófájlhoz.
+
+\item \texttt{output-log-file}: Elérési út a kimeneti naplófájlhoz.
+
+\item \texttt{temp-file}: Elérési út egy ideiglenes fájlhoz.
+\end{itemize}
+Az OPT gyorsítótár egy kétlépéses algoritmussal\cite{stack-algorithm}
+számítja ki az eredményt.
+Első lépésben a naplót visszafele végigolvasva LRU-ra hasonlító
+módon minden memória-elérésnél meghatározza,
+hogy mikor lesz legközelebb ugyanez a cím elérve.
+Ehhez a lépéshez minden elért memóriacímet a memóriában kell tartani.
+A második lépésben a naplóban előrefelé olvasva
+szimulálja a gyorsítótárat,
+az első lépésben meghatározott segédadatokkal.
+
+Egy online gyorsítótár szimulációját a következőképp lehet indítani.
+\begin{verbatim}
+run-emulator.sh \
+  cache \
+  replacement-policy \
+  cache-size \
+  associativity \
+  line-size \
+  access-type \
+  write-miss \
+  write-policy \
+  input-log-file \
+  output-log-file \
+  [random-seed]
+\end{verbatim}
+A \texttt{cache-size}, \texttt{line-size}, \texttt{access-type},
+\texttt{input-log-file}, és \texttt{output-log-file}
+paraméterek megegyeznek az OPT gyorsítótáréval.
+Az új paraméterek a következőek.
+\begin{itemize}
+\item \texttt{replacement-policy}:
+A gyorsítótár cserestratégiája.
+A lehetséges értékek \texttt{fifo}, \texttt{lfu},
+\texttt{lru}, és \texttt{random}.
+
+\item \texttt{cache-size}: A gyorsítótár mérete gyorsítótár-sorokban.
+Az érték csak kettő-hatvány lehet.
+
+\item \texttt{associativity}:
+A gyorsítótár asszociativitása.
+Az érték csak kettő-hatvány lehet, és a \text{cache-size} osztója kell legyen.
+Ha az \texttt{associativity} értéke 1, akkor a gyorsítótár közvetlen leképezésű,
+és minden cserestratégiával ugyanúgy viselkedik.
+Ha az \texttt{associativity} és a \texttt{cache-size} egyenlő,
+akkor a gyorsítótár teljesen asszociatív.
+
+\item \texttt{write-miss}: A tárolás találati hibáinak kezelési módja.
+\begin{itemize}
+\item \texttt{allocate}:
+A tároláshoz tartozó sor a gyorsítótárba kerül.
+Ha a tárolás nem fed le egy teljes memóriasort,
+akkor először azt betölti.
+\item \texttt{dont-allocate}:
+A tárolást a gyorsítótárt megkerülésével közvetlenül a memóriában végzi el,
+a tároláshoz tartozó memóriasor nem kerül a gyorsítótárba.
+\end{itemize}
+
+\item \texttt{write-policy}: Az írási stratégia.
+\begin{itemize}
+\item \texttt{back}:
+A tárolást csak a gyorsítótárban végzi el, és az érintett sort
+megjelöli módosítottnak.
+Egy módosított sort csere előtt a memóriába írja.
+\item \texttt{through}:
+A tárolást elvégzi a gyorsítótárban is,
+és közvetlenül a memóriában is.
+\end{itemize}
+
+\item \texttt{random-seed}:
+A véletlen cserestratégia véletlenszám-generátor inicializáló értéke.
+Nem kötelező paraméter.
+\end{itemize}
+
+\section{Összesítő}
+
+Egy memória-elérési naplóból összesített statisztikák nyerhetőek ki a következő paranccsal.
+\begin{verbatim}
+run-emulator.sh statistics memory-log
+\end{verbatim}
+A \texttt{memory-log} egy elérési út kell legyen egy napló-fájlhoz.
+
+A program a statisztikákat a parancssor sztenderd kimenetére írja,
+CSV formátumban.
+A program a napló bejegyzéseit sorban felolvassa,
+és számontartja az utolsó beolvasott bejegyzésig futtatott gépi kódú
+utasítások számát, és a memória-elérések számát, típusonként.
+A napló bejárása során naplózás letiltása, naplózás engedélyezése,
+és felhasználói adat bejegyzést olvasva, valamint a napló végén,
+az összesített adatokat egy új sorba kiírja.
+
+A kimenet oszlopai a következőek.
+\begin{itemize}
+\item A naplóbejegyzés típusa, aminek hatására a kimeneti sort generálta.
+\item A futtatott gépi kódú utasítások száma.
+\item Az utasításbetöltések száma.
+\item Az adatbetöltések száma.
+\item A tárolások száma.
+\item Az adatbetöltések és a tárolások száma.
+\item Az összes memória-elérés száma.
+\end{itemize}
+
+Például a gyorsítótár-független RekurzívSzita
+memória-elérési naplójának statisztikája a következő.
+
+\begin{table}[ht]
+\centering
+\caption{Memória-elérési napló statisztikái}
+\label{table-statistics}
+{\tiny
+\begin{tabular}{|l|r|r|r|r|r|r|r|}
+\hline
+type & elapsed cycles & instruction loads & data loads & stores & data accesses & total accesses \\
+\hline
+access log disabled & 0 & 0 & 0 & 0 & 0 & 0 \\
+\hline
+access log enabled & 32 & 0 & 0 & 0 & 0 & 0 \\
+\hline
+262144 & 129119032 & 129095999 & 21162926 & 13736243 & 34899169 & 163995168 \\
+\hline
+524288 & 271417020 & 271373596 & 44621021 & 29013074 & 73634095 & 345007691 \\
+\hline
+786432 & 418210485 & 418147504 & 68874967 & 44867925 & 113742892 & 531890396 \\
+\hline
+access log disabled & 565902428 & 565820367 & 93300999 & 60874464 & 154175463 & 719995830 \\
+\hline
+end & 565902439 & 565820367 & 93300999 & 60874464 & 154175463 & 719995830 \\
+\hline
+\end{tabular}
+}
+\end{table}
+
+\section{Fordítás}
+
+A C programokat a \texttt{c} könyvtárban található \texttt{compile.sh}
+BASH script-tel lehet lefordítani.
+Ez az összes programot lefordítja GCC-vel natív futtatható programként,
+valamint GCC-vel és Clang-gal RISC-V architektúrára,
+0, 1, és 2-es optimalizálási szinttel.
+A lefordított programok a \texttt{c/out} könyvtárban találhatóak
+
+A java program a mellékelt Maven projektfájl segítségével fordítható,
+a \\
+\texttt{risc-v-cache-emulator} könyvtárban
+kiadott \texttt{mvn package} paranccsal.
 
 \section{Tesztek}
 
+A C programok, a RISC-V szimulátor, és a gyorsítótár szimulátorok tesztelésére
+JUnit tesztek készültek.
+Ezek 100\% lefedik a C programok, a RISC-V szimulátort,
+és a gyorsítótár szimulátorokat.
+
+A JUnit teszteket a
+\texttt{risc-v-cache-emulator} könyvtárban
+kiadott \texttt{mvn test} paranccsal lehet futtatni.
+
+A C programok tesztelése kétféleképpen történik.
+Kis méretű bemeneteken a kimenet és az elvárt eredmény összehasonlításával.
+Nagy méretű bemeneten véletlenszerűen generált bemenetekkel,
+és az eredményt a program egyszerűsített java implementációjának
+eredményével hasonlítja össze.
+
+A RISC-V szimulátor tesztelése a C programok és egy speciális
+C nyelven írt funkciógyűjtemény segítségével történik.
+Ez a funkciógyűjtemény a C nyelv konstrukcióit
+exportált függvényekként teszi elérhetővé.
+A tesztek az összes funkció meghívják, különböző bemeneti adatokkal,
+és az eredményt összehasonlítják az elvárt értékkel.
+A teszt minden C programot hatféle változatban kipróbál,
+GCC-vel és Clang-gal lefordítva, valamint 0, 1, és 2 optimalizálási szinttel.
+
+A gyorsítótár szimulációk tesztelése hasonló a C programok tesztjeihez.
+Kis méretű inputokon az eredményt az összehasonlítja az elvárt értékkel.
+Nagy méretű inputokon véletlenszerű adatokkal futtatja a szimulátort,
+és az eredményt egy egyszerűsített implementáció
+eredményével hasonlítja össze.
+
+A naplófájl statisztikáinak előállítását manuálisan teszteltem.
+
+\section{Dokumentáció ???}
+
+{\color{red} XXXXXXXXXXXXXXX}
+
 \chapter{Mérési eredmények}
+
+\section{Mátrix szorzás}
+
+A \ref{table-mm-po2-factor} táblázat tartalmazza
+a gyorsítótár cserestratégiák összehasonlítását
+a kettő-hatvány négyzetes mátrixok gyorsítótár-független szorzásának
+segítségével.
+A gyorsítótárak teljesen asszociatívak,
+visszaírási stratégiával, és írási hiba esetén foglalással.
+A gyorsítótár mérete 2 kilobájt 16 bájtos sorokkal,
+és 32 kilobájt, 64 bájtos sorokkal.
+Az értékek a gyorsítótár által kiváltott adat-elérések száma
+és az $n^3 / \sqrt{Z}L$ hányadosa.
+Ez az érték a gyorsítótár-komplexitásra adott becslés növekedési osztályának
+köbös tagja.
+A növekedési osztály $\Theta(n+n^2/L+n^3/\sqrt{Z}L)$.
+% jóslat: n= 64, Z/L= 2k/16 ->   362,039
+% jóslat: n= 64, Z/L=32k/64 ->    22,627
+% jóslat: n=128, Z/L= 2k/16 ->  2896,309
+% jóslat: n=128, Z/L=32k/64 ->   181,019
+% jóslat: n=256, Z/L= 2k/16 -> 23170,475
+% jóslat: n=256, Z/L=32k/64 ->  1448,155
+% opt:
+% szimuláció: n= 64, opt  2k/16 ->     78235
+% szimuláció: n= 64, opt 32k/64 ->      6346
+% szimuláció: n=128, opt  2k/16 ->    538396
+% szimuláció: n=128, opt 32k/64 ->     43864
+% szimuláció: n=256, opt  2k/16 ->   3949333
+% szimuláció: n=256, opt 32k/64 ->    274556
+% lru:
+% szimuláció: n= 64, opt  2k/16 ->    113369
+% szimuláció: n= 64, opt 32k/64 ->     10070
+% szimuláció: n=128, opt  2k/16 ->    816346
+% szimuláció: n=128, opt 32k/64 ->     58383
+% szimuláció: n=256, opt  2k/16 ->   6169811
+% szimuláció: n=256, opt 32k/64 ->    376751
+% lfu:
+% szimuláció: n= 64, opt  2k/16 ->   5436079
+% szimuláció: n= 64, opt 32k/64 ->   2842778
+% szimuláció: n=128, opt  2k/16 ->  43498351
+% szimuláció: n=128, opt 32k/64 ->  24487130
+% szimuláció: n=256, opt  2k/16 -> 347823343
+% szimuláció: n=256, opt 32k/64 -> 265728346
+% random 13:
+% szimuláció: n= 64, opt  2k/16 ->    178417
+% szimuláció: n= 64, opt 32k/64 ->     11016
+% szimuláció: n=128, opt  2k/16 ->   1335317
+% szimuláció: n=128, opt 32k/64 ->     73817
+% szimuláció: n=256, opt  2k/16 ->  10318978
+% szimuláció: n=256, opt 32k/64 ->    502780
+% fifo:
+% szimuláció: n= 64, opt  2k/16 ->    140738
+% szimuláció: n= 64, opt 32k/64 ->     10074
+% szimuláció: n=128, opt  2k/16 ->   1035259
+% szimuláció: n=128, opt 32k/64 ->     60652
+% szimuláció: n=256, opt  2k/16 ->   7918526
+% szimuláció: n=256, opt 32k/64 ->    395481
+\begin{table}[ht]
+\centering
+\caption{A mátrixszorzás viselkedése különböző gyorsítótárakkal}
+\label{table-mm-po2-factor}
+\begin{tabular}{|r|r|r|r|r|r|r|}
+\hline
+$n$ & $Z/L$ & OPT & LRU & FIFO & Random & LFU \\
+\hline
+ $64$ &  $2k/16$ & $216,096$ & $313,140$ & $388,737$ & $492,812$ & $15015,175$ \\
+\hline
+ $64$ & $32k/64$ & $280,461$ & $445,044$ & $445,220$ & $486,852$ & $125636,540$ \\
+\hline
+$128$ &  $2k/16$ & $185,890$ & $281,857$ & $357,441$ & $461,041$ & $15018,546$ \\
+\hline
+$128$ & $32k/64$ & $242,317$ & $322,524$ & $335,059$ & $407,786$ & $135273,811$ \\
+\hline
+$256$ &  $2k/16$ & $170,447$ & $266,279$ & $341,750$ & $445,350$ & $15011,490$ \\
+\hline
+$256$ & $32k/64$ & $189,590$ & $260,159$ & $273,093$ & $347,187$ & $183494,409$ \\
+\hline
+\end{tabular}
+\end{table}
+
+A \ref{table-mm-po2-factor-associativity} táblázat tartalmazza
+az LRU gyorsítótár komplexitásának változását az asszociativitás függvényében.
+A program a kettő-hatvány mátrixok szorzása, minden esetben $n=256$.
+Az értékek a gyorsítótár által kiváltott adatelérések
+és a gyorsítótár-komplexitás köbös tagjának hányadosa.
+
+% jóslat: n=256, Z/L= 2k/16 -> 23170,475
+% jóslat: n=256, Z/L=32k/64 ->  1448,155
+% lru-1:
+% szimuláció: n=256, opt  2k/16 -> 63626444
+% szimuláció: n=256, opt 32k/64 -> 10028083
+% lru-2:
+% szimuláció: n=256, opt  2k/16 -> 44159126
+% szimuláció: n=256, opt 32k/64 ->  2555212
+% lru-4:
+% szimuláció: n=256, opt  2k/16 -> 29877056
+% szimuláció: n=256, opt 32k/64 ->  1786651
+% lru-8:
+% szimuláció: n=256, opt  2k/16 -> 13977790
+% szimuláció: n=256, opt 32k/64 ->  1790853
+% lru-16:
+% szimuláció: n=256, opt  2k/16 ->  8184997
+% szimuláció: n=256, opt 32k/64 ->  1818605
+% lru-32:
+% szimuláció: n=256, opt  2k/16 ->  6366424
+% szimuláció: n=256, opt 32k/64 ->   849163
+% lru:
+% szimuláció: n=256, opt  2k/16 ->  6169811
+% szimuláció: n=256, opt 32k/64 ->   376751
+\begin{table}[ht]
+\centering
+\caption{Az LRU viselkedése az asszociativitás függvényében}
+\label{table-mm-po2-factor-associativity}
+\begin{tabular}{|r|r|r|}
+\hline
+Asszociativitás & $Z/L=2k/16$ & $Z/L=32k/64$ \\
+\hline
+Közvetlen leképezésű & $2746,013$ & $6924,730$ \\
+\hline
+2 & $1905,836$ & $1764,460$ \\
+\hline
+4 & $1289,445$ & $1233,743$ \\
+\hline
+8 & $603,259$ & $1236,645$ \\
+\hline
+16 & $353,251$ & $1255,808$ \\
+\hline
+32 & $274,765$ & $586,376$ \\
+\hline
+Teljes & $266,279$ & $260,159$ \\
+\hline
+\end{tabular}
+\end{table}
+
+A \ref{table-matrix-multiply-algorithms} táblázat tartalmazza
+a mátrixszorzás algoritmusok viselkedését egy LRU gyorsítótáron.
+Minden esetben $n=256$. A gyorsítótár teljesen asszociatív.
+Az értékek a gyorsítótár által kiváltott adat-elérések száma
+és a gyorsítótár-komplexitás növekedési osztályának köbös tagjának hányadosa.
+
+% by definition
+% jóslat:         16777216
+% valóság  2k/16: 25526021
+% valóság 32k/64:  2163196
+% halving
+% jóslat  2k/16:     23170,475
+% jóslat 32k/64:      1448,155
+% valóság  2k/16:  8192094
+% valóság 32k/64:   345646
+% power of 2
+% jóslat  2k/16:     23170,475
+% jóslat 32k/64:      1448,155
+% valóság  2k/16:  6169811
+% valóság 32k/64:   376751
+% power of 2 strassen
+% jóslat  2k/16:      7961,582
+% jóslat 32k/64:       497,599
+% valóság  2k/16: 41772190
+% valóság 32k/64:  2201311
+\begin{table}[ht]
+\centering
+\caption{A mátrixszorzás algoritmusok viselkedése LRU gyorsítótáron}
+\label{table-matrix-multiply-algorithms}
+\begin{tabular}{|l|r|r|r|}
+\hline
+Algoritmus & Becslés & $Z/L=2k/16$ & $Z/L=32k/64$ \\
+\hline
+Definíció szerint & $n^3$ & $1,521$ & $0,129$ \\
+\hline
+Felezés & $n^3 / \sqrt{Z}L$ & $353,557$ & $238,680$ \\
+\hline
+Kettő-hatvány & $n^3 / \sqrt{Z}L$ & $266,279$ & $260,159$ \\
+\hline
+Strassen kettő-hatvány & $n^{\log_{2}{7}} / \sqrt{Z}L$ & $5246,720$ & $4423,865$ \\
+\hline
+\end{tabular}
+\end{table}
+
+\section{RekurzívSzita}
+
+A \ref{table-bucket-sieves} táblázat tartalmazza
+a RekurzívSzita viselkedését egy teljesen asszociatív LRU gyorsítótáron.
+$a$ a számrendszer alapja.
+A független oszlop tartalmazza a tömbök partícióján alapuló
+gyorsítótár-független algoritmus eredményeit,
+a tudatos oszlopokban a láncolt-listák partícióján
+alapuló gyorsítótár-tudatos szita vannak.
+A láncolt listák lapmérete $4096$ bájt.
+Az értékek a gyorsítótár által kiváltott memória-elérések
+és a RekurzívSzita gyorsítótár-komplexitására adott becslés domináns tagjának
+hányadosa.
+A domináns tag $rac{n}{L} \log_{a}{\frac{n^q}{Z}}$.
+$q$ minden esetben 1.
+
+% jóslat a=2
+% n=2^19 -   2k/ 16 -> 262144
+% n=2^19 -   8k/ 32 ->  98304
+% n=2^19 -  32k/ 64 ->  32768
+% n=2^19 - 128k/128 ->   8192
+% n=2^20 -   2k/ 16 -> 589824
+% n=2^20 -   8k/ 32 -> 229376
+% n=2^20 -  32k/ 64 ->  81920
+% n=2^20 - 128k/128 ->  24576
+% oblivious
+% n=2^19 -   2k/ 16 -> 10896028
+% n=2^19 -   8k/ 32 ->  3180188
+% n=2^19 -  32k/ 64 ->   837929
+% n=2^19 - 128k/128 ->   162638
+% n=2^20 -   2k/ 16 -> 24265380
+% n=2^20 -   8k/ 32 ->  7367274
+% n=2^20 -  32k/ 64 ->  2038121
+% n=2^20 - 128k/128 ->   415421
+% aware a=2
+% n=2^19 -   2k/ 16 -> 42221269
+% n=2^19 -   8k/ 32 -> 11850587
+% n=2^19 -  32k/ 64 ->  2147741
+% n=2^19 - 128k/128 ->   222428
+% n=2^20 -   2k/ 16 -> 89827042
+% n=2^20 -   8k/ 32 -> 25868719
+% n=2^20 -  32k/ 64 ->  4833958
+% n=2^20 - 128k/128 ->   569810
+% jóslat a=4
+% n=2^19 -   2k/ 16 -> 131072
+% n=2^19 -   8k/ 32 ->  49152
+% n=2^19 -  32k/ 64 ->  16384
+% n=2^19 - 128k/128 ->   4096
+% n=2^20 -   2k/ 16 -> 294912
+% n=2^20 -   8k/ 32 -> 114688
+% n=2^20 -  32k/ 64 ->  40960
+% n=2^20 - 128k/128 ->  12288
+% aware a=4
+% n=2^19 -   2k/ 16 -> 23829301
+% n=2^19 -   8k/ 32 ->  6918364
+% n=2^19 -  32k/ 64 ->  1663420
+% n=2^19 - 128k/128 ->   178401
+% n=2^20 -   2k/ 16 -> 50543175
+% n=2^20 -   8k/ 32 -> 14929718
+% n=2^20 -  32k/ 64 ->  3651645
+% n=2^20 - 128k/128 ->   464582
+% jóslat a=16
+% n=2^19 -   2k/ 16 ->  65536
+% n=2^19 -   8k/ 32 ->  24576
+% n=2^19 -  32k/ 64 ->   8192
+% n=2^19 - 128k/128 ->   2048
+% n=2^20 -   2k/ 16 -> 147456
+% n=2^20 -   8k/ 32 ->  57344
+% n=2^20 -  32k/ 64 ->  20480
+% n=2^20 - 128k/128 ->   6144
+% aware a=16
+% n=2^19 -   2k/ 16 -> 16150788
+% n=2^19 -   8k/ 32 ->  4520781
+% n=2^19 -  32k/ 64 ->  1211680
+% n=2^19 - 128k/128 ->   312464
+% n=2^20 -   2k/ 16 -> 34199249
+% n=2^20 -   8k/ 32 ->  9562984
+% n=2^20 -  32k/ 64 ->  2600406
+% n=2^20 - 128k/128 ->   699502
+\begin{table}[ht]
+\centering
+\caption{A RekurzívSzita viselkedése egy LRU gyorsítótáron}
+\label{table-bucket-sieves}
+\begin{tabular}{|r|r|r|r|r|r|}
+\hline
+$n$ & $Z/L$ & Független & \multicolumn{3}{|c|}{Tudatos} \\
+\hline
+ & & $a=2$ & $a=2$ & $a=4$ & $a=16$ \\
+\hline
+$2^{19}$ &    $2k/16$ & $41,565$ & $161,061$ & $181,803$ & $246,441$ \\
+\hline
+$2^{19}$ &    $8k/32$ & $32,350$ & $120,550$ & $140,754$ & $183,951$ \\
+\hline
+$2^{19}$ &   $32k/64$ & $25,572$ &  $65,544$ & $101,527$ & $147,910$ \\
+\hline
+$2^{19}$ & $128k/128$ & $19,853$ &  $27,152$ &  $43,555$ & $152,570$ \\
+\hline
+$2^{20}$ &    $2k/16$ & $41,140$ & $152,295$ & $171,384$ & $231,929$ \\
+\hline
+$2^{20}$ &    $8k/32$ & $32,119$ & $112,779$ & $130,177$ & $166,765$ \\
+\hline
+$2^{20}$ &   $32k/64$ & $24,879$ &  $59,008$ &  $89,151$ & $126,973$ \\
+\hline
+$2^{20}$ & $128k/128$ & $16,904$ &  $23,186$ &  $37,808$ & $113,851$ \\
+\hline
+\end{tabular}
+\end{table}
+
+A \ref{table-bucket-sieve-aware} táblázat tartalmazza
+a gyorsítótár-tudatos RekurzívSzita viselkedését
+a lapméret és a gyorsítótár méretének függvényében.
+A gyorsítótár LRU cserestratégiát használ,
+és teljesen asszociatív.
+A szitált intervallom $[0, 2^20)$.
+A számrendszer alapja $16$.
+Az értékek a gyorsítótár által kiváltott memória-elérések
+és a RekurzívSzita gyorsítótár-komplexitására adott becslés domináns tagjának
+hányadosa.
+A domináns tag $rac{n}{L} \log_{a}{\frac{n^q}{Z}}$.
+$q$ minden esetben 1.
+
+% jóslat
+%   2k/ 16 -> 147456
+%   8k/ 32 ->  57344
+%  32k/ 64 ->  20480
+% 128k/128 ->   6144
+% page size 1024
+%   2k/ 16 -> 34493774
+%   8k/ 32 ->  8423852
+%  32k/ 64 ->  1796663
+% 128k/128 ->   223261
+% page size 2048
+%   2k/ 16 -> 34365047
+%   8k/ 32 ->  9144895
+%  32k/ 64 ->  2274922
+% 128k/128 ->   369486
+% page size 4096
+%   2k/ 16 -> 34199249
+%   8k/ 32 ->  9562984
+%  32k/ 64 ->  2600406
+% 128k/128 ->   699502
+% page size 8192
+%   2k/ 16 -> 34234141
+%   8k/ 32 ->  9727243
+%  32k/ 64 ->  2810822
+% 128k/128 ->   874677
+% page size 16384
+%   2k/ 16 -> 34185703
+%   8k/ 32 ->  9739973
+%  32k/ 64 ->  2899865
+% 128k/128 ->   968464
+\begin{table}[ht]
+\centering
+\caption{A RekurzívSzita viselkedése a lapméret függvényében}
+\label{table-bucket-sieve-aware}
+\begin{tabular}{|r|r|r|r|r|}
+\hline
+ & \multicolumn{4}{|c|}{$Z/L$} \\
+\hline
+Lapméret & $2k/16$ & $8k/32$ & $32k/64$ & $128k/128$ \\
+\hline
+ $1024$ & $233,926$ & $146,900$ &  $87,728$ &  $36,338$ \\
+\hline
+ $2048$ & $233,053$ & $159,474$ & $111,080$ &  $60,138$ \\
+\hline
+ $4096$ & $231,929$ & $166,765$ & $126,973$ & $113,851$ \\
+\hline
+ $8192$ & $232,165$ & $169,630$ & $137,247$ & $142,363$ \\
+\hline
+$16384$ & $231,837$ & $169,852$ & $141,595$ & $157,628$ \\
+\hline
+\end{tabular}
+\end{table}
 
 \begin{thebibliography}{9}
 
@@ -2131,7 +3031,7 @@ Fornai, P., Iványi, A.: FIFO anomaly is unbounded.  (2010) arXiv preprint arXiv
 Mattson, R.L., Gecsei, J., Slutz, D.R., Traiger, I.L.: Evaluation Techniques for Storage Hierarchies. IBM Syst. J., 9, (1970) 78-117.
 
 \bibitem{competetive-analysis}
-Aspnes, J. (1998). Competitive analysis of distributed algorithms. In: Fiat, A., Woeginger, G.J. (eds) Online Algorithms. Lecture Notes in Computer Science, vol 1442. Springer, Berlin, Heidelberg. https://doi.org/10.1007/BFb0029567
+Aspnes, J. (1998). Competitive analysis of distributed algorithms. In: Fiat, A., Woeginger, G.J. (eds) Online Algorithms. Lecture Notes in Computer Science, vol 1442. Springer, Berlin, Heidelberg. \url{https://doi.org/10.1007/BFb0029567}
 
 \bibitem{lru-k-competetive}
 Daniel D. Sleator and Robert E. Tarjan.: Amortized efficiency of list update and paging rules. Commun. ACM 28, 2 (Feb. 1985), 202–208.
@@ -2154,6 +3054,15 @@ Selberg, Atle. An Elementary Proof of the Prime-Number Theorem. Annals of Mathem
 
 \bibitem{info-theory}
 Cover, T. M., Thomas, J. A. (2006). Elements of Information Theory (2nd ed.). Wiley-Interscience. ISBN: 978-0-471-24195-9. p.111.
+
+\bibitem{riscv-isa}
+The RISC-V Instruction Set Manual: Volume I
+\url{https://lists.riscv.org/g/tech-unprivileged/attachment/535/0/unpriv-isa-asciidoc.pdf}
+
+\bibitem{riscv-abi}
+RISC-V ABIs Specification \\
+\Urlmuskip=0mu  plus 10mu
+\url{https://lists.riscv.org/g/tech-psabi/attachment/61/0/riscv-abi.pdf}
 
 \end{thebibliography}
 

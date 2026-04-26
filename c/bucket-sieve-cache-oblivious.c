@@ -9,6 +9,8 @@ void swap(
 		struct prime_t *prime0,
 		struct prime_t *prime1);
 
+uint64_t nextLog;
+
 // partitions an array of primes
 // places primes with position >= positionEnd at the start of the array
 // places primes with position < positionEnd at the end of the array
@@ -50,7 +52,7 @@ uint64_t sieve(
 		if ((2ULL<=position) && (!primes)) {
 			write_uint64(position);
 			if (!free) {
-				exit(3);
+				exit(1);
 				return 0ULL;
 			}
 			memory[primes].position=position;
@@ -60,6 +62,10 @@ uint64_t sieve(
 		}
 		for (uint64_t ii=0; primes>ii; ++ii) {
 			memory[ii].position+=memory[ii].prime;
+		}
+		if (position==nextLog) {
+			memory_access_log_user_data(position);
+			nextLog*=2;
 		}
 	}
 	else {
@@ -99,16 +105,17 @@ uint64_t sieve(
 void start() {
 	uint64_t height=read_uint64();
 	if (63ULL<height) {
-		exit(1);
+		exit(2);
 		return;
 	}
 	uint64_t memorySize=read_uint64();
 	memorySize/=sizeof(struct prime_t);
 	struct prime_t *memory=malloc(sizeof(struct prime_t)*memorySize);
 	if (!memory) {
-		exit(2);
+		exit(1);
 		return;
 	}
+	nextLog=1;
 	
 	memory_access_log_enable();
 	

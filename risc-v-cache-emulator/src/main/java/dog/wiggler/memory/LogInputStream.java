@@ -33,6 +33,10 @@ public class LogInputStream implements AutoCloseable {
         channel.close();
     }
 
+    public static long entries(@NotNull Path path) throws Throwable {
+        return Files.size(path)/8L;
+    }
+
     public static @NotNull Supplier<@NotNull LogInputStream> factory(
             @NotNull Supplier<? extends @NotNull ReadableByteChannel> channelFactory) {
         return Supplier.factory(

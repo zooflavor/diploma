@@ -75,6 +75,7 @@ public class LogOutputStream implements Log {
 
     public static @NotNull Supplier<@NotNull LogOutputStream> factory(
             @NotNull Path path) {
+        Objects.requireNonNull(path, "path");
         return factory(
                 ()->Files.newByteChannel(
                         path,

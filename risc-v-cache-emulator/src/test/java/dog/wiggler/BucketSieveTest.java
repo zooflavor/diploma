@@ -96,11 +96,12 @@ public class BucketSieveTest {
         @NotNull Deque<@NotNull Number> input=new ArrayDeque<>();
         if (oblivious) {
             input.addLast((long)height);
-            input.addLast(1L<<23);
+            input.addLast(1L<<23); // array size
         }
         else {
             input.addLast((long)base);
             input.addLast((long)height);
+            input.addLast(4096L); // page size
         }
         var actualPrimes=new ArrayList<@NotNull Number>();
         try (var emulator=Emulator.factory(

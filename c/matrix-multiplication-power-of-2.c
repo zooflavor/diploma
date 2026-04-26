@@ -1,5 +1,7 @@
 #include "emulator.h"
 
+int stride;
+
 void zero(double *matrix, int size);
 
 int max(int value0, int value1) {
@@ -18,8 +20,7 @@ void multiply(
 		double *matrix0,
 		double *matrix1,
 		double *matrix2,
-		int size,
-		int stride) {
+		int size) {
 	if (0>=size) {
 		// nothing to do
 	}
@@ -35,8 +36,7 @@ void multiply(
 							matrix0+rr*halfSize*stride+ii*halfSize,
 							matrix1+ii*halfSize*stride+cc*halfSize,
 							matrix2+rr*halfSize*stride+cc*halfSize,
-							halfSize,
-							stride);
+							halfSize);
 				}
 			}
 		}
@@ -54,81 +54,66 @@ void start() {
 	
 	int maxSize=max(size0, max(size1, size2));
 	// find smallest power of 2 not smaller than maxSize
-	int size=1;
+	stride=1;
 	while (1) {
-		if (0>=size) {
+		if (0>=stride) {
 			// overflow
-			exit(4);
+			exit(2);
 		}
-		if (size>=maxSize) {
+		if (stride>=maxSize) {
 			break;
 		}
-		size*=2;
+		stride*=2;
 	}
 	
-	// allocate left matrix
-	double *matrix0=malloc(size*size*sizeof(double));
-	if (0==matrix0) {
+	// allocate 3 matrices
+	double *matrices=malloc(3*stride*stride*sizeof(double));
+	if (0==matrices) {
 		exit(1);
 		return;
 	}
-	// allocate right matrix
-	double *matrix1=malloc(size*size*sizeof(double));
-	if (0==matrix1) {
-		free(matrix0);
-		exit(2);
-		return;
-	}
-	// allocate result matrix
-	double *matrix2=malloc(size*size*sizeof(double));
-	if (0==matrix2) {
-		free(matrix1);
-		free(matrix0);
-		exit(3);
-		return;
-	}
+	double *matrix0=matrices;
+	double *matrix1=matrix0+stride*stride;
+	double *matrix2=matrix1+stride*stride;
 	
 	memory_access_log_enable();
 	
 	// zero input matrices
-	zero(matrix0, size);
-	zero(matrix1, size);
+	zero(matrix0, stride);
+	zero(matrix1, stride);
 	
 	// read input matrices. row-major order
 	for (int rr=0; size0>rr; ++rr) {
 		for (int cc=0; size1>cc; ++cc) {
-			matrix0[rr*size+cc]=read_double();
+			matrix0[rr*stride+cc]=read_double();
 		}
 	}
 	for (int rr=0; size1>rr; ++rr) {
 		for (int cc=0; size2>cc; ++cc) {
-			matrix1[rr*size+cc]=read_double();
+			matrix1[rr*stride+cc]=read_double();
 		}
 	}
 	
 	// zero the result matrix
-	zero(matrix2, size);
+	zero(matrix2, stride);
 	
 	// compute result
 	multiply(
 			matrix0,
 			matrix1,
 			matrix2,
-			size,
-			size);
+			stride);
 	
 	// print result
 	for (int rr=0; size0>rr; ++rr) {
 		for (int cc=0; size2>cc; ++cc) {
-			write_double(matrix2[rr*size+cc]);
+			write_double(matrix2[rr*stride+cc]);
 		}
 	}
 	
 	memory_access_log_disable();
 	
-	free(matrix2);
-	free(matrix1);
-	free(matrix0);
+	free(matrices);
 }
 
 void zero(double *matrix, int size) {

@@ -11,15 +11,16 @@ struct page_t {
 	struct prime_t primes[];
 };
 
-#define PAGE_SIZE 4096
-#define PAGE_PRIMES ((PAGE_SIZE-sizeof(struct page_t))/sizeof(struct prime_t))
-
+uint64_t base;
 struct page_t *freePages=0;
+uint64_t nextLog;
+uint64_t pagePrimes;
+uint64_t pageSize;
 
 struct page_t *allocatePage(struct page_t *next);
 
 struct page_t *add(struct page_t *page, struct prime_t *prime) {
-	if ((!page) || (PAGE_PRIMES<=page->size)) {
+	if ((!page) || (pagePrimes<=page->size)) {
 		page=allocatePage(page);
 	}
 	page->primes[page->size]=*prime;
@@ -34,9 +35,9 @@ struct page_t *allocatePage(struct page_t *next) {
 		freePages=freePages->next;
 	}
 	else {
-		result=malloc(PAGE_SIZE);
+		result=malloc(pageSize);
 		if (!result) {
-			exit(3);
+			exit(1);
 			return 0;
 		}
 	}
@@ -62,7 +63,6 @@ uint64_t power(uint64_t base, uint64_t exponent) {
 }
 
 struct page_t *sieve(
-		uint64_t base,
 		uint64_t height, // height of the current recursion
 		uint64_t interval, // size of the current interval
 		uint64_t position, // current position of the sieve
@@ -79,6 +79,10 @@ struct page_t *sieve(
 			for (uint64_t ii=0; page->size>ii; ++ii) {
 				page->primes[ii].position+=page->primes[ii].prime;
 			}
+		}
+		if (position==nextLog) {
+			memory_access_log_user_data(position);
+			nextLog*=2;
 		}
 	}
 	else {
@@ -101,7 +105,6 @@ struct page_t *sieve(
 		
 		for (uint64_t bb=0; base>bb; ++bb) {
 			buckets[bb]=sieve(
-					base,
 					height-1,
 					interval2,
 					position+bb*interval2,
@@ -126,9 +129,9 @@ struct page_t *sieve(
 }
 
 void start() {
-	uint64_t base=read_uint64();
+	base=read_uint64();
 	if (2ULL>base) {
-		exit(1);
+		exit(3);
 		return;
 	}
 	uint64_t height=read_uint64();
@@ -136,11 +139,17 @@ void start() {
 		exit(2);
 		return;
 	}
+	pageSize=read_uint64();
+	if (32ULL>pageSize) {
+		exit(4);
+		return;
+	}
+	pagePrimes=(pageSize-sizeof(struct page_t))/sizeof(struct prime_t);
+	nextLog=1;
 	
 	memory_access_log_enable();
 	
 	struct page_t *primes=sieve(
-			base,
 			height,
 			power(base, height), // interval
 			0ULL, // position

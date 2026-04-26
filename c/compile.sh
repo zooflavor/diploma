@@ -7,6 +7,8 @@ rm -rf "${OUTPUT_DIR}"
 mkdir "${OUTPUT_DIR}"
 
 function compile() {
+  gcc -o "${OUTPUT_DIR}/${1}.native-gcc-O2.elf" "${1}.c" native.c \
+    -std=c17 -Wall -Wextra
   compile_clang "${1}" "0"
   compile_clang "${1}" "1"
   compile_clang "${1}" "2"
@@ -21,9 +23,10 @@ function compile_clang() {
   OUTPUT_ELF="${OUTPUT_DIR}/${INPUT}.riscv64-clang-O${OPTIMIZE}.elf"
   OUTPUT_DISASSEMBLY="${OUTPUT_ELF}.disassembly"
   echo $OUTPUT_ELF
-  clang --target=riscv64-linux-gnu -march=rv64imfd -mabi=lp64d "-O${OPTIMIZE}" -std=c17 -Wall -Wextra \
-                -Wl,-Triscv64.ld -nostdlib -ffreestanding \
-                -DEMULATED=1 -o "${OUTPUT_ELF}" "${INPUT}.c"
+  clang --target=riscv64-linux-gnu -march=rv64imfd -mabi=lp64d \
+    "-O${OPTIMIZE}" -std=c17 -Wall -Wextra \
+    -Wl,-Triscv64.ld -nostdlib -ffreestanding \
+    -DEMULATED=1 -o "${OUTPUT_ELF}" "${INPUT}.c"
   riscv64-linux-gnu-objdump -d "${OUTPUT_ELF}" > "${OUTPUT_DISASSEMBLY}"
 }
 
@@ -33,9 +36,10 @@ function compile_gcc() {
   OUTPUT_ELF="${OUTPUT_DIR}/${INPUT}.riscv64-gcc-O${OPTIMIZE}.elf"
   OUTPUT_DISASSEMBLY="${OUTPUT_ELF}.disassembly"
   echo $OUTPUT_ELF
-  riscv64-linux-gnu-gcc -march=rv64imfd -mabi=lp64d "-O${OPTIMIZE}" -std=c17 -Wall -Wextra \
-                -T riscv64.ld -nostdlib -ffreestanding  \
-                -DEMULATED=1 -o "${OUTPUT_ELF}" "${INPUT}.c"
+  riscv64-linux-gnu-gcc -march=rv64imfd -mabi=lp64d \
+    "-O${OPTIMIZE}" -std=c17 -Wall -Wextra \
+    -T riscv64.ld -nostdlib -ffreestanding  \
+    -DEMULATED=1 -o "${OUTPUT_ELF}" "${INPUT}.c"
   riscv64-linux-gnu-objdump -d "${OUTPUT_ELF}" > "${OUTPUT_DISASSEMBLY}"
 }
 
@@ -45,3 +49,4 @@ compile "emulator-tests"
 compile "matrix-multiplication-by-definition"
 compile "matrix-multiplication-halving"
 compile "matrix-multiplication-power-of-2"
+compile "matrix-multiplication-power-of-2-strassen"

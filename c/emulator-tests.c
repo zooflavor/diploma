@@ -792,8 +792,7 @@ uint64_t stack_overflow(uint64_t size) {
     return 1+stack_overflow(size)+stack_overflow(size+1)+size;
 }
 
-int start() {
-    return 0;
+void start() {
 }
 
 BINARY_OP(subtract_double, double,   -);

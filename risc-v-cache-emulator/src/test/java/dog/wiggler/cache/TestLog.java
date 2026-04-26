@@ -10,7 +10,7 @@ import java.util.LinkedList;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class TestLog implements Log {
+public class TestLog implements Log {
     public final @NotNull Deque<@NotNull String> log=new LinkedList<>();
     private final boolean print;
 

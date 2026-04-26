@@ -39,11 +39,7 @@
 
 #else
 
-void *malloc(uint64_t size);
-void free(void *ptr);
-
-void exit(int code);
-void exit_ok();
+#include <stdlib.h>
 
 void memory_access_log_disable();
 void memory_access_log_enable();
@@ -59,6 +55,8 @@ uint16_t read_uint16();
 uint32_t read_uint32();
 uint64_t read_uint64();
 uint8_t read_uint8();
+
+void start();
 
 void write_double(double value);
 void write_float(float value);

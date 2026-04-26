@@ -1,5 +1,6 @@
 package dog.wiggler.cache;
 
+import dog.wiggler.Progress;
 import dog.wiggler.memory.AccessType;
 import dog.wiggler.memory.LogInputStream;
 import dog.wiggler.memory.LogOutputStream;
@@ -66,6 +67,7 @@ public class NWayAssociativeCacheTest {
                 inputLogPath,
                 8,
                 outputLogPath,
+                Progress.NO_OP,
                 LRUPolicy::new,
                 WriteMiss.ALLOCATE,
                 WritePolicy.WRITE_BACK);
@@ -115,6 +117,7 @@ public class NWayAssociativeCacheTest {
                     inputLogPath,
                     8,
                     outputLogPath,
+                    Progress.NO_OP,
                     LRUPolicy::new,
                     WriteMiss.ALLOCATE,
                     WritePolicy.WRITE_BACK);
@@ -141,6 +144,7 @@ public class NWayAssociativeCacheTest {
                 inputLogPath,
                 8,
                 outputLogPath,
+                Progress.NO_OP,
                 LRUPolicy::new,
                 WriteMiss.ALLOCATE,
                 WritePolicy.WRITE_BACK);
@@ -158,6 +162,7 @@ public class NWayAssociativeCacheTest {
                 inputLogPath,
                 8,
                 outputLogPath,
+                Progress.NO_OP,
                 LRUPolicy::new,
                 WriteMiss.ALLOCATE,
                 WritePolicy.WRITE_BACK);
@@ -181,6 +186,7 @@ public class NWayAssociativeCacheTest {
                 inputLogPath,
                 8,
                 outputLogPath,
+                Progress.NO_OP,
                 LRUPolicy::new,
                 WriteMiss.ALLOCATE,
                 WritePolicy.WRITE_BACK);
@@ -226,6 +232,7 @@ public class NWayAssociativeCacheTest {
                 inputLogPath,
                 8,
                 outputLogPath,
+                Progress.NO_OP,
                 LRUPolicy::new,
                 WriteMiss.ALLOCATE,
                 WritePolicy.WRITE_BACK);
@@ -287,6 +294,7 @@ public class NWayAssociativeCacheTest {
                 inputLogPath,
                 8,
                 outputLogPath,
+                Progress.NO_OP,
                 LRUPolicy::new,
                 WriteMiss.ALLOCATE,
                 WritePolicy.WRITE_BACK);
@@ -337,6 +345,7 @@ public class NWayAssociativeCacheTest {
                 inputLogPath,
                 8,
                 outputLogPath,
+                Progress.NO_OP,
                 LRUPolicy::new,
                 WriteMiss.ALLOCATE,
                 WritePolicy.WRITE_BACK);

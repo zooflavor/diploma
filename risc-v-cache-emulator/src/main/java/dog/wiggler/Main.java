@@ -98,16 +98,19 @@ public class Main {
         };
         @NotNull Path inputLogFile=Paths.get(args[8]).toAbsolutePath();
         @NotNull Path outputLogFile=Paths.get(args[9]).toAbsolutePath();
-        NWayAssociativeCache.run(
-                associativity,
-                cacheSize,
-                cacheType,
-                inputLogFile,
-                lineSize,
-                outputLogFile,
-                replacementPolicyFactory,
-                writeMiss,
-                writePolicy);
+        try (var progress=new Progress.SystemOut()) {
+            NWayAssociativeCache.run(
+                    associativity,
+                    cacheSize,
+                    cacheType,
+                    inputLogFile,
+                    lineSize,
+                    outputLogFile,
+                    progress,
+                    replacementPolicyFactory,
+                    writeMiss,
+                    writePolicy);
+        }
     }
 
     private static void cacheOpt(String[] args) throws Throwable {
@@ -121,13 +124,16 @@ public class Main {
         @NotNull Path inputLogFile=Paths.get(args[5]).toAbsolutePath();
         @NotNull Path outputLogFile=Paths.get(args[6]).toAbsolutePath();
         @NotNull Path tempFile=Paths.get(args[7]).toAbsolutePath();
-        OPTCache.run(
-                cacheSize,
-                cacheType,
-                inputLogFile,
-                lineSize,
-                outputLogFile,
-                tempFile);
+        try (var progress=new Progress.SystemOut()) {
+            OPTCache.run(
+                    cacheSize,
+                    cacheType,
+                    inputLogFile,
+                    lineSize,
+                    outputLogFile,
+                    progress,
+                    tempFile);
+        }
     }
 
     private static @NotNull CacheType cacheType(@NotNull String value) {
@@ -152,8 +158,8 @@ public class Main {
         System.out.printf("%s%n", Main.class.getName());
         System.out.printf("  %s %s%n", NAME, COMMAND_HELP);
         System.out.printf("    prints this screen%n");
-        System.out.printf("  %s %s %s cache-size line-size instruction-type input-log-file output-log-file temp-file%n", NAME, COMMAND_CACHE, REPLACEMENT_POLICY_OPT);
-        System.out.printf("  %s %s replacement-policy cache-size associativity line-size instruction-type write-miss write-policy input-log-file output-log-file (random-seed)%n", NAME, COMMAND_CACHE);
+        System.out.printf("  %s %s %s cache-size line-size access-type input-log-file output-log-file temp-file%n", NAME, COMMAND_CACHE, REPLACEMENT_POLICY_OPT);
+        System.out.printf("  %s %s replacement-policy cache-size associativity line-size access-type write-miss write-policy input-log-file output-log-file [random-seed]%n", NAME, COMMAND_CACHE);
         System.out.printf("    process memory log file through a cache%n");
         System.out.printf("    replacement policy can be: %s, %s, %s, %s, %s%n", REPLACEMENT_POLICY_FIFO, REPLACEMENT_POLICY_LFU, REPLACEMENT_POLICY_LRU, REPLACEMENT_POLICY_OPT, REPLACEMENT_POLICY_RANDOM);
         System.out.printf("    cache-size is in cache lines%n");
@@ -161,7 +167,7 @@ public class Main {
         System.out.printf("      associativity = 1 means a direct mapped cache%n");
         System.out.printf("      associativity = cache-size means a fully associative cache%n");
         System.out.printf("    line-size is in bytes%n");
-        System.out.printf("    instruction-type can be: %s, %s, %s%n", ACCESS_TYPE_BOTH, ACCESS_TYPE_DATA, ACCESS_TYPE_INSTRUCTION);
+        System.out.printf("    access-type can be: %s, %s, %s%n", ACCESS_TYPE_BOTH, ACCESS_TYPE_DATA, ACCESS_TYPE_INSTRUCTION);
         System.out.printf("      %s will process data loads, instruction loads, and stores%n", ACCESS_TYPE_BOTH);
         System.out.printf("      %s will process data loads, and stores, and leaves instruction loads untouched%n", ACCESS_TYPE_DATA);
         System.out.printf("      %s will process instruction loads, leaves data loads and stores untouched%n", ACCESS_TYPE_INSTRUCTION);
@@ -329,7 +335,7 @@ public class Main {
         try (var log=LogInputStream.factory(memoryLog)
                         .get()) {
             var visitor=new StatisticsVisitor();
-            System.out.printf("user data,elapsed cycles,instruction loads,data loads,stores,data accesses,total accesses%n");
+            System.out.printf("type,elapsed cycles,instruction loads,data loads,stores,data accesses,total accesses%n");
             while (log.hasNext()) {
                 log.readNext(visitor);
             }
