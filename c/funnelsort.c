@@ -279,20 +279,14 @@ uint64_t sort(
 				start=arraySize;
 			}
 			uint64_t leafBufferSize=end-start;
-			uint64_t leafBufferMemorySize
-					=roundUp8(leafBufferSize*sizeof(uint64_t));
 			uint64_t leafMemorySize=roundUp8(sizeof(struct merger_t));
 			struct merger_t *leaf=(struct merger_t*)memory;
 			if (memory) {
 				memory+=leafMemorySize;
 				initMerger(leaf);
-				leaf->buffer=(uint64_t*)memory;
+				leaf->buffer=array+start;
 				leaf->bufferEnd=leafBufferSize;
 				leaf->bufferSize=leafBufferSize;
-				memory+=leafBufferMemorySize;
-				for (uint64_t ll=start; end>ll; ++ll) {
-					leaf->buffer[ll-start]=array[ll];
-				}
 				if (jj) {
 					right(merger, leaf);
 				}
@@ -300,7 +294,7 @@ uint64_t sort(
 					left(merger, leaf);
 				}
 			}
-			memorySize+=leafMemorySize+leafBufferMemorySize;
+			memorySize+=leafMemorySize;
 		}
 	}
 	if (memory) {

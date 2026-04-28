@@ -1055,11 +1055,286 @@ hogy egy $s \times s$ méretű részfeladatot a gyorsítótárba egyszer beolvas
 
 \subsection{Összefésüléses rendezés}
 
+Az összefésüléses rendezés egy stabil rendezés.
+Egy rendezés stabil, ha egyenlő elemek sorrendje a bemeneti
+és a kimeneti listában megegyezik.
+Az összefésüléses rendezés összefésülés lépése két rendezett listából
+előállít egy listát, ami a két lista elemeit tartalmazza,
+és szintén rendezett.
+Tegyük fel, hogy a rendezendő lista $L[1:n]$,
+ahol $n$ a lista hossza.
+A rekurzív algoritmus a következő.
+\begin{itemize}
+\item Az $n \le 1$ a rekurzió alapesete. Az üres és az egyelemű lista rendezett.
+\item Ha $n > 1$, akkor legyen $k = \lfloor n/2 \rfloor$.
+\item Rendezzük rekurzívan $L[1:k]$-t, és $L[k+1:n]$-et.
+\item Fésüljük össze a már rendezett $L[1:k]$-t, és $L[k+1:n]$-et.
+\begin{itemize}
+\item Legyen az eredménylista üres.
+\item Legyen a bal és a jobb lista a rendezett $L[1:k]$, és $L[k+1:n]$.
+\item Amíg se a bal, se a jobb lista nem üres,
+addig hasonlítsuk össze, hogy a két lista első elemét,
+és válasszuk azt a listát, ahol az első elem kisebb.
+Ha a két lista első eleme megegyezik, akkor válasszuk a bal listát.
+Távolítsuk el a kiválasztott lista első elemét,
+és fűzzük az eredménylista végére.
+\item Fűzzük a maradék bal listát az eredménylista végére.
+\item Fűzzük a maradék jobb listát az eredménylista végére.
+\end{itemize}
+\end{itemize}
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}
+\node at (1.5, 0) [draw,rectangle,minimum width=1cm,minimum height=1.0cm] {4};
+\node at (2.5, 0) [draw,rectangle,minimum width=1cm,minimum height=1.0cm] {1};
+\node at (3.5, 0) [draw,rectangle,minimum width=1cm,minimum height=1.0cm] {3};
+\node at (4.5, 0) [draw,rectangle,minimum width=1cm,minimum height=1.0cm] {2};
+
+\draw[->, thick, shorten <=0.25cm, shorten >=0.25cm] (3, -0.5) -- (1.5, -1.5);
+\draw[->, thick, shorten <=0.25cm, shorten >=0.25cm] (3, -0.5) -- (4.5, -1.5);
+
+\node at (1, -2) [draw,rectangle,minimum width=1cm,minimum height=1.0cm] {4};
+\node at (2, -2) [draw,rectangle,minimum width=1cm,minimum height=1.0cm] {1};
+\node at (4, -2) [draw,rectangle,minimum width=1cm,minimum height=1.0cm] {3};
+\node at (5, -2) [draw,rectangle,minimum width=1cm,minimum height=1.0cm] {2};
+
+\draw[->, thick, shorten <=0.25cm, shorten >=0.25cm] (1.5, -2.5) -- (0, -3.5);
+\draw[->, thick, shorten <=0.25cm, shorten >=0.25cm] (1.5, -2.5) -- (2, -3.5);
+\draw[->, thick, shorten <=0.25cm, shorten >=0.25cm] (4.5, -2.5) -- (4, -3.5);
+\draw[->, thick, shorten <=0.25cm, shorten >=0.25cm] (4.5, -2.5) -- (6, -3.5);
+
+\node at (0, -4) [draw,rectangle,minimum width=1cm,minimum height=1.0cm] {4};
+\node at (2, -4) [draw,rectangle,minimum width=1cm,minimum height=1.0cm] {1};
+\node at (4, -4) [draw,rectangle,minimum width=1cm,minimum height=1.0cm] {3};
+\node at (6, -4) [draw,rectangle,minimum width=1cm,minimum height=1.0cm] {2};
+
+\draw[->, thick, shorten <=0.25cm, shorten >=0.25cm] (0, -4.5) -- (1.5, -5.5);
+\draw[->, thick, shorten <=0.25cm, shorten >=0.25cm] (2, -4.5) -- (1.5, -5.5);
+\draw[->, thick, shorten <=0.25cm, shorten >=0.25cm] (4, -4.5) -- (4.5, -5.5);
+\draw[->, thick, shorten <=0.25cm, shorten >=0.25cm] (6, -4.5) -- (4.5, -5.5);
+
+\node at (1, -6) [draw,rectangle,minimum width=1cm,minimum height=1.0cm] {1};
+\node at (2, -6) [draw,rectangle,minimum width=1cm,minimum height=1.0cm] {4};
+\node at (4, -6) [draw,rectangle,minimum width=1cm,minimum height=1.0cm] {2};
+\node at (5, -6) [draw,rectangle,minimum width=1cm,minimum height=1.0cm] {3};
+
+\draw[->, thick, shorten <=0.25cm, shorten >=0.25cm] (1.5, -6.5) -- (3, -7.5);
+\draw[->, thick, shorten <=0.25cm, shorten >=0.25cm] (4.5, -6.5) -- (3, -7.5);
+
+\node at (1.5, -8) [draw,rectangle,minimum width=1cm,minimum height=1.0cm] {1};
+\node at (2.5, -8) [draw,rectangle,minimum width=1cm,minimum height=1.0cm] {2};
+\node at (3.5, -8) [draw,rectangle,minimum width=1cm,minimum height=1.0cm] {3};
+\node at (4.5, -8) [draw,rectangle,minimum width=1cm,minimum height=1.0cm] {4};
+\end{tikzpicture}
+\caption{Az összefésüléses rendezés futása}
+\label{fig:merge-sort}
+\end{figure}
+
+Tegyük fel, hogy a rendezendő lista mérete $n$.
+Ekkor az összefésüléses rendezés időbonyolultsága $\Theta(n \log{n})$.
+Tegyük fel, hogy a gyorsítótár mérete $(Z/L)$.
+Ekkor az összefésüléses rendezés gyorsítótár-bonyolultsága
+$\Theta(\frac{n}{L}\log{\frac{n}{Z}})$ \cite{prokop}.
+
+Az időbonyolultságot analizálhatjuk a mester-tétel\cite{algoritmusok} segítségével.
+Egy $n$ elemű lista szétválasztása, és összefésülése $\Theta(n)$ műveletet igényel.
+Legyen $T(n)$ az összefésüléses rendezés időbonyolultsága.
+Ez megfelel a következő rekurziónak.
+\begin{align*}
+T(n) &=
+  \begin{cases}
+   O(1) & \text{ha } n=1 \\
+   2T(n/2)+O(n) & \text{különben}
+  \end{cases}
+\end{align*}
+Ekkor a mester-tétel szerint $T(n) = \Theta(n \log{n})$.
+
+Az időbonyolultság megbecsléséhez a rekurzív fát is vizsgálhatjuk.
+\begin{itemize}
+\item A rekurzív fának $\Theta(\log{n})$ szintje van.
+\item Minden szinten a listák elemszámainak összege legfeljebb $n$,
+és szinte minden szinten egyenlő $n$-nel.
+\item Egy adott szinten az összes összefésülés legfeljebb $O(n)$ műveletet igényel,
+és szinte minden szinten $\Theta(n)$ műveletet.
+\item Legfeljebb a legalsó szint nem tartalmaz összesen $n$ elemet.
+\item Összes művelet száma így $\Theta(n \log{n})$.
+\end{itemize}
+
+A gyorsítótár-bonyolultság analíziséhez is használjuk a rekurzív fát.
+\begin{itemize}
+\item Ha egy $n$ elemű részlista, és a segédstruktúrák
+teljes egészében elférnek a $Z$ mérető gyorsítótárban,
+akkor a rekurzió ezen része legfeljebb $O(Z)$ memóriaműveletet végez.
+\item A rekurzív fának $\Theta(\log{\frac{n}{Z}})$ szintje van,
+mert az időbonyolultság rekurzív fájának alsó $\Theta(\log{Z})$
+szintje nem jár további memóriaművelettel.
+\item Egy adott szinten sorban kell bejárni tömböket.
+Egy $k$ elemű lista összefésülése $O(\frac{k}{L}+1)$ művelettel jár.
+Ha a teljes szinten $m$ listát kell összefésülni,
+akkor azt összesen $O(\frac{n}{Z}+m)$ memóriaművelettel jár.
+A $d$-edik szinten $m \le 2^d$.
+\item Összesen a domináns tag tehát $\Theta(\frac{n}{L}\log{\frac{n}{Z}})$.
+\item A töredék sorok beolvasása miatt műveletek száma legfeljebb
+\begin{align*}
+\sum_{i=0}^{O(\log{\frac{n}{Z}})} 2^i
+= O\left( 2^{O(\log{\frac{n}{Z}})} \right)
+= O\left(\frac{n}{Z}\right)
+\end{align*}
+Ez aszimptotikusan kisebb, mint $O(\frac{n}{L}\log{\frac{n}{Z}})$.
+\end{itemize}
+
 \subsection{Tölcsér rendezés}
 
-{\color{red}Katasztrofális.}
+A lusta tölcsér rendezés\cite{brodal-distribution-sweep}
+egy összefésülésen alapuló rekurzív rendezés.
+A rekurzív algoritmus hasonló az összefésüléses rendezéshez,
+a fő különbség a többirányú összefésülés.
+Legyen $n$ a rendezendő tömb mérete.
+\begin{itemize}
+\item Az $n \le 1$ a rekurzió alapesete, az üres és egyelemű tömb rendezett.
+\item Ha $n > 1$:
+\begin{itemize}
+\item Legyen $k = \lceil n^{1/3} \rceil$.
+\item A tömböt osszuk fel $k$ darab közel egyenlő hosszú résztömbre.
+\item Rendezzük a $k$ darab résztömböt rekurzívan.
+\item Egy $k$-összefésülővel fésüljük össze a $k$ darab résztömböt.
+A $k$ összefésülő kimeneti pufferének mérete legyen $n$
+\end{itemize}
+\end{itemize}
 
-Oszd meg és uralkodj. 2 algoritmus is van. Az alsó korlát elérhető, de a papír nem az igazi erről. Tall cache assumption. A tall cache assumption lényegesen befolyásolja a műveletigényt.
+Egy $k$-összefésülő $k$ rendezett tömböt fésül össze egy rendezett tömbbé.
+A $k$-összefésülőket kettő-hatvány $k$-ra adjuk meg.
+Ha $k$ nem kettő-hatvány, akkor üres tömbökkel ki lehet egészíteni az összefésülendő
+tömbök listáját kettő-hatvány számosságúra.
+Legyen $h = \log_2{k}$.
+Ekkor egy $k$-összefésülő egy $h$ magasságú teljes bináris fa.
+A fa levelei a $k$ darab bemeneti puffer.
+A fa belső csúcsai egy kimeneti pufferből állnak,
+és egy 2-összefésülőből.
+A 2-összefésülő ugyanaz, mint az összefésüléses rendezésben.
+A 2-összefésülő bemenetei a csúcs két gyerekének kimeneti pufferei.
+A $k$-összefésülő kimeneti puffere a gyökér kimeneti puffere.
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}[level distance=50pt, sibling distance=18pt]
+\Tree
+	[.\node[draw]{$8^3 = 512$};
+		\edge[] node[auto=right] {};
+		[.\node[draw]{$1^3 = 1$};
+			\edge[] node[auto=right] {};
+			[.\node[draw]{$2^3 = 8$};
+				\edge[] node[auto=right] {};
+				[.\node[draw,minimum width=1cm]{?}; ]
+				\edge[] node[auto=left] {};
+				[.\node[draw,minimum width=1cm]{?}; ]
+			]
+			\edge[] node[auto=left] {};
+			[.\node[draw]{$2^3 = 8$};
+				\edge[] node[auto=right] {};
+				[.\node[draw,minimum width=1cm]{?}; ]
+				\edge[] node[auto=left] {};
+				[.\node[draw,minimum width=1cm]{?}; ]
+			]
+		]
+		\edge[] node[auto=left] {};
+		[.\node[draw]{$1^3 = 1$};
+			\edge[] node[auto=right] {};
+			[.\node[draw]{$2^3 = 8$};
+				\edge[] node[auto=right] {};
+				[.\node[draw,minimum width=1cm]{?}; ]
+				\edge[] node[auto=left] {};
+				[.\node[draw,minimum width=1cm]{?}; ]
+			]
+			\edge[] node[auto=left] {};
+			[.\node[draw,sibling distance=3cm]{$2^3 = 8$};
+				\edge[] node[auto=right] {};
+				[.\node[draw,minimum width=1cm]{?}; ]
+				\edge[] node[auto=left] {};
+				[.\node[draw,minimum width=1cm]{?}; ]
+			]
+		]
+	]
+
+\node at (0, -2.5) [draw,rectangle,minimum width=14cm,minimum height=8cm,dashed] {};
+\node at (0, -0.75) [draw,rectangle,minimum width=9cm,minimum height=3cm,dashed] {T};
+\node at (-5, -4.25) [draw,rectangle,minimum width=3cm,minimum height=3cm,dashed] {$B_0$};
+\node at (-1.625, -4.25) [draw,rectangle,minimum width=3cm,minimum height=3cm,dashed] {$B_1$};
+\node at (1.625, -4.25) [draw,rectangle,minimum width=3cm,minimum height=3cm,dashed] {$B_2$};
+\node at (5, -4.25) [draw,rectangle,minimum width=3cm,minimum height=3cm,dashed] {$B_3$};
+\end{tikzpicture}
+\caption{Egy 8-összefésülő elrendezése a memóriában, és a kimenő pufferek méretei}
+\label{fig:8-összefésülő}
+\end{figure}
+
+A pufferek FIFO sorok, a következő tulajdonságokkal.
+\begin{itemize}
+\item Minden puffernek van egy előre meghatározott maximális mérete.
+\item Támogatja a szokásos sor műveleteket:
+\begin{itemize}
+\item Tele van?
+\item Üres?
+\item Elem hozzáadása a sor végéhez.
+\item Elem elvétele a sor elejéről.
+\item Betekintés a sor első elemébe.
+\end{itemize}
+\item Elem kivétele után addig nem adható új elem a sorhoz,
+amíg az ki nem ürül teljesen.
+\end{itemize}
+
+Egy 2-összefésülő eljárása a Feltölt.
+Ez addig futtatja a két bemenet összefűzését,
+amíg a 2-összefésülő kimenete meg nem telik,
+vagy elfogynak az elemek a bemeneti pufferekben.
+Ha egy bemeneti pufferben az elemek elfogynak,
+akkor az rekurzívan meghívja a kiürült pufferhez tartozó
+Feltölt eljárást.
+Ha ezek után is üres a bemeneti puffer, akkor az megjelöli ténylegesen üresnek.
+
+Egy $k$-összefésülő pufferméreteit és az elrendezését a memóriában
+rekurzívan adjuk meg.
+Tegyük fel, hogy a $k$-összefésülő kimeneti pufferének mérete $n$ kell legyen.
+Tegyük fel, hogy $k \ge 2$, és $h=\log_2{k}$.
+$h$ egész szám, mivel $k$ kettő-hatvány.
+Legyen $d = \lfloor h/2 \rfloor$.
+Legyen $T$ az összefésülőfa azon csúcsok által indukált részfája,
+amiknek a távolság a gyökértől legfeljebb $d$.
+Legyen $m = 2^{d+1}$.
+Legyenek $B_1, B_2, ..., B_m$ az összefésülőfa részfái,
+amiknek a gyökerei azon csúcsok, amiknek a távolsága a gyökértől
+$d+1$.
+Egy ilyen felosztás látható a \ref{fig:8-összefésülő} ábrán.
+
+Ezek után a memóriában sorfolytonosan helyezzük el először
+a $T$-hez tartozó $2^d$-összefésülőt, aminek a kimeneti pufferének mérete $n$.
+Majd sorban minden $B_i$-re rendezzünk el egy $k/m$-összefésülőt,
+aminek a kimeneti pufferének mérete legyen $(k/m)^3$.
+
+Ezek után $k$ darab rendezett tömböt, amiknek összesen az elemszáma $n$,
+összefésülhetünk egy $n$ méretű kimeneti pufferrel rendelkező
+$k$-összefésülő felépítésével,
+majd a Feltölt eljárás egyszeri meghívásával.
+
+Megmutatható\cite{brodal-distribution-sweep},
+hogy egy $k$-összefésülő tárigénye a kimeneti puffer nélkül
+legfeljebb $O(k^2)$.
+Tegyük fel, hogy a rendezendő elemek száma $n$.
+Tegyük fel, hogy a gyorsítótár mérete $(Z/L)$,
+és a gyorsítótár magas, azaz $Z=\Omega(L^2)$.
+
+Szintén megmutatható, hogy a tölcsér rendezés gyorsítótár-bonyolultsága
+$\Theta(\frac{n}{L}\log_{Z}{n})$.
+Ez $\ln{Z}$ faktorral jobb, mint az összefésüléses rendezés.
+Ha egy $k$-összefésülő teljesen egészében elfér a gyorsítótárban,
+valamint az általa használt bemeneti pufferek mindegyikéből is elfér egy-egy
+block a gyorsítótárban, és a bemeneti pufferek tele vannak,
+akkor az összefésülő kimeneti pufferének feltöltéséhez
+elég az összefésülőt egyszer beolvasni a memóriába,
+és a kimeneti puffert, valamint a bemeneti puffereket egyszer
+bejárni.
+Ezek a $k$-összefésülők a gyorsítótár szempontjából úgy viselkednek,
+mintha egy atomi összefésülő lenne $k$ bemeneti pufferrel.
 
 \section{Edénysor szita}
 
@@ -3055,6 +3330,11 @@ $16384$ & $231,837$ & $169,852$ & $141,595$ & $157,628$ \\
 \end{tabular}
 \end{table}
 
+\chapter{Összegzés}
+
+{\color{red}XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX}
+konstans faktor vs cache méret. külső tár. hierarchia. további.
+
 \begin{thebibliography}{9}
 
 \bibitem{prokop}
@@ -3105,6 +3385,9 @@ The RISC-V Instruction Set Manual: Volume I
 RISC-V ABIs Specification \\
 \Urlmuskip=0mu  plus 10mu
 \url{https://lists.riscv.org/g/tech-psabi/attachment/61/0/riscv-abi.pdf}
+
+\bibitem{brodal-distribution-sweep}
+Brodal, Gerth \& Fagerberg, Rolf. (2002). Cache Oblivious Distribution Sweeping. BRICS Report Series. 9. 426-438. \url{https://doi.org/10.1007/3-540-45465-9_37}
 
 \end{thebibliography}
 
