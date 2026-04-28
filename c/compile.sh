@@ -7,8 +7,10 @@ rm -rf "${OUTPUT_DIR}"
 mkdir "${OUTPUT_DIR}"
 
 function compile() {
-  gcc -o "${OUTPUT_DIR}/${1}.native-gcc-O2.elf" "${1}.c" native.c \
-    -std=c17 -Wall -Wextra
+  OUTPUT_ELF="${OUTPUT_DIR}/${1}.native-gcc-O2.elf"
+  echo $OUTPUT_ELF
+  gcc -o "${OUTPUT_ELF}" "${1}.c" native.c \
+    -std=c17 -Wall -Wextra -g
   compile_clang "${1}" "0"
   compile_clang "${1}" "1"
   compile_clang "${1}" "2"
@@ -46,7 +48,9 @@ function compile_gcc() {
 compile "bucket-sieve-cache-aware"
 compile "bucket-sieve-cache-oblivious"
 compile "emulator-tests"
+compile "funnelsort"
 compile "matrix-multiplication-by-definition"
 compile "matrix-multiplication-halving"
 compile "matrix-multiplication-power-of-2"
 compile "matrix-multiplication-power-of-2-strassen"
+compile "mergesort"

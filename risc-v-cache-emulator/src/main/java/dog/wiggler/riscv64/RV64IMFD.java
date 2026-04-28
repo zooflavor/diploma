@@ -113,6 +113,8 @@ public class RV64IMFD {
                                         .formatted(instruction, hart.getPc(), opcode, funct3, imm));
                     }
                 }
+                // ORI
+                case 6 -> hart.xRegisters.setInt64(heapAndStack, rd, hart.xRegisters.getInt64(rs1)|imm);
                 // ANDI
                 case 7 -> hart.xRegisters.setInt64(heapAndStack, rd, hart.xRegisters.getInt64(rs1)&imm);
                 default -> throw new IllegalInstructionException(

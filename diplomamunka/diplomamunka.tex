@@ -1053,27 +1053,13 @@ hogy egy $s \times s$ méretű részfeladatot a gyorsítótárba egyszer beolvas
 
 \section{Rendezés}
 
+\subsection{Összefésüléses rendezés}
+
+\subsection{Tölcsér rendezés}
+
 {\color{red}Katasztrofális.}
 
 Oszd meg és uralkodj. 2 algoritmus is van. Az alsó korlát elérhető, de a papír nem az igazi erről. Tall cache assumption. A tall cache assumption lényegesen befolyásolja a műveletigényt.
-
-\section{FFT}
-
-{\color{red}Katasztrofális.}
-
-Oszd meg és uralkodj. Alsó korlát is van, amit elér, de túl erős feltevésekkel.
-
-\section{Diff.egyenlet közelítés}
-
-{\color{red}Katasztrofális.}
-
-Oszd meg és uralkodj. Több dimenzióban.
-
-\section{Statikus keresőfa}
-
-{\color{red}Katasztrofális.}
-
-Van Emde Boas fák. Dinamikus eset szuperbonyolult, asszem.
 
 \section{Edénysor szita}
 
@@ -2178,6 +2164,14 @@ a memória-műveletek naplójába írja a megadott értéket.
 
 \subsection{Mátrix szorzás}
 
+A mátrixszorzást megvalósításának forráskódjai:
+\begin{itemize}
+\item \texttt{matrix-multiplication-by-definition.c}
+\item \texttt{matrix-multiplication-halving.c}
+\item \texttt{matrix-multiplication-power-of-2.c}
+\item \texttt{matrix-multiplication-power-of-2-strassen.c}
+\end{itemize}
+
 A mátrixszorzások bemenete a következő.
 \begin{itemize}
 \item Három egész. Az első a bal mátrix sorainak száma.
@@ -2216,7 +2210,51 @@ Egy mátrixszorzás kilépési kódja a következőek egyike lehet.
 \item $2$: A mátrixok egyik dimenziója nagyobb, mint $2^{63}$.
 \end{itemize}
 
+\subsection{Rendezés}
+
+A rendezések megvalósításának forráskódjai:
+\begin{itemize}
+\item \texttt{funnelsort.c}
+\item \texttt{mergesort.c}
+\end{itemize}
+
+A rendezések bemenetei egész számok.
+\begin{itemize}
+\item Az első szám a rendezendő elemek száma.
+\item A többi szám a rendezendő elemek.
+\end{itemize}
+A rendezések kimenete a rendezett elemek felsorolva.
+
+
+Például egy rendezés bemenete és kimenete a következő.
+Az első két sor a bement. A utolsó sor a kimenet.
+A példában az új-sor karakterek szóközzel vannak helyettesítve
+a jobb értelmezhetőség kedvéért.
+\begin{table}[ht]
+\centering
+\caption{A rendezés futtatásának példája}
+\label{table-sort-example-run}
+\begin{boxedverbatim}
+funnelsort.native-gcc-O2.elf 
+5
+2 5 3 1 4
+1 2 3 4 5
+\end{boxedverbatim}
+\end{table}
+
+Egy rendezések kilépési kódja a következőek egyike lehet.
+\begin{itemize}
+\item $0$: Siker.
+\item $1$: Nincs elég szabad memória.
+\end{itemize}
+
 \subsection{RekurzívSzita}
+
+A RekurzívSzita megvalósításának forráskódjai:
+\begin{itemize}
+\item \texttt{bucket-sieve-cache-aware.c}
+\item \texttt{bucket-sieve-cache-oblivious.c}
+\end{itemize}
 
 A gyorsítótár-független RekurzívSzita bemenete két egész szám.
 \begin{itemize}
@@ -2838,6 +2876,10 @@ Strassen kettő-hatvány & $n^{\log_{2}{7}} / \sqrt{Z}L$ & $5246,720$ & $4423,86
 \hline
 \end{tabular}
 \end{table}
+
+\section{Rendezés}
+
+{\color{red}XXXXXXXXXXXXXXXXXXXXXXXXXXXXX}
 
 \section{RekurzívSzita}
 

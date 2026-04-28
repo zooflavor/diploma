@@ -40,7 +40,6 @@ public class IllegalInstructionsTest {
         result.add(Arguments.of(0xffffff87)); // RV64IMFD - opcode 0x07
         result.add(Arguments.of(0xffff9f93)); // RV64IMFD - opcode 0x13 - slli, shift amount too large
         result.add(Arguments.of(0xffffdf93)); // RV64IMFD - opcode 0x13 - invalid shift right
-        result.add(Arguments.of(0xffffef93)); // RV64IMFD - opcode 0x13 - funct3=6
         result.add(Arguments.of(0xffff9f9b)); // RV64IMFD - opcode 0x1b - slliw, shift amount too large
         result.add(Arguments.of(0xffffdf9b)); // RV64IMFD - opcode 0x1b - invalid shift right
         result.add(Arguments.of(0xffffef9b)); // RV64IMFD - opcode 0x1b - funct3=6
