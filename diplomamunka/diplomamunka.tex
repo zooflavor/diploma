@@ -1319,13 +1319,14 @@ majd a Feltölt eljárás egyszeri meghívásával.
 Megmutatható\cite{brodal-distribution-sweep},
 hogy egy $k$-összefésülő tárigénye a kimeneti puffer nélkül
 legfeljebb $O(k^2)$.
+
 Tegyük fel, hogy a rendezendő elemek száma $n$.
 Tegyük fel, hogy a gyorsítótár mérete $(Z/L)$,
 és a gyorsítótár magas, azaz $Z=\Omega(L^2)$.
-
 Szintén megmutatható, hogy a tölcsér rendezés gyorsítótár-bonyolultsága
 $\Theta(\frac{n}{L}\log_{Z}{n})$.
 Ez $\ln{Z}$ faktorral jobb, mint az összefésüléses rendezés.
+
 Ha egy $k$-összefésülő teljesen egészében elfér a gyorsítótárban,
 valamint az általa használt bemeneti pufferek mindegyikéből is elfér egy-egy
 block a gyorsítótárban, és a bemeneti pufferek tele vannak,
@@ -2351,6 +2352,35 @@ Tehát az $\frac{f'}{f}$ hányados felülről becsülhető egy konstanssal,
 és az edénysor szita aszimptotikus idő-, és gyorsítótár bonyolultsága
 megegyezik a RekurzívSzita bonyolultságával.
 
+\subsection{Eratoszthenész szitája}
+
+Eratoszthenész szitája a következő algoritmus.
+Tegyük fel, hogy $2$ és $n$ között szeretnénk minden számot megjelölni
+a prímosztóival.
+\begin{itemize}
+\item Készítsünk egy listát, amin minden egész szám szerepel
+$2$ és $n$ között, növekvő sorrendben.
+\item Kezdetben minden szám a listán legyen jelöletlen.
+\item Vizsgáljuk, sorban a számokat $2$-től $n$-ig,
+növekvő sorrendben. Legyen az éppen vizsgált szám $k$.
+\item Ha $k$ meg van jelölve a listán, akkor $k$ összetett,
+és folytassuk a vizsgálatot a következő számmal.
+\item Ha $k$ nincs megjelölve, akkor $k$ prím.
+\item Jelöljük meg $k$ összes $k$-nál nagyobb többszörösét a listán.
+Ezt megtehetjük egy ciklusban, egy futó indexváltozóval $2k$-tól indulva,
+a változót mindig $k$-val növelve, amíg $n$-t meg nem haladja.
+\end{itemize}
+
+Legyen $M(n)$ a megjelölések száma a szitát $n$-ig futtatva.
+Ekkor $M(n)$ megbecsülhető Mertens tételével és a prímszámtétellel.
+\begin{align*}
+M(n)
+&= \sum_{p \le n} \left( \left\lfloor \frac{n}{p} \right\rfloor - 1 \right)
+\le \sum_{p \le n} \left( \frac{n}{p} - 1 \right)
+= n \sum_{p \le n} \frac{1}{p} - \Pi(n)
+= n \ln{\ln{n}} + O(n)
+\end{align*}
+
 \chapter{Szimulátor}
 
 A gyorsítótár-független algoritmusok valódi viselkedésének
@@ -2523,12 +2553,13 @@ Egy rendezések kilépési kódja a következőek egyike lehet.
 \item $1$: Nincs elég szabad memória.
 \end{itemize}
 
-\subsection{RekurzívSzita}
+\subsection{Prímszita}
 
-A RekurzívSzita megvalósításának forráskódjai:
+A sziták megvalósításának forráskódjai:
 \begin{itemize}
 \item \texttt{bucket-sieve-cache-aware.c}
 \item \texttt{bucket-sieve-cache-oblivious.c}
+\item \texttt{sieve-of-eratosthenes.c}
 \end{itemize}
 
 A gyorsítótár-független RekurzívSzita bemenete két egész szám.
@@ -2550,7 +2581,11 @@ akkor a rekurzív fa a $[0, a^h)$ intervallumot fedi le.
 \item A harmadik paraméter a láncolt lista elemeinek lapmérete.
 \end{itemize}
 
-A RekurzívSzita kimenete a prímek listája
+Eratoszthenész szitájának bemenete egy egész szám,
+a szitálandó intervallum vége.
+Azokat a számokat vizsgálja, melyek a megadott számnál kisebbek.
+
+A sziták kimenete a prímek listája
 a szitált intervallumban, növekvő sorrendben.
 
 Például a gyorsítótár-független RekurzívSzita bemenete és kimenete a következő.
@@ -2579,7 +2614,19 @@ bucket-sieve-cache-aware.native-gcc-O2.elf
 \end{boxedverbatim}
 \end{table}
 
-Egy RekurzívSzita kilépési kódja a következőek egyike lehet.
+Példa Eratoszthenész szitájának futtatására.
+\begin{table}[ht]
+\centering
+\caption{Az eratoszthenészi szita futtatásának példája}
+\label{table-sieve-of-eratosthenes-run}
+\begin{boxedverbatim}
+sieve-of-eratosthenes.native-gcc-O2.elf 
+32
+2 3 5 7 11 13 17 19 23 29 31
+\end{boxedverbatim}
+\end{table}
+
+Egy sziták kilépési kódja a következőek egyike lehet.
 \begin{itemize}
 \item $0$: Siker.
 \item $1$: Nincs elég szabad memória.
@@ -3152,14 +3199,173 @@ Strassen kettő-hatvány & $n^{\log_{2}{7}} / \sqrt{Z}L$ & $5246,720$ & $4423,86
 \end{tabular}
 \end{table}
 
+A \ref{table-matrix-multiply-algorithms-elapsed-cycles}
+táblázat tartalmazza a különböző
+mátrixszorzás algoritmusok futási idejét,
+a szimulátor által futtatott utasítások száma alapján.
+Az értékek a sorhoz tartozó algoritmus
+és a definíció szerinti algoritmus futási idejének hányadosa.
+
+% definíció szerint
+% n =  64 ->    1938387
+% n = 128 ->   15091539
+% n = 256 ->  119082579
+% felezés
+% n =  64 ->   19154644
+% n = 128 ->  152938708
+% n = 256 -> 1222323412
+% kettő-hatvány
+% n =  64 ->   11133926
+% n = 128 ->   88422828
+% n = 256 ->  704808242
+% strassen
+% n =  64 ->   11033729
+% n = 128 ->   77321944
+% n = 256 ->  541605973
+\begin{table}[ht]
+\centering
+\caption{A mátrixszorzás algoritmusok futási ideje a definíció szerintihez képest}
+\label{table-matrix-multiply-algorithms-elapsed-cycles}
+\begin{tabular}{|l|r|r|r|}
+\hline
+Futási idő & $n=64$ & $n=128$ & $n=256$ \\
+\hline
+Felezés                & $9,882$ & $10,134$ & $10,265$ \\
+\hline
+Kettő-hatvány          & $5,744$ &  $5,859$ &  $5,919$ \\
+\hline
+Strassen kettő-hatvány & $5,692$ &  $5,124$ &  $4,548$ \\
+\hline
+\end{tabular}
+\end{table}
+
 \section{Rendezés}
 
-{\color{red}XXXXXXXXXXXXXXXXXXXXXXXXXXXXX}
+A \ref{table-sorting} táblázat tartalmazza
+a rendező algoritmusok viselkedését egy LRU gyorsítótáron.
+A gyorsítótár teljesen asszociatív.
+Az értékek a gyorsítótár által kiváltott adat-elérések száma
+és a gyorsítótár-komplexitás növekedési osztályának domináns tagjának hányadosa.
 
-\section{RekurzívSzita}
+% jóslat merge
+% n=2^19 -   2k/ 16 -> 181704,375
+% n=2^19 -   8k/ 32 ->  68139,140
+% n=2^19 -  32k/ 64 ->  22713,047
+% n=2^19 - 128k/128 ->   5678,262
+% n=2^20 -   2k/ 16 -> 408834,843
+% n=2^20 -   8k/ 32 -> 158991,328
+% n=2^20 -  32k/ 64 ->  56782,617
+% n=2^20 - 128k/128 ->  17034,785
+% n=2^21 -   2k/ 16 -> 908521,873
+% n=2^21 -   8k/ 32 -> 363408,749
+% n=2^21 -  32k/ 64 -> 136278,280
+% n=2^21 - 128k/128 ->  45426,094
+% jóslat funnel
+% n=2^19 -   2k/ 16 ->  56599,273
+% n=2^19 -   8k/ 32 ->  23945,846
+% n=2^19 -  32k/ 64 ->  10376,533
+% n=2^19 - 128k/128 ->   4577,882
+% n=2^20 -   2k/ 16 -> 119156,364
+% n=2^20 -   8k/ 32 ->  50412,308
+% n=2^20 -  32k/ 64 ->  21845,333
+% n=2^20 - 128k/128 ->   9637,647
+% n=2^21 -   2k/ 16 -> 250228,364
+% n=2^21 -   8k/ 32 -> 105865,846
+% n=2^21 -  32k/ 64 ->  45875,200
+% n=2^21 - 128k/128 ->  20239,059
+% valóság merge
+% n=2^19 -   2k/ 16 -> 20909687
+% n=2^19 -   8k/ 32 ->  8730998
+% n=2^19 -  32k/ 64 ->  3553198
+% n=2^19 - 128k/128 ->  1378985
+% n=2^20 -   2k/ 16 -> 44965608
+% n=2^20 -   8k/ 32 -> 19034713
+% n=2^20 -  32k/ 64 ->  7892847
+% n=2^20 - 128k/128 ->  3151411
+% n=2^21 -   2k/ 16 -> 96222619
+% n=2^21 -   8k/ 32 -> 41215093
+% n=2^21 -  32k/ 64 -> 17358674
+% n=2^21 - 128k/128 ->  7088923
+% valóság funnel
+% n=2^19 -   2k/ 16 -> 12696073
+% n=2^19 -   8k/ 32 ->  3023755
+% n=2^19 -  32k/ 64 ->  1035069
+% n=2^19 - 128k/128 ->   334967
+% n=2^20 -   2k/ 16 -> 27521787
+% n=2^20 -   8k/ 32 ->  6819835
+% n=2^20 -  32k/ 64 ->  2614439
+% n=2^20 - 128k/128 ->   919784
+% n=2^21 -   2k/ 16 -> 67331842
+% n=2^21 -   8k/ 32 -> 14933120
+% n=2^21 -  32k/ 64 ->  5513532
+% n=2^21 - 128k/128 ->  1928155
+\begin{table}[ht]
+\centering
+\caption{A rendező algoritmusok viselkedése LRU gyorsítótáron}
+\label{table-sorting}
+\begin{tabular}{|r|r|r|r|}
+\hline
+$n$ & $Z/L$ & Összefésüléses rendezés & Tölcsér rendezés \\
+\hline
+$2^{19}$ &    $2k/16$ & $115,075$ & $224,315$ \\
+\hline
+$2^{19}$ &    $8k/32$ & $128,139$ & $126,275$ \\
+\hline
+$2^{19}$ &   $32k/64$ & $156,439$ &  $99,751$ \\
+\hline
+$2^{19}$ & $128k/128$ & $242,853$ &  $34,756$ \\
+\hline
+$2^{20}$ &    $2k/16$ & $109,985$ & $230,972$ \\
+\hline
+$2^{20}$ &    $8k/32$ & $119,722$ & $135,281$ \\
+\hline
+$2^{20}$ &   $32k/64$ & $139,001$ & $119,680$ \\
+\hline
+$2^{20}$ & $128k/128$ & $184,999$ &  $95,437$ \\
+\hline
+$2^{21}$ &    $2k/16$ & $105,911$ & $269,082$ \\
+\hline
+$2^{21}$ &    $8k/32$ & $113,412$ & $141,057$ \\
+\hline
+$2^{21}$ &   $32k/64$ & $127,377$ & $120,185$ \\
+\hline
+$2^{21}$ & $128k/128$ & $156,054$ & $95,269$ \\
+\hline
+\end{tabular}
+\end{table}
+
+A \ref{table-sorting-elapsed-cycles} táblázat tartalmazza
+a tölcsérrendezés futási idejének és az összefésüléses
+rendezés futási idejének hányadosát.
+Az idő a szimulátor által futtatott utasítások száma.
+
+% összefésüléses
+% n=2^18 ->  106171113
+% n=2^19 ->  222573230
+% n=2^20 ->  465586743
+% n=2^21 ->  972060389
+% tölcsér
+% n=2^18 ->  371827465
+% n=2^19 ->  809497851
+% n=2^20 -> 1644217148
+% n=2^21 -> 3526108585
+\begin{table}[ht]
+\centering
+\caption{A tölcsérrendezés futási ideje az összefésüléses rendezéshez képest}
+\label{table-sorting-elapsed-cycles}
+\begin{tabular}{|r|r|r|r|r|}
+\hline
+ & $n=2^{18}$ & $n=2^{19}$ & $n=2^{20}$ & $n=2^{21}$ \\
+\hline
+Tölcsér/összefésüléses & $3,502$ & $3,637$ & $3,531$ & $3,627$ \\
+\hline
+\end{tabular}
+\end{table}
+
+\section{Prímszita}
 
 A \ref{table-bucket-sieves} táblázat tartalmazza
-a RekurzívSzita viselkedését egy teljesen asszociatív LRU gyorsítótáron.
+a sziták viselkedését egy teljesen asszociatív LRU gyorsítótáron.
 $a$ a számrendszer alapja.
 A független oszlop tartalmazza a tömbök partícióján alapuló
 gyorsítótár-független algoritmus eredményeit,
@@ -3167,9 +3373,10 @@ a tudatos oszlopokban a láncolt-listák partícióján
 alapuló gyorsítótár-tudatos szita vannak.
 A láncolt listák lapmérete $4096$ bájt.
 Az értékek a gyorsítótár által kiváltott memória-elérések
-és a RekurzívSzita gyorsítótár-komplexitására adott becslés domináns tagjának
+és a szita gyorsítótár-komplexitására adott becslés domináns tagjának
 hányadosa.
-A domináns tag $rac{n}{L} \log_{a}{\frac{n^q}{Z}}$.
+A domináns tag $n \ln{\ln{n}}$ Eratoszthenész szitájának esetén,
+és $\frac{n}{L} \log_{a}{\frac{n^q}{Z}}$ a RekurzívSzita esetén.
 $q$ minden esetben 1.
 
 % jóslat a=2
@@ -3235,31 +3442,93 @@ $q$ minden esetben 1.
 % n=2^20 -   8k/ 32 ->  9562984
 % n=2^20 -  32k/ 64 ->  2600406
 % n=2^20 - 128k/128 ->   699502
+% jóslat eratoszthenés
+% n= 2^19 -> 1351575,697
+% n= 2^20 -> 2756936,312
+% eratoszthenés
+% n=2^19 -   2k/ 16 -> 1921601
+% n=2^19 -   8k/ 32 -> 1580273
+% n=2^19 -  32k/ 64 -> 1285874
+% n=2^19 - 128k/128 ->  967290
+% n=2^20 -   2k/ 16 -> 3967184
+% n=2^20 -   8k/ 32 -> 3290769
+% n=2^20 -  32k/ 64 -> 2716192
+% n=2^20 - 128k/128 -> 2163812
 \begin{table}[ht]
 \centering
-\caption{A RekurzívSzita viselkedése egy LRU gyorsítótáron}
+\caption{A sziták viselkedése egy LRU gyorsítótáron}
 \label{table-bucket-sieves}
-\begin{tabular}{|r|r|r|r|r|r|}
+\begin{tabular}{|r|r|r|r|r|r|r|}
 \hline
-$n$ & $Z/L$ & Független & \multicolumn{3}{|c|}{Tudatos} \\
+$n$ & $Z/L$ &Eratoszthenészi & Független & \multicolumn{3}{|c|}{Tudatos} \\
 \hline
- & & $a=2$ & $a=2$ & $a=4$ & $a=16$ \\
+ & &  & $a=2$ & $a=2$ & $a=4$ & $a=16$ \\
 \hline
-$2^{19}$ &    $2k/16$ & $41,565$ & $161,061$ & $181,803$ & $246,441$ \\
+$2^{19}$ &    $2k/16$ & $1,422$ & $41,565$ & $161,061$ & $181,803$ & $246,441$ \\
 \hline
-$2^{19}$ &    $8k/32$ & $32,350$ & $120,550$ & $140,754$ & $183,951$ \\
+$2^{19}$ &    $8k/32$ & $1,169$ & $32,350$ & $120,550$ & $140,754$ & $183,951$ \\
 \hline
-$2^{19}$ &   $32k/64$ & $25,572$ &  $65,544$ & $101,527$ & $147,910$ \\
+$2^{19}$ &   $32k/64$ & $0,951$ & $25,572$ &  $65,544$ & $101,527$ & $147,910$ \\
 \hline
-$2^{19}$ & $128k/128$ & $19,853$ &  $27,152$ &  $43,555$ & $152,570$ \\
+$2^{19}$ & $128k/128$ & $0,716$ & $19,853$ &  $27,152$ &  $43,555$ & $152,570$ \\
 \hline
-$2^{20}$ &    $2k/16$ & $41,140$ & $152,295$ & $171,384$ & $231,929$ \\
+$2^{20}$ &    $2k/16$ & $1,439$ & $41,140$ & $152,295$ & $171,384$ & $231,929$ \\
 \hline
-$2^{20}$ &    $8k/32$ & $32,119$ & $112,779$ & $130,177$ & $166,765$ \\
+$2^{20}$ &    $8k/32$ & $1,194$ & $32,119$ & $112,779$ & $130,177$ & $166,765$ \\
 \hline
-$2^{20}$ &   $32k/64$ & $24,879$ &  $59,008$ &  $89,151$ & $126,973$ \\
+$2^{20}$ &   $32k/64$ & $0,985$ & $24,879$ &  $59,008$ &  $89,151$ & $126,973$ \\
 \hline
-$2^{20}$ & $128k/128$ & $16,904$ &  $23,186$ &  $37,808$ & $113,851$ \\
+$2^{20}$ & $128k/128$ & $0,785$ & $16,904$ &  $23,186$ &  $37,808$ & $113,851$ \\
+\hline
+\end{tabular}
+\end{table}
+
+A \ref{table-bucket-sieves-elapsed-cycles} táblázat tartalmazza
+az oszlophoz tartozó szita futási idejének és az eratoszthenészi szita futási idejének hányadosát.
+Az idő a szimulátor által futtatott utasítások száma.
+
+% eratoszthenész
+% n^17 ->    2595644
+% n^18 ->    5252897
+% n^19 ->   10622102
+% n^20 ->   21464772
+% oblivious
+% n^17 ->   61261821
+% n^18 ->  129119191
+% n^19 ->  271417178
+% n^20 ->  565902575
+% aware - a=2
+% n^17 ->  137462711
+% n^18 ->  287570719
+% n^19 ->  600334760
+% n^20 -> 1242371602
+% aware - a=4
+% n^17 ->   73835255
+% n^18 ->  154494978
+% n^19 ->  320900259
+% n^20 ->  662856667
+% aware - a=16
+% n^17 ->   43666864
+% n^18 ->   90388256
+% n^19 ->  186744635
+% n^20 ->  384106577
+\begin{table}[ht]
+\centering
+\caption{A sziták futási ideje Eratoszthenész szitájához képest}
+\label{table-bucket-sieves-elapsed-cycles}
+\begin{tabular}{|r|r|r|r|r|r|r|}
+\hline
+$n$ & Független & \multicolumn{3}{|c|}{Tudatos} \\
+\hline
+ & $a=2$ & $a=2$ & $a=4$ & $a=16$ \\
+\hline
+$2^{17}$ & $23,602$ & $52,959$ & $28,446$ & $16,823$ \\
+\hline
+$2^{18}$ & $24,581$ & $54,745$ & $29,411$ & $17,207$ \\
+\hline
+$2^{19}$ & $25,552$ & $56,518$ & $30,211$ & $17,581$ \\
+\hline
+$2^{20}$ & $26,364$ & $57,880$ & $30,881$ & $17,895$ \\
 \hline
 \end{tabular}
 \end{table}
@@ -3274,7 +3543,7 @@ A számrendszer alapja $16$.
 Az értékek a gyorsítótár által kiváltott memória-elérések
 és a RekurzívSzita gyorsítótár-komplexitására adott becslés domináns tagjának
 hányadosa.
-A domináns tag $rac{n}{L} \log_{a}{\frac{n^q}{Z}}$.
+A domináns tag $\frac{n}{L} \log_{a}{\frac{n^q}{Z}}$.
 $q$ minden esetben 1.
 
 % jóslat
@@ -3309,7 +3578,7 @@ $q$ minden esetben 1.
 % 128k/128 ->   968464
 \begin{table}[ht]
 \centering
-\caption{A RekurzívSzita viselkedése a lapméret függvényében}
+\caption{A gyorsítótár-tudatos RekurzívSzita viselkedése a lapméret függvényében}
 \label{table-bucket-sieve-aware}
 \begin{tabular}{|r|r|r|r|r|}
 \hline
@@ -3332,7 +3601,8 @@ $16384$ & $231,837$ & $169,852$ & $141,595$ & $157,628$ \\
 
 \chapter{Összegzés}
 
-{\color{red}XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX}
+{\color{red}XXXXXXXXXXXXXXXXXXXXXXXXXXXX}
+
 konstans faktor vs cache méret. külső tár. hierarchia. további.
 
 \begin{thebibliography}{9}

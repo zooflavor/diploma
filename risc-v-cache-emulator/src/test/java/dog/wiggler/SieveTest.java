@@ -28,24 +28,33 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @ParameterizedClass
 @MethodSource("parameters")
 @TestMethodOrder(MethodOrderer.MethodName.class)
-public class BucketSieveTest {
-    private static final @NotNull String IMAGE_AWARE="bucket-sieve-cache-aware";
-    private static final @NotNull String IMAGE_OBLIVIOUS="bucket-sieve-cache-oblivious";
+public class SieveTest {
+    public enum Sieve {
+        BUCKET_SIEVE_AWARE("bucket-sieve-cache-aware"),
+        BUCKET_SIEVE_OBLIVIOUS("bucket-sieve-cache-oblivious"),
+        SIEVE_OF_ERATOSTHENES("sieve-of-eratosthenes");
+
+        public final @NotNull String imageName;
+
+        Sieve(@NotNull String imageName) {
+            this.imageName=imageName;
+        }
+    }
 
     private final int base;
     private final @NotNull String executableImageOption;
     private final int height;
-    private final boolean oblivious;
+    private final @NotNull Sieve sieve;
 
-    public BucketSieveTest(
+    public SieveTest(
             int base,
             @NotNull String executableImageOption,
             int height,
-            boolean oblivious) {
+            @NotNull Sieve sieve) {
         this.base=base;
         this.executableImageOption=executableImageOption;
         this.height=height;
-        this.oblivious=oblivious;
+        this.sieve=sieve;
     }
 
     /**
@@ -75,18 +84,23 @@ public class BucketSieveTest {
 
     public static @NotNull Stream<@NotNull Arguments> parameters() {
         @NotNull List<@NotNull Arguments> result=new ArrayList<>();
+        @NotNull List<@NotNull Long> intervals=new ArrayList<>();
         for (var executableImageOption: EmulatorTests.EXECUTABLE_IMAGE_OPTIONS) {
             for (var height: List.of(2, 4, 8, 10, 11)) {
-                result.add(Arguments.of(2, executableImageOption, height, false));
-                result.add(Arguments.of(2, executableImageOption, height, true));
+                result.add(Arguments.of(2, executableImageOption, height, Sieve.BUCKET_SIEVE_AWARE));
+                result.add(Arguments.of(2, executableImageOption, height, Sieve.BUCKET_SIEVE_OBLIVIOUS));
+                result.add(Arguments.of(2, executableImageOption, height, Sieve.SIEVE_OF_ERATOSTHENES));
             }
             for (var height: List.of(2, 4, 8)) {
-                result.add(Arguments.of(3, executableImageOption, height, false));
+                result.add(Arguments.of(3, executableImageOption, height, Sieve.BUCKET_SIEVE_AWARE));
+                result.add(Arguments.of(3, executableImageOption, height, Sieve.SIEVE_OF_ERATOSTHENES));
             }
             for (var height: List.of(2, 4)) {
-                result.add(Arguments.of(5, executableImageOption, height, false));
+                result.add(Arguments.of(5, executableImageOption, height, Sieve.BUCKET_SIEVE_AWARE));
+                result.add(Arguments.of(5, executableImageOption, height, Sieve.SIEVE_OF_ERATOSTHENES));
             }
-            result.add(Arguments.of(8, executableImageOption, 3, false));
+            result.add(Arguments.of(8, executableImageOption, 3, Sieve.BUCKET_SIEVE_AWARE));
+            result.add(Arguments.of(8, executableImageOption, 3, Sieve.SIEVE_OF_ERATOSTHENES));
         }
         return result.stream();
     }
@@ -94,14 +108,19 @@ public class BucketSieveTest {
     @Test
     public void test() throws Throwable {
         @NotNull Deque<@NotNull Number> input=new ArrayDeque<>();
-        if (oblivious) {
-            input.addLast((long)height);
-            input.addLast(1L<<23); // array size
-        }
-        else {
-            input.addLast((long)base);
-            input.addLast((long)height);
-            input.addLast(4096L); // page size
+        switch (sieve) {
+            case BUCKET_SIEVE_AWARE -> {
+                input.addLast((long)base);
+                input.addLast((long)height);
+                input.addLast(4096L); // page size
+            }
+            case BUCKET_SIEVE_OBLIVIOUS -> {
+                input.addLast((long)height);
+                input.addLast(1L<<23); // array size
+            }
+            case SIEVE_OF_ERATOSTHENES -> {
+                input.add(PowerTest.power(base, height));
+            }
         }
         var actualPrimes=new ArrayList<@NotNull Number>();
         try (var emulator=Emulator.factory(
@@ -113,9 +132,7 @@ public class BucketSieveTest {
             emulator.loadELFAndReset(
                     EmulatorTests.imagePath(
                             executableImageOption,
-                            oblivious
-                                    ?IMAGE_OBLIVIOUS
-                                    :IMAGE_AWARE));
+                            sieve.imageName));
             emulator.run();
             assertEquals(0, emulator.exit.code());
         }

@@ -52,12 +52,13 @@ void freePage(struct page_t *page) {
 }
 
 uint64_t power(uint64_t base, uint64_t exponent) {
-	if (!exponent) {
-		return 1ULL;
-	}
-	uint64_t result=power(base*base, exponent>>1);
-	if (exponent&1ULL) {
-		result*=base;
+	uint64_t result=1ULL;
+	while (exponent) {
+		if (exponent&1ULL) {
+			result*=base;
+		}
+		base*=base;
+		exponent>>=1;
 	}
 	return result;
 }
