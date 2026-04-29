@@ -1,3 +1,5 @@
+// Matrix multiplication by definition.
+
 #include "emulator.h"
 
 void start() {
@@ -9,27 +11,15 @@ void start() {
 	// columns of right matrix
 	int size2=read_int64();
 	
-	// allocate left matrix
-	double *matrix0=malloc(size0*size1*sizeof(double));
+	// allocate 3 matrices
+	double *matrix0=malloc(
+			(size0*size1+size1*size2+size0*size2)*sizeof(double));
 	if (0==matrix0) {
 		exit(1);
 		return;
 	}
-	// allocate right matrix
-	double *matrix1=malloc(size1*size2*sizeof(double));
-	if (0==matrix1) {
-		free(matrix0);
-		exit(1);
-		return;
-	}
-	// allocate result matrix
-	double *matrix2=malloc(size0*size2*sizeof(double));
-	if (0==matrix2) {
-		free(matrix1);
-		free(matrix0);
-		exit(1);
-		return;
-	}
+	double *matrix1=matrix0+size0*size1;
+	double *matrix2=matrix1+size1*size2;
 	
 	memory_access_log_enable();
 	
@@ -59,7 +49,5 @@ void start() {
 	
 	memory_access_log_disable();
 	
-	free(matrix2);
-	free(matrix1);
 	free(matrix0);
 }

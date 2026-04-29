@@ -1,27 +1,31 @@
+/*
+Linker script for freestanding linking.
+*/
+
 ENTRY(start)
 
 SECTIONS
 {
     . = 0x10000;
 
-    .text (READONLY) : ALIGN(4K)
+    .text (READONLY) : ALIGN(CONSTANT (COMMONPAGESIZE))
     {
         *(.text*)
     }
 
-    .rodata (READONLY) : ALIGN(4K)
+    .rodata (READONLY) : ALIGN(CONSTANT (COMMONPAGESIZE))
     {
         *(.rodata)
     }
 
     . = ALIGN (CONSTANT (COMMONPAGESIZE));
 
-    .data : ALIGN(4K)
+    .data : ALIGN(CONSTANT (COMMONPAGESIZE))
     {
         *(.data)
     }
 
-    .bss : ALIGN(4K)
+    .bss : ALIGN(CONSTANT (COMMONPAGESIZE))
     {
         *(COMMON)
         *(.bss)

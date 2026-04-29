@@ -1,11 +1,20 @@
+// Matrix multiplication by the Strassen algorithm.
+// This recursively halves all dimensions,
+// and uses block operations.
+// All matrix dimensions are enlarged to the same power-of-2 number,
+// by adding zero rows and columns to the matrices.
+// The result is truncated back to the size compatible with the inputs.
+
 #include "emulator.h"
 
 int stride;
 
+// Sets the cells of the matrix to zero.
 void zero(
 		double *matrix,
 		int size);
 
+// Sets destination = source0 + source1.
 void copyAdd(
 		double *destination,
 		double *source0,
@@ -19,6 +28,7 @@ void copyAdd(
 	}
 }
 
+// Sets destination = source0 + source1 + source2 + source3.
 void copyAddAddSubtract(
 		double *destination,
 		double *source0,
@@ -34,6 +44,7 @@ void copyAddAddSubtract(
 	}
 }
 
+// Sets destination = source0 - source1.
 void copySubtract(
 		double *destination,
 		double *source0,
@@ -53,12 +64,15 @@ int max(int value0, int value1) {
 			:value1;
 }
 
-// stride is the distance in memory between two cells
-// in the same column and adjecent rows.
-// in this implementation is the same value
-// as the real number of columns in a matrix
-// matrices are laid out in row-major order,
-// so all strides are always the chose power of 2 value.
+// The recursion of the multiplication.
+// Matrices are laid out in row-major order.
+// matrix0/size/stride and matrix1/size/stride are the input matrix blocks.
+// matrix2/size/stride is the output matrix block.
+// temp matrices are half wasted.
+// The left-upper quarter of every one is used to hold temporary
+// results used in this instance of the recursion.
+// The left-lower querters are passed on to the lower levels of the recursion.
+// The right half of temp matrices are unused.
 void multiply(
 		double *matrix0,
 		double *matrix1,
@@ -77,9 +91,11 @@ void multiply(
 		// nothing to do
 	}
 	else if (1==size) {
+		// all matrices are 1x1
 		matrix2[0]=matrix0[0]*matrix1[0];
 	}
-	else { // 1<size
+	else {
+		// halve all dimensions
 		int halfSize=size/2;
 		double *matrix011=matrix0;
 		double *matrix021=matrix0+halfSize*stride;
@@ -94,10 +110,6 @@ void multiply(
 		double *matrix212=matrix211+halfSize;
 		double *matrix222=matrix221+halfSize;
 		
-		/*copy(temp8, matrix011, halfSize);
-		add(temp8, matrix022, halfSize);
-		copy(temp9, matrix111, halfSize);
-		add(temp9, matrix122, halfSize);*/
 		copyAdd(temp8, matrix011, matrix022, halfSize);
 		copyAdd(temp9, matrix111, matrix122, halfSize);
 		multiply(
@@ -115,8 +127,6 @@ void multiply(
 			temp9+halfSize*stride,
 			halfSize);
 		
-		/*copy(temp8, matrix021, halfSize);
-		add(temp8, matrix022, halfSize);*/
 		copyAdd(temp8, matrix021, matrix022, halfSize);
 		multiply(
 			temp8,
@@ -133,8 +143,6 @@ void multiply(
 			temp9+halfSize*stride,
 			halfSize);
 		
-		/*copy(temp9, matrix112, halfSize);
-		subtract(temp9, matrix122, halfSize);*/
 		copySubtract(temp9, matrix112, matrix122, halfSize);
 		multiply(
 			matrix011,
@@ -151,8 +159,6 @@ void multiply(
 			temp9+halfSize*stride,
 			halfSize);
 		
-		/*copy(temp9, matrix121, halfSize);
-		subtract(temp9, matrix111, halfSize);*/
 		copySubtract(temp9, matrix121, matrix111, halfSize);
 		multiply(
 			matrix022,
@@ -169,8 +175,6 @@ void multiply(
 			temp9+halfSize*stride,
 			halfSize);
 		
-		/*copy(temp8, matrix011, halfSize);
-		add(temp8, matrix012, halfSize);*/
 		copyAdd(temp8, matrix011, matrix012, halfSize);
 		multiply(
 			temp8,
@@ -187,10 +191,6 @@ void multiply(
 			temp9+halfSize*stride,
 			halfSize);
 		
-		/*copy(temp8, matrix021, halfSize);
-		subtract(temp8, matrix011, halfSize);
-		copy(temp9, matrix111, halfSize);
-		add(temp9, matrix112, halfSize);*/
 		copySubtract(temp8, matrix021, matrix011, halfSize);
 		copyAdd(temp9, matrix111, matrix112, halfSize);
 		multiply(
@@ -208,10 +208,6 @@ void multiply(
 			temp9+halfSize*stride,
 			halfSize);
 		
-		/*copy(temp8, matrix012, halfSize);
-		subtract(temp8, matrix022, halfSize);
-		copy(temp9, matrix121, halfSize);
-		add(temp9, matrix122, halfSize);*/
 		copySubtract(temp8, matrix012, matrix022, halfSize);
 		copyAdd(temp9, matrix121, matrix122, halfSize);
 		multiply(
@@ -263,12 +259,11 @@ void start() {
 	}
 	
 	// allocate 12 matrices
-	double *matrices=malloc(12*stride*stride*sizeof(double));
-	if (0==matrices) {
+	double *matrix0=malloc(12*stride*stride*sizeof(double));
+	if (0==matrix0) {
 		exit(1);
 		return;
 	}
-	double *matrix0=matrices;
 	double *matrix1=matrix0+stride*stride*sizeof(double);
 	double *matrix2=matrix1+stride*stride*sizeof(double);
 	double *temp1=matrix2+stride*stride*sizeof(double);
@@ -327,7 +322,7 @@ void start() {
 	
 	memory_access_log_disable();
 	
-	free(matrices);
+	free(matrix0);
 }
 
 void zero(double *matrix, int size) {

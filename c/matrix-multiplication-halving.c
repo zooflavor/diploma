@@ -1,3 +1,6 @@
+// Matrix multiplication by recursively halving the largest dimension,
+// and using block operations.
+
 #include "emulator.h"
 
 int max(int value0, int value1) {
@@ -6,12 +9,15 @@ int max(int value0, int value1) {
 			:value1;
 }
 
-// stride is the distance in memory between two cells
+// The recursion of the multiplication.
+// Stride is the distance in memory between two cells
 // in the same column and adjecent rows.
-// in this implementation it is the same value
-// as the real number of columns in a matrix
-// matrices are laid out in row-major order,
+// In this implementation it is the same value
+// as the real number of columns in a matrix.
+// Matrices are laid out in row-major order,
 // so stride2 would be always the same stride1.
+// matrix0/size0/stride0 and matrix1/size1/stride1 are the input matrix blocks.
+// matrix2/size2/stride1 is the output matrix block.
 void multiply(
 		double *matrix0,
 		double *matrix1,
@@ -26,9 +32,11 @@ void multiply(
 		// nothing to do
 	}
 	else if (1==maxSize) {
+		// all matrices are 1x1
 		matrix2[0]+=matrix0[0]*matrix1[0];
 	}
 	else if (size0==maxSize) {
+		// halve the number of rows of the left matrix
 		int halfSize0=size0/2;
 		multiply(
 				matrix0,
@@ -50,6 +58,8 @@ void multiply(
 				stride1);
 	}
 	else if (size1==maxSize) {
+		// halve the number of columns of the left matrix,
+		// which is the same as the number of rows of the right matrix
 		int halfSize1=size1/2;
 		multiply(
 				matrix0,
@@ -70,7 +80,8 @@ void multiply(
 				stride0,
 				stride1);
 	}
-	else { // size2==maxSize
+	else {
+		// halve the number of columns of the left matrix
 		int halfSize2=size2/2;
 		multiply(
 				matrix0,
@@ -102,27 +113,15 @@ void start() {
 	// columns of right matrix
 	int size2=read_int64();
 	
-	// allocate left matrix
-	double *matrix0=malloc(size0*size1*sizeof(double));
+	// allocate 3 matrices
+	double *matrix0=malloc(
+			(size0*size1+size1*size2+size0*size2)*sizeof(double));
 	if (0==matrix0) {
 		exit(1);
 		return;
 	}
-	// allocate right matrix
-	double *matrix1=malloc(size1*size2*sizeof(double));
-	if (0==matrix1) {
-		free(matrix0);
-		exit(1);
-		return;
-	}
-	// allocate result matrix
-	double *matrix2=malloc(size0*size2*sizeof(double));
-	if (0==matrix2) {
-		free(matrix1);
-		free(matrix0);
-		exit(1);
-		return;
-	}
+	double *matrix1=matrix0+size0*size1;
+	double *matrix2=matrix1+size1*size2;
 	
 	memory_access_log_enable();
 	

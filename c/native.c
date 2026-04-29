@@ -1,3 +1,5 @@
+// implements the system functions of the emulator using the native host system
+
 #include "emulator.h"
 #include <stdio.h>
 

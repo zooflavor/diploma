@@ -1,4 +1,13 @@
 #!/bin/bash
+
+# Compiles the programs listed at the bottom section.
+#
+# Every program will be compiled to the native host system and also to RISC-V.
+#
+# RISC-V outputs are generated
+# for all combination of compilers gcc and clang,
+# and optimization levels 0, 1, and 2.
+
 set -e
 
 OUTPUT_DIR="./out"
@@ -11,12 +20,13 @@ function compile() {
   echo $OUTPUT_ELF
   gcc -o "${OUTPUT_ELF}" "${1}.c" native.c \
     -std=c17 -Wall -Wextra -g
-  compile_clang "${1}" "0"
-  compile_clang "${1}" "1"
-  compile_clang "${1}" "2"
-  compile_gcc "${1}" "0"
-  compile_gcc "${1}" "1"
-  compile_gcc "${1}" "2"
+  for CO in $(echo -n "compile_clang" "compile_gcc")
+  do
+    for OL in {0..2}
+	do
+	  "${CO}" "${1}" "${OL}"
+	done
+  done
 }
 
 function compile_clang() {

@@ -1,3 +1,8 @@
+// Functions used to test the RISC-V emulator.
+// Start will not be called, but it is requered for linking.
+// The rest of the functions are directly called
+// from Java unittests by setting them up as entry points for emulation.
+
 #include "emulator.h"
 
 typedef volatile uint16_t vuint16_t;

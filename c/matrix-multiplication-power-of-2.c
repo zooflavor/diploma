@@ -1,7 +1,16 @@
+// Matrix multiplication by recirsively halving all dimensions,
+// and using block operations.
+// All matrix dimensions are enlarged to the same power-of-2 number,
+// by adding zero rows and columns to the matrices.
+// The result is truncated back to the size compatible with the inputs.
+
 #include "emulator.h"
 
+// The distance between to adjecent cell in the same column.
+// Also this is the common dimensions of all of the matrices.
 int stride;
 
+// Sets the cells of the matrix to zero.
 void zero(double *matrix, int size);
 
 int max(int value0, int value1) {
@@ -10,12 +19,10 @@ int max(int value0, int value1) {
 			:value1;
 }
 
-// stride is the distance in memory between two cells
-// in the same column and adjecent rows.
-// in this implementation is the same value
-// as the real number of columns in a matrix
-// matrices are laid out in row-major order,
-// so all strides are always the chose power of 2 value.
+// The recursion of the multiplication.
+// Matrices are laid out in row-major order.
+// matrix0/size/stride and matrix1/size/stride are the input matrix blocks.
+// matrix2/size/stride is the output matrix block.
 void multiply(
 		double *matrix0,
 		double *matrix1,
@@ -25,9 +32,11 @@ void multiply(
 		// nothing to do
 	}
 	else if (1==size) {
+		// all matrices are 1x1
 		matrix2[0]+=matrix0[0]*matrix1[0];
 	}
-	else { // 1<size
+	else {
+		// halve all dimensions
 		int halfSize=size/2;
 		for (int rr=0; 2>rr; ++rr) {
 			for (int cc=0; 2>cc; ++cc) {
@@ -59,6 +68,7 @@ void start() {
 		if (0>=stride) {
 			// overflow
 			exit(2);
+			return;
 		}
 		if (stride>=maxSize) {
 			break;

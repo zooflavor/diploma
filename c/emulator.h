@@ -1,3 +1,5 @@
+// System functions of the emulator.
+
 #ifndef __EMULATOR_H__
 #define __EMULATOR_H__ 1
 
@@ -5,16 +7,27 @@
 
 #ifdef EMULATED
 
+// Calling this addresses are trapped by the emulator.
+// This must match IOMap.java.
+
+// Same as in stdlib.h.
 #define malloc(size)                      (((void *(*)(uint64_t))0x1000UL)(size))
 #define free(ptr)                         (((void (*)(void*))    0x1004UL)(ptr))
 
+// Same as in stdlib.h.
 #define exit(code)                        (((void (*)(uint32_t)) 0x1010UL)(code))
+// Equivalent to exit(0).
 #define exit_ok()                         (((void (*)())         0x1014UL)(code))
 
+// Disables the logging of memory accesses.
 #define memory_access_log_disable()       (((void (*)())         0x1020UL)())
+// Enables the logging of memory accesses.
 #define memory_access_log_enable()        (((void (*)())         0x1024UL)())
+// Logs an user data.
 #define memory_access_log_user_data(data) (((void (*)(uint64_t)) 0x1028UL)(data))
 
+// Reads a value from the standard input.
+// Every input line most contain exactly one value.
 #define read_double()                     (((double (*)())       0x1030UL)())
 #define read_float()                      (((float (*)())        0x1034UL)())
 #define read_int16()                      (((int16_t (*)())      0x1038UL)())
@@ -26,6 +39,8 @@
 #define read_uint64()                     (((uint64_t (*)())     0x1050UL)())
 #define read_uint8()                      (((uint8_t (*)())      0x1054UL)())
 
+// Writes a value to the standard output.
+// Every value will be printed on a new line.
 #define write_double(value)               (((void (*)(double))   0x1060UL)(value))
 #define write_float(value)                (((void (*)(float))    0x1064UL)(value))
 #define write_int16(value)                (((void (*)(int16_t))  0x1068UL)(value))
@@ -40,6 +55,9 @@
 #else
 
 #include <stdlib.h>
+
+// Forward declaration of system functions delegated to the host system.
+// These are implemented in native.c.
 
 void memory_access_log_disable();
 void memory_access_log_enable();
