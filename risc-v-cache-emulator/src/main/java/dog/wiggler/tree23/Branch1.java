@@ -4,6 +4,9 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
 
+/**
+ * A branch node holding 1 child. This is not a {@link NormalizedTree}.
+ */
 public class Branch1<A, L extends Leaf1<A, L>> extends AbstractTree<A, L> implements Branch<A, L> {
     public final @NotNull NormalizedTree<A, L> child;
     private final long size;

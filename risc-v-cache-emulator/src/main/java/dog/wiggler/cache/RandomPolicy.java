@@ -9,6 +9,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
+/**
+ * Implements the random replacement policy.
+ * This policy is not a stack algorithm.
+ * <br>
+ * There's {@link HashMap} in this containing all lines in the cache, and their dirty flags.
+ * There's also a {@link List} containing all lines, in some order.
+ * The list is used to randomly choose a line.
+ * The map is used to check on a line.
+ * Every operation has O(1) amortized time complexity.
+ */
 public class RandomPolicy implements ReplacementPolicy {
     private final @NotNull List<@NotNull Long> addresses=new ArrayList<>();
     private final @NotNull Map<@NotNull Long, @NotNull Boolean> lines=new HashMap<>();

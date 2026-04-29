@@ -7,6 +7,9 @@ import org.jetbrains.annotations.NotNull;
  * Output abstracts over the standard output.
  */
 public interface Output {
+    /**
+     * Creates an output delegating all values to a consumer.
+     */
     static @NotNull Output consumer(
             @NotNull Consumer<? super @NotNull Number> consumer) {
         return new Output() {
@@ -42,6 +45,9 @@ public interface Output {
         };
     }
 
+    /**
+     * Creates an output throwing an exception on all outputs.
+     */
     static @NotNull Output refuse() {
         return consumer(
                 (value)->{

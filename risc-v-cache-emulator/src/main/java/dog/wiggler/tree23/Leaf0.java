@@ -2,6 +2,9 @@ package dog.wiggler.tree23;
 
 import org.jetbrains.annotations.NotNull;
 
+/**
+ * A leaf node holding no data. This is not a {@link NormalizedTree}.
+ */
 public class Leaf0<A, L extends Leaf1<A, L>> extends AbstractTree<A, L> {
     @Override
     public long size() {

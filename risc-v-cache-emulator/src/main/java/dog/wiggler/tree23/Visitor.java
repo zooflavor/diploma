@@ -2,7 +2,16 @@ package dog.wiggler.tree23;
 
 import org.jetbrains.annotations.NotNull;
 
+/**
+ * The receiver side of the visitor pattern,
+ * to pattern match on the type of a {@link Tree}.
+ * <br>
+ * Use with {@link Tree#visit(Visitor)}.
+ */
 public interface Visitor<A, L extends Leaf1<A, L>, R> {
+    /**
+     * A visitor implementation where all methods throw az {@link IllegalArgumentException}.
+     */
     abstract class FailVisitor<A, L extends Leaf1<A, L>, R> implements Visitor<A, L, R> {
         @Override
         public R branch1(@NotNull Branch1<A, L> branch1) throws Throwable {

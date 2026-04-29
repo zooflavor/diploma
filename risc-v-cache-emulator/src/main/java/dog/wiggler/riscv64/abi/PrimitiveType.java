@@ -6,6 +6,7 @@ import org.jetbrains.annotations.NotNull;
 
 /**
  * Describes how primitive types are stored in memory and registers.
+ * @param <J> the type corresponding to the primitive type.
  */
 public sealed abstract class PrimitiveType<J> {
     public static final class DFloatType
@@ -683,12 +684,18 @@ public sealed abstract class PrimitiveType<J> {
         }
     }
 
+    /**
+     * Throws  an exception when a value of the primitive type cannot be stored.
+     */
     public abstract void checkStored();
 
     public static @NotNull DFloatType dfloat() {
         return DFloatType.INSTANCE;
     }
 
+    /**
+     * Returns the result of a function call.
+     */
     public J functionCallResult(
             @NotNull Hart hart) {
         return integral()
@@ -698,11 +705,17 @@ public sealed abstract class PrimitiveType<J> {
 
     public abstract boolean integral();
 
+    /**
+     * Loads a value from memory.
+     */
     public abstract J load(
             @NotNull Memory memory,
             long address)
             throws Throwable;
 
+    /**
+     * Loads a function call argument from a register.
+     */
     public abstract J loadArgument(
             @NotNull Hart hart,
             int register);
@@ -728,22 +741,31 @@ public sealed abstract class PrimitiveType<J> {
     }
 
     /**
-     * Size in bytes.
+     * The size of a value of the primitive type in bytes.
      */
     public abstract int size();
 
+    /**
+     * Stores a value in memory.
+     */
     public abstract void store(
             @NotNull Memory memory,
             long address,
             J value)
             throws Throwable;
 
+    /**
+     * Stores a function call argument in a register.
+     */
     public abstract void storeArgument(
             @NotNull Hart hart,
             @NotNull HeapAndStack heapAndStack,
             int register,
             J value);
 
+    /**
+     * Stores a function call argument in memory.
+     */
     public abstract void storeArgument(
             @NotNull Memory memory,
             long address,
@@ -759,6 +781,7 @@ public sealed abstract class PrimitiveType<J> {
     public String toString() {
         return getClass().getSimpleName()+"()";
     }
+    
     public static @NotNull UInt16Type uint16() {
         return UInt16Type.INSTANCE;
     }

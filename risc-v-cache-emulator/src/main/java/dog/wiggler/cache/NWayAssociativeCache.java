@@ -16,16 +16,31 @@ import java.util.List;
 
 /**
  * Runs a memory access log through an n-way associative cache.
- * This uses cacheLines/associativity independent fully-associative caches.
+ * This uses cacheLines/associativity number independent fully-associative caches.
  * The bits of a memory address is partitioned into subfields.
  * The log2(lineSize) least-significant bits specify the address of the byte in a cache line.
- * The next log2(cacheLines/associativity) bits select cache
+ * The next log2(cacheLines/associativity) bits select a cache
  * where the cache line of the memory address can be stored.
  */
 public class NWayAssociativeCache {
     private NWayAssociativeCache() {
     }
 
+    /**
+     * Runs the entries of a log file through a cache.
+     * Writes the new entries to a file.
+     *
+     * @param associativity the number of lines in a fully-associative subcache
+     * @param cacheSizeInLines the total number of lines in the cache
+     * @param cacheType filters the accesses
+     * @param inputLogPath the file to process
+     * @param lineSizeInBytes the size of a line, specified in bytes
+     * @param outputLogPath the file to write the result to
+     * @param progress interface to report progress to the use
+     * @param replacementPolicyFactory factory to create replacement policies
+     * @param writeMiss write miss policy to use
+     * @param writePolicy write policy to use
+     */
     public static void run(
             int associativity,
             int cacheSizeInLines,
@@ -53,6 +68,7 @@ public class NWayAssociativeCache {
              var outputLog=CollapseElapsedCyclesLog.factory(
                              LogOutputStream.factory(outputLogPath))
                      .get()) {
+            // subcaches
             @NotNull List<@NotNull FullyAssociativeCache> caches2=new ArrayList<>(caches);
             for (int ii=caches; 0<ii; --ii) {
                 caches2.add(
@@ -64,6 +80,7 @@ public class NWayAssociativeCache {
                                 writeMiss,
                                 writePolicy));
             }
+            // entry processor
             var visitor=new CachePreprocessorLogVisitor<>(
                     cacheType,
                     lineSizeInBytes,
@@ -72,8 +89,10 @@ public class NWayAssociativeCache {
                         @Override
                         public Void access(long address, int size, @NotNull AccessType type) throws Throwable {
                             if (cacheType.notCached(type)) {
+                                // delegate entries not interested in
                                 return outputLog.access(address, size, type);
                             }
+                            // mask out everything but the index of the cache
                             int cache=(int)((address>>lineSizeShift)&(caches-1));
                             caches2.get(cache)
                                     .access(address, size, type);
@@ -105,6 +124,7 @@ public class NWayAssociativeCache {
                             return outputLog.userData(userData);
                         }
                     });
+            // process all entries
             for (long entry=0; inputLog.hasNext(); ++entry) {
                 progress.progress("forward", 100L*entry/entries);
                 inputLog.readNext(visitor);

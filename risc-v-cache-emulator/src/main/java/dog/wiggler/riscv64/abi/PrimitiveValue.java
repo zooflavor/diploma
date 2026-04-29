@@ -17,6 +17,9 @@ public record PrimitiveValue<J>(
         this.value=value;
     }
 
+    /**
+     * Stores the value as a function call argument in a register.
+     */
     public void storeArgument(
             @NotNull Hart hart,
             @NotNull HeapAndStack heapAndStack,
@@ -24,6 +27,9 @@ public record PrimitiveValue<J>(
         type().storeArgument(hart, heapAndStack, register, value());
     }
 
+    /**
+     * Stores the value as a function call argument in memory.
+     */
     public void storeArgument(
             @NotNull Memory memory,
             long address)

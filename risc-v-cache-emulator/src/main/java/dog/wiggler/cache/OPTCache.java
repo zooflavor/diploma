@@ -32,8 +32,15 @@ import java.util.TreeMap;
 /**
  * Creates a new memory access log by applying the OTP cache to an existing memory access log.
  * Line size must be a power of two. This will be checked by the preprocess step.
+ * <br>
+ * The temp file holds two longs for each input log entry.
+ * The first long is the log entry.
+ * The second long holds the forward distance of the next access for the log entry in the first position.
  */
 public class OPTCache {
+    /**
+     * Writes the temporary file.
+     */
     private class TempLog implements Log {
         private final @NotNull SeekableByteChannel tempChannel;
 
@@ -101,11 +108,21 @@ public class OPTCache {
     private final int lineSizeInBytes;
     private final @NotNull Path outputLogPath;
     private final @NotNull Progress progress;
+    /**
+     * Buffer to hold data from the temp file.
+     */
     private final @NotNull ByteBuffer tempBuffer
             =ByteBuffer.allocateDirect(PAGE_SIZE)
             .order(ByteOrder.LITTLE_ENDIAN);
+    /**
+     * The address of the data in the temp buffer in the temp file.
+     */
     private long tempBufferAddress=-1L;
     private boolean tempBufferDirty;
+    /**
+     * The number of entries in the temp file.
+     * One entry is two longs.
+     */
     private long tempEntries;
     private final @NotNull Path tempPath;
 
@@ -131,6 +148,10 @@ public class OPTCache {
         this.tempPath=Objects.requireNonNull(tempPath, "tempPath");
     }
 
+    /**
+     * Creates the temp file from the input file.
+     * The forward distances are undefined at this point.
+     */
     private void preprocess(
             @NotNull SeekableByteChannel tempChannel)
             throws Throwable {
@@ -152,6 +173,13 @@ public class OPTCache {
         }
     }
 
+    /**
+     * Fills the forward distances by going backward on the temp file.
+     * Uses 2-3 tree to maintain the backward LRU stack.
+     * This tree will contain all addresses ever accessed.
+     * A hashmap is used to quickly access leaves by address.
+     * For an entry in the temp file the forward distance is the index of the leaf associated to address of the entry.
+     */
     private void processBackward(
             @NotNull SeekableByteChannel tempChannel)
             throws Throwable {
@@ -238,6 +266,15 @@ public class OPTCache {
         progress.progress("backward", 100L);
     }
 
+    /**
+     * Writes the output log based on the temp file.
+     * It maintains a bounded size OPT stack going forward in the temp file.
+     * The cache stores the forward index of the lines contained in it.
+     * The forward indices are encoded as aggregates of 2-3 trees,
+     * where the aggregates are interpreted as length of intervals.
+     * In case of eviction the forward index can be read from the temp file make the insertation
+     * of the new line into the stack possible.
+     */
     private void processForward(
             @NotNull SeekableByteChannel tempChannel)
             throws Throwable {
@@ -277,6 +314,9 @@ public class OPTCache {
                  * and the number of address leaves in the finite stack.
                  */
                 private int usedLines;
+                /**
+                 * The forward distance of the entry currently visiting
+                 */
                 public long forwardDistance;
                 /**
                  * Addresses that are in the cache, and have finite forward distance.
@@ -508,6 +548,18 @@ public class OPTCache {
         }
     }
 
+    /**
+     * Runs the entries of a log file through an OPT cache.
+     * Writes the new entries to a file.
+     *
+     * @param cacheSizeInLines the total number of lines in the cache
+     * @param cacheType filters the accesses
+     * @param inputLogPath the file to process
+     * @param lineSizeInBytes the size of a line, specified in bytes
+     * @param outputLogPath the file to write the result to
+     * @param progress interface to report progress to the use
+     * @param tempPath a file to store temporary data
+     */
     public static void run(
             int cacheSizeInLines,
             @NotNull CacheType cacheType,
@@ -521,6 +573,10 @@ public class OPTCache {
                 .run();
     }
 
+    /**
+     * Reads an entry from the temp file through the temp buffer.
+     * Switches buffer position when the requested address is not contained in the current buffer.
+     */
     private long tempRead(
             @NotNull SeekableByteChannel tempChannel,
             long halfEntryAddress)
@@ -530,6 +586,11 @@ public class OPTCache {
         return tempBuffer.getLong(bufferAddress);
     }
 
+    /**
+     * Makes sure the temp buffer contains data from the temp file at a specific address.
+     * If the current buffer is dirty and a new block must be read,
+     * it first writes the current buffer data to the temp file.
+     */
     private void tempReadBuffer(
             @NotNull SeekableByteChannel tempChannel,
             long halfEntryAddress)
@@ -552,6 +613,10 @@ public class OPTCache {
         }
     }
 
+    /**
+     * Writes an entry of the temp file through the temp buffer.
+     * Switches buffer position when the requested address is not contained in the current buffer.
+     */
     private void tempWrite(
             @NotNull SeekableByteChannel tempChannel,
             long halfEntryAddress,

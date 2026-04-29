@@ -5,6 +5,11 @@ import org.jetbrains.annotations.NotNull;
 import java.io.IOException;
 import java.util.Objects;
 
+/**
+ * A log implementation that can be switched whether to send entries to the underlying log.
+ * Memory access and user data entries can be switched.
+ * Elapsed cycles, log disable and enable events, and the end are always delegated.
+ */
 public class SwitchableLog implements Log {
     private boolean accessLogEnabled;
     private final @NotNull Log log;

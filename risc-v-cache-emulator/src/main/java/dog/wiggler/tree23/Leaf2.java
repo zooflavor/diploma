@@ -4,6 +4,9 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
 
+/**
+ * A leaf node holding two data. This is not a {@link NormalizedTree}.
+ */
 public class Leaf2<A, L extends Leaf1<A, L>> extends AbstractTree<A, L> {
     public final @NotNull L leaf0;
     public final @NotNull L leaf1;

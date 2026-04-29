@@ -6,7 +6,7 @@ import java.io.Serial;
 
 /**
  * Thrown on illegal memory accesses.
- * A memory access is illegal when it's try to access memory that doesn't exist.
+ * A memory access is illegal when the memory address accessed has no backing.
  */
 public class IllegalMemoryAccessException extends EmulatorException {
     @Serial

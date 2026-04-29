@@ -15,8 +15,13 @@ import java.util.List;
 
 /**
  * Memory implementation using heap memory or a file mapped to memory.
+ * <br>
+ * The memory is backed by a list of {@link java.nio.Buffer}s.
  */
 public class MemoryMappedMemory implements Memory {
+    /**
+     * The default number of address bits for a single {@link java.nio.Buffer}.
+     */
     private static final int DEFAULT_BUFFER_BITS=30;
 
     private final boolean allowMisalignedAccess;
@@ -77,6 +82,11 @@ public class MemoryMappedMemory implements Memory {
         }
     }
 
+    /**
+     * Creates a factory for a memory mapped file memory.
+     * bufferBits is the number of address bits for a single {@link java.nio.Buffer}.
+     * A single buffer will have at most {code 1<<bufferBits} bytes.
+     */
     public static @NotNull Supplier<@NotNull Memory> factory(
             boolean allowMisalignedAccess,
             int bufferBits,
@@ -111,6 +121,9 @@ public class MemoryMappedMemory implements Memory {
                         StandardOpenOption.WRITE));
     }
 
+    /**
+     * Creates a factory for a heap memory.
+     */
     public static @NotNull Supplier<@NotNull Memory> factory(
             boolean allowMisalignedAccess,
             int bufferBits,
@@ -133,6 +146,9 @@ public class MemoryMappedMemory implements Memory {
         };
     }
 
+    /**
+     * Creates a factory for a memory mapped file memory.
+     */
     public static @NotNull Supplier<@NotNull Memory> factory(
             boolean allowMisalignedAccess,
             @NotNull Path path,
@@ -140,6 +156,9 @@ public class MemoryMappedMemory implements Memory {
         return factory(allowMisalignedAccess, DEFAULT_BUFFER_BITS, path, size);
     }
 
+    /**
+     * Creates a factory for a memory mapped file memory.
+     */
     public static @NotNull Supplier<@NotNull Memory> factory(
             boolean allowMisalignedAccess,
             long size) {

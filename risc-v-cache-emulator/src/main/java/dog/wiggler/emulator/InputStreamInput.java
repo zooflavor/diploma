@@ -1,12 +1,16 @@
-package dog.wiggler;
+package dog.wiggler.emulator;
 
-import dog.wiggler.emulator.Input;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.NoSuchElementException;
 
+/**
+ * An input that reads from an {@link InputStream}.
+ * It reads a line and tries to parse it as the requested value.
+ * Reaching EOF it throws a NoSuchElementException.
+ */
 public class InputStreamInput implements Input {
     private final @NotNull InputStream stream;
 
@@ -50,13 +54,18 @@ public class InputStreamInput implements Input {
         return Byte.parseByte(line);
     }
 
+    /**
+     * Reads one non-empty, complete line.
+     * A line is terminated by a new-line, a carriage return, or an EOF.
+     * Empty lines are skipped.
+     */
     private @NotNull String readLine() throws Throwable {
         var sb=new StringBuilder();
         while (true) {
             int cc=stream.read();
             if (0>cc) {
                 if (sb.isEmpty()) {
-                    throw new EOFException();
+                    throw new NoSuchElementException();
                 }
                 else {
                     return sb.toString();

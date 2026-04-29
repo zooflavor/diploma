@@ -3,9 +3,12 @@ package dog.wiggler.memory;
 import java.io.IOException;
 
 /**
- * Interface for the emulator to access memory through.
+ * Interface for the emulator to access memory.
  */
 public interface Memory extends AutoCloseable {
+    /**
+     * The number of address lines supported.
+     */
     int ADDRESS_BITS=48;
 
     @Override

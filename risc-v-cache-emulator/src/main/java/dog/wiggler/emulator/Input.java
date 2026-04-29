@@ -7,8 +7,12 @@ import java.util.NoSuchElementException;
 
 /**
  * Input abstracts over the standard input.
+ * The methods throw {@link NoSuchElementException} when there's no more to read.
  */
 public interface Input {
+    /**
+     * Creates an empty input.
+     */
     static @NotNull Input empty() {
         return supplier(
                 ()->{
@@ -44,6 +48,9 @@ public interface Input {
         return readInt8();
     }
 
+    /**
+     * Creates an input getting all it's values from a {@link Supplier}.
+     */
     static @NotNull Input supplier(
             @NotNull Supplier<? extends @NotNull Number> supplier) {
         return new Input() {

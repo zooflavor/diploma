@@ -1,7 +1,7 @@
 package dog.wiggler.riscv64.abi;
 
 /**
- * Risc-v LP64D ABI values.
+ * RISC-V LP64D ABI values.
  * The ABI describes the function call conventions.
  * @see <a href="https://riscv.org/wp-content/uploads/2024/12/riscv-calling.pdf">https://riscv.org/wp-content/uploads/2024/12/riscv-calling.pdf</a>.
  */

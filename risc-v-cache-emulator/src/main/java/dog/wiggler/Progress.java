@@ -6,15 +6,39 @@ import org.jetbrains.annotations.Nullable;
 import java.time.Duration;
 import java.time.Instant;
 
+/**
+ * Prints out progress info. A progress info is a label and a percent of the work done.
+ */
 @FunctionalInterface
 public interface Progress {
+    /**
+     * Prints nowhere.
+     */
     @NotNull Progress NO_OP=(label, percent)->{
     };
 
+    /**
+     * Prints to the system out.
+     * Updates the printing only when the label or the percent changes.
+     * Changing labels causes a new line to be emitted.
+     * Closing the progress causes a new line to be emitted.
+     */
     class SystemOut implements AutoCloseable, Progress {
+        /**
+         * The label currently printed.
+         */
         private @Nullable String lastLabel;
+        /**
+         * The percent currently printed.
+         * {@link Long#MIN_VALUE} means it's not printed.
+         */
         private long lastPercent=Long.MIN_VALUE;
+        /**
+         * The number of characters printed on the line.
+         */
         private int printedCharacters;
+        /**
+         */
         private final @NotNull Instant startTime=Instant.now();
 
         @Override

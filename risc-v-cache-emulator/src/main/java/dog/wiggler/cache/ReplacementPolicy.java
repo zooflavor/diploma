@@ -11,11 +11,14 @@ public interface ReplacementPolicy {
      * Signal that the cache line has been accessed.
      * Dirty = true sets the dirty flag on the line.
      * Dirty = false won't clear the dirty flag on the line.
+     * <br>
+     * The cache line must be in the cache.
      */
     void access(long address, boolean dirty);
 
     /**
-     * Add a new cache line that's accessed right away. It must not be contained in this already.
+     * Add a new cache line to this, and access it right away.
+     * It must not be contained in this already.
      */
     void addAndAccess(long address, boolean dirty);
 

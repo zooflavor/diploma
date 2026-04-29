@@ -33,10 +33,16 @@ public class LogInputStream implements AutoCloseable {
         channel.close();
     }
 
+    /**
+     * Returns the number of entries in a file.
+     */
     public static long entries(@NotNull Path path) throws Throwable {
         return Files.size(path)/8L;
     }
 
+    /**
+     * Creates a factory from a channel factory.
+     */
     public static @NotNull Supplier<@NotNull LogInputStream> factory(
             @NotNull Supplier<? extends @NotNull ReadableByteChannel> channelFactory) {
         return Supplier.factory(
@@ -44,6 +50,9 @@ public class LogInputStream implements AutoCloseable {
                 channelFactory);
     }
 
+    /**
+     * Creates a factory for a file.
+     */
     public static @NotNull Supplier<@NotNull LogInputStream> factory(
             @NotNull Path path) {
         return factory(
@@ -52,6 +61,9 @@ public class LogInputStream implements AutoCloseable {
                         StandardOpenOption.READ));
     }
 
+    /**
+     * Returns true when there's more entries in the log.
+     */
     public boolean hasNext() throws IOException {
         if (!buffer.hasRemaining()) {
             buffer.clear();
@@ -65,6 +77,10 @@ public class LogInputStream implements AutoCloseable {
         return buffer.hasRemaining();
     }
 
+    /**
+     * Reads one entry from the log.
+     * Throws {@link EOFException} when there's no more entries.
+     */
     public long readNext() throws IOException {
         if (hasNext()) {
             return buffer.getLong();
@@ -74,6 +90,10 @@ public class LogInputStream implements AutoCloseable {
         }
     }
 
+    /**
+     * Reads one entry from the log, and pattern matches it on the visitor.
+     * Calls {@link LogVisitor#end()} when there's no more entries.
+     */
     public <R> R readNext(
             @NotNull LogVisitor<R> visitor)
             throws Throwable {

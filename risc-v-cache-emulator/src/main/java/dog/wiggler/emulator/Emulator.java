@@ -121,6 +121,10 @@ public class Emulator implements AutoCloseable {
                 memoryLog.accessLogEnabled();
     }
 
+    /**
+     * Creates an emulator factory from a log and a memory factory.
+     * The emulator will use input and output.
+     */
     public static @NotNull Supplier<@NotNull Emulator> factory(
             @NotNull Input input,
             @NotNull Supplier<? extends @NotNull Log> logFactory,

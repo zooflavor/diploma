@@ -14,6 +14,8 @@ import java.util.Objects;
 
 /**
  * Writes memory access log to a file.
+ * <br>
+ * Uses a buffer to batch writes.
  */
 public class LogOutputStream implements Log {
     private final @NotNull ByteBuffer buffer
@@ -66,6 +68,9 @@ public class LogOutputStream implements Log {
         return null;
     }
 
+    /**
+     * Creates a factory from a channel factory.
+     */
     public static @NotNull Supplier<@NotNull LogOutputStream> factory(
             @NotNull Supplier<@NotNull WritableByteChannel> channelFactory) {
         return Supplier.factory(
@@ -73,6 +78,9 @@ public class LogOutputStream implements Log {
                 channelFactory);
     }
 
+    /**
+     * Creates a factory for a file.
+     */
     public static @NotNull Supplier<@NotNull LogOutputStream> factory(
             @NotNull Path path) {
         Objects.requireNonNull(path, "path");
@@ -90,6 +98,9 @@ public class LogOutputStream implements Log {
         return null;
     }
 
+    /**
+     * Writes the buffer, and prepares it for further writes.
+     */
     private void writeBuffer() throws IOException {
         try {
             buffer.flip();
@@ -102,6 +113,10 @@ public class LogOutputStream implements Log {
         }
     }
 
+    /**
+     * Writes an entry to the buffer.
+     * When the buffer is full, it will flush it first.
+     */
     private void writeLog(long log) throws IOException {
         if (!buffer.hasRemaining()) {
             writeBuffer();

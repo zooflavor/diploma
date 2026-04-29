@@ -4,9 +4,14 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 /**
+ * Selects a leaf of a tree by navigating the branches from the root.
+ * <br>
  * Selectors may have an internal state that changes on the course of a selection.
  */
 public interface Selector<A, L extends Leaf1<A, L>> {
+    /**
+     * A selector to select the first leaf.
+     */
     static <A, L extends Leaf1<A, L>> @NotNull Selector<A, L> firstSelector() {
         return new Selector<>() {
             @Override
@@ -22,8 +27,8 @@ public interface Selector<A, L extends Leaf1<A, L>> {
     }
 
     /**
-     * Leaf aggregate values are interpreted as lines that long.
-     * Trees containing these lines are interpreted as the lines put one after another, on end,
+     * Leaf aggregate values are interpreted as lines that are as long as the value.
+     * Trees containing these lines are interpreted as the lines put one after another, end on end,
      * in the order defined by the inorder traversal of the tree.
      * This selector selects a leaf that has the point index in it,
      * measured from the starting point of the leftmost leaf.
@@ -72,6 +77,9 @@ public interface Selector<A, L extends Leaf1<A, L>> {
         };
     }
 
+    /**
+     * A selector to select the last leaf.
+     */
     static <A, L extends Leaf1<A, L>> @NotNull Selector<A, L> lastSelector() {
         return new Selector<>() {
             @Override
@@ -86,10 +94,23 @@ public interface Selector<A, L extends Leaf1<A, L>> {
         };
     }
 
+    /**
+     * Choose one of the branches of the tree.
+     * @param branch2 the branch to choose on if its children
+     * @return on of the child of the tree
+     */
     @NotNull NormalizedTree<A, L> select2(@NotNull Branch2<A, L> branch2) throws Throwable;
 
+    /**
+     * Choose one of the branches of the tree.
+     * @param branch3 the branch to choose on if its children
+     * @return on of the child of the tree
+     */
     @NotNull NormalizedTree<A, L> select3(@NotNull Branch3<A, L> branch3) throws Throwable;
 
+    /**
+     * Select a leaf of the tree by the selector.
+     */
     static <A, L extends Leaf1<A, L>> @NotNull L selectLeaf(
             @NotNull Selector<A, L> selector,
             @NotNull NormalizedTree<A, L> tree)

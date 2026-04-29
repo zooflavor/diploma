@@ -1,6 +1,5 @@
 package dog.wiggler.emulator;
 
-import dog.wiggler.AppendableOutput;
 import dog.wiggler.function.Runnable;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.MethodOrderer;

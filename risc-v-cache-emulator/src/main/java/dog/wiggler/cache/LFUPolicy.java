@@ -10,6 +10,16 @@ import java.util.NavigableSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
+/**
+ * Implements the least-frequently-used replacement policy.
+ * <br>
+ * There's {@link HashMap} in this containing all lines in the cache, and associated data.
+ * The hashmap is used to check on a line.
+ * There's also a {@link TreeMap} containing all frequencies having a line in cache with that access frequency.
+ * The treemap values are sets of line, containing all the lines with frequency equaling the key.
+ * Most operation has O(1) amortized time complexity and also O(ln(cacheLines)) time complexity.
+ * {@link #contains(long)} is O(1).
+ */
 public class LFUPolicy implements ReplacementPolicy {
     private static class Line {
         public boolean dirty;

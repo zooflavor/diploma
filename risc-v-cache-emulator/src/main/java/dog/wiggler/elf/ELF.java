@@ -22,13 +22,18 @@ import java.util.Map;
 import java.util.TreeMap;
 
 /**
- * Reads the header of an ELF file.
+ * Reads the header of an ELF (Executable and Linkable Format) file.
  * Only the 64 bit format is supported.
  */
 public class ELF {
     private ELF() {
     }
 
+    /**
+     * Reads the file header from the channel.
+     * The position of the channel will not be changed.
+     * The channel will not bo closed.
+     */
     public static @NotNull FileHeader read(
             @NotNull SeekableByteChannel channel)
             throws Throwable {
@@ -143,6 +148,9 @@ public class ELF {
         }
     }
 
+    /**
+     * Reads the file header from the file specified by the path.
+     */
     public static @NotNull FileHeader read(
             @NotNull Path path) throws Throwable {
         try (@NotNull SeekableByteChannel channel=Files.newByteChannel(path, StandardOpenOption.READ)) {
@@ -150,7 +158,18 @@ public class ELF {
         }
     }
 
-    public static <T> @NotNull List<@NotNull T> readBlocks(
+    /**
+     * Reads a contiguous section of blocks of the channel.
+     *
+     * @param blocks      the number of blocks to read
+     * @param blockSize   the size of a block
+     * @param buffer      temporary buffer used for the operations
+     * @param channel     is used to read the blocks
+     * @param constructor to parse the blocks
+     * @param position    is the starting position of the first block
+     * @return the parsed blocks
+     */
+    private static <T> @NotNull List<@NotNull T> readBlocks(
             int blocks,
             int blockSize,
             @NotNull ByteBuffer buffer,
@@ -167,7 +186,11 @@ public class ELF {
         return Collections.unmodifiableList(result);
     }
 
-    public static void readFully(
+    /**
+     * Reads the buffer full.
+     * Throws {@link java.io.EOFException} when there's not enough data to fill the buffer.
+     */
+    private static void readFully(
             @NotNull ByteBuffer buffer,
             @NotNull SeekableByteChannel channel)
             throws Throwable {
@@ -178,7 +201,18 @@ public class ELF {
         }
     }
 
-    public static void readFully(
+    /**
+     * Reads bytes to a buffer.
+     * Clears the buffer first,
+     * then reads fully the number of bytes requested,
+     * then flips the buffer for immediate processing.
+     *
+     * @param buffer to read to
+     * @param channel is used to read data
+     * @param limit is the number of bytes to be read
+     * @param position is the start of the section to be read in the channel
+     */
+    private static void readFully(
             @NotNull ByteBuffer buffer,
             @NotNull SeekableByteChannel channel,
             int limit,
@@ -191,7 +225,15 @@ public class ELF {
         buffer.flip();
     }
 
-    public static @Nullable String readString(
+    /**
+     * Reads a zero terminated string from a section.
+     *
+     * @param buffer temporary buffer for reading
+     * @param channel is used to read data
+     * @param nameOffset is the starting position of the string in the section. Its non-positive for nulls.
+     * @param sectionHeader the header of the section containing the string.
+     */
+    private static @Nullable String readString(
             @NotNull ByteBuffer buffer,
             @NotNull SeekableByteChannel channel,
             int nameOffset,

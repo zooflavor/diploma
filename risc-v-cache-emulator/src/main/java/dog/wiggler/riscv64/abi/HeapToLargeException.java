@@ -4,6 +4,9 @@ import dog.wiggler.emulator.EmulatorException;
 
 import java.io.Serial;
 
+/**
+ * Thrown when the heap size can not be represented by longs.
+ */
 public class HeapToLargeException extends EmulatorException {
     @Serial
     private static final long serialVersionUID=0L;

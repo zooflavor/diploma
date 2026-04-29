@@ -11,6 +11,8 @@ import java.util.Objects;
  * A fully associative cache with pluggable replacement policy.
  * This doesn't handle cache types.
  * This is not supposed to be used on its own but through NWayAssociativeCache.
+ * Handles all combination of {@link WriteMiss} and {@link WritePolicy} policies.
+ * Delegates the generated memory accesses to an underlying log.
  */
 public class FullyAssociativeCache {
     private final int cacheLines;

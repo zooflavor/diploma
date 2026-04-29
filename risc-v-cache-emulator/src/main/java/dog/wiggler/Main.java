@@ -11,7 +11,9 @@ import dog.wiggler.cache.ReplacementPolicy;
 import dog.wiggler.cache.WriteMiss;
 import dog.wiggler.cache.WritePolicy;
 import dog.wiggler.elf.ELF;
+import dog.wiggler.emulator.AppendableOutput;
 import dog.wiggler.emulator.Emulator;
+import dog.wiggler.emulator.InputStreamInput;
 import dog.wiggler.function.Supplier;
 import dog.wiggler.memory.AccessType;
 import dog.wiggler.memory.LogInputStream;
@@ -24,6 +26,9 @@ import org.jetbrains.annotations.Nullable;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+/**
+ * Entry point of the command line utility.
+ */
 public class Main {
     private static final @NotNull String ACCESS_TYPE_BOTH="both";
     private static final @NotNull String ACCESS_TYPE_DATA="data";
@@ -44,6 +49,9 @@ public class Main {
     private static final @NotNull String WRITE_POLICY_BACK="back";
     private static final @NotNull String WRITE_POLICY_THROUGH="through";
 
+    /**
+     * Select cache function.
+     */
     private static void cache(String[] args) throws Throwable {
         if ((8>args.length) || (11<args.length)) {
             help();
@@ -113,6 +121,9 @@ public class Main {
         }
     }
 
+    /**
+     * Run an OPT cache.
+     */
     private static void cacheOpt(String[] args) throws Throwable {
         if (8!=args.length) {
             help();
@@ -145,6 +156,9 @@ public class Main {
         };
     }
 
+    /**
+     * Print ELF info.
+     */
     private static void elf(String[] args) throws Throwable {
         if (2!=args.length) {
             help();
@@ -154,6 +168,9 @@ public class Main {
                 .print();
     }
 
+    /**
+     * Print help and exit.
+     */
     private static void help() {
         System.out.printf("%s%n", Main.class.getName());
         System.out.printf("  %s %s%n", NAME, COMMAND_HELP);
@@ -199,6 +216,9 @@ public class Main {
         System.exit(1);
     }
 
+    /**
+     * Select function.
+     */
     public static void main(String[] args) throws Throwable {
         if (0==args.length) {
             help();
@@ -213,6 +233,9 @@ public class Main {
         }
     }
 
+    /**
+     * Run a RISC-V image.
+     */
     private static void run(String[] args) throws Throwable {
         if ((4!=args.length) && (5!=args.length)) {
             help();
@@ -261,6 +284,9 @@ public class Main {
         System.exit(exitCode);
     }
 
+    /**
+     * Print the statistics of a memory access log.
+     */
     private static void statistics(String[] args) throws Throwable {
         if (2!=args.length) {
             help();

@@ -4,9 +4,20 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+/**
+ * Implements the least-recently-used replacement policy.
+ * <br>
+ * There's a double-linked list in this, containing all the lines in the cache.
+ * The list is ordered by access time, the head is closer to now.
+ * There's also a {@link HashMap} containing all lines, and there associated linked-list node.
+ * The list is used to evict the least recently used line.
+ * The map is used to check on a line.
+ * Every operation has O(1) amortized time complexity.
+ */
 public class LRUPolicy implements ReplacementPolicy {
     private static class ListNode {
         public final @NotNull Long address;

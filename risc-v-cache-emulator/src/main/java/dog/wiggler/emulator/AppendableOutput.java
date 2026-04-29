@@ -1,8 +1,11 @@
-package dog.wiggler;
+package dog.wiggler.emulator;
 
-import dog.wiggler.emulator.Output;
 import org.jetbrains.annotations.NotNull;
 
+/**
+ * An output that prints to an {@link Appendable}.
+ * It prints every value on a new line.
+ */
 public class AppendableOutput implements Output {
     private final @NotNull Appendable appendable;
 

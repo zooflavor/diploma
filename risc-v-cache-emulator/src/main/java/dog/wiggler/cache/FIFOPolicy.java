@@ -7,7 +7,18 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.TreeMap;
 
+/**
+ * Implements the first-in-first-out replacement policy.
+ * <br>
+ * There's {@link HashMap} in this containing all lines in the cache, and their dirty flags.
+ * The hashmap is used to check on a line.
+ * There's also a {@link Deque} containing all lines in the cache.
+ * The order of the lines if the deque is the FIFO order,
+ * the head of the queue has the earliest first access time among the lines in the cache.
+ * Every operation has O(1) amortized time complexity.
+ */
 public class FIFOPolicy implements ReplacementPolicy {
     private final @NotNull Map<@NotNull Long, @NotNull Boolean> lines=new HashMap<>();
     private final @NotNull Deque<@NotNull Long> queue=new ArrayDeque<>();

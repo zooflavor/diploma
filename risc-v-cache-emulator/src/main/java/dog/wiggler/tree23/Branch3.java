@@ -5,6 +5,9 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
 
+/**
+ * An internal node holding three children.
+ */
 public class Branch3<A, L extends Leaf1<A, L>>
         extends AbstractTree<A, L>
         implements Branch<A, L>, NormalizedTree<A, L> {

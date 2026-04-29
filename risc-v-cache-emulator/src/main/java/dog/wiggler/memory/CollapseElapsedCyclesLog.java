@@ -7,6 +7,13 @@ import org.jetbrains.annotations.Nullable;
 import java.io.IOException;
 import java.util.Objects;
 
+/**
+ * A log implementation to collapse consecutive elapsed cycles entries.
+ * It tracks the latest elapsed cycles value since the last elapsed cycle write to the underlying log.
+ * Received elapsed cycles entries are tracked in memory and not sent to the underlying log immediately.
+ * When an entry is received that is not an elapsed cycles entry, and there's an unwritten elapsed cycles entry
+ * in memory, it will send the elapsed cycle entry first, and clears it, then sends the entry received.
+ */
 public class CollapseElapsedCyclesLog implements Log {
     private @Nullable Long lastElapsedCycles;
     private final @NotNull Log log;

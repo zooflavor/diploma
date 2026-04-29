@@ -1,6 +1,5 @@
 package dog.wiggler.emulator;
 
-import dog.wiggler.InputStreamInput;
 import dog.wiggler.function.Supplier;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.MethodOrderer;
@@ -8,7 +7,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 
 import java.io.ByteArrayInputStream;
-import java.io.EOFException;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayDeque;
@@ -79,7 +77,7 @@ public class InputTest {
             input.readUint64();
             fail();
         }
-        catch (EOFException ignore) {
+        catch (NoSuchElementException ignore) {
         }
     }
 

@@ -4,10 +4,31 @@ import dog.wiggler.function.BiFunction;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+/**
+ * Utility class implementing the insert operation.
+ * It inserts into a given index, where leaf indices
+ * are counted among the leaves from left to right.
+ * So index 0 will insert before the leftmost leaf,
+ * and index {@code tree.size()} would insert after the rightmost tree.
+ * <br>
+ * The implementation is very standard.
+ * It descends to the leaf level guided by the value of index and the sizes of the subtrees encountered.
+ * After that, it inserts a new leaf, and rebalances the tree as necessary ascending to the root.
+ */
 public class InsertAtIndex {
     private InsertAtIndex() {
     }
 
+    /**
+     * Inserts newLeaf at index index into the tree.
+     * The old tree is destroyed.
+     *
+     * @param aggregator used to calculate aggregates in internal nodes
+     * @param index newLeaf will be inserted at this index
+     * @param newLeaf will be inserted
+     * @param tree to insert into
+     * @return the new tree
+     */
     public static <A, L extends Leaf1<A, L>> @NotNull NormalizedTree<A, L> insertAtIndex(
             @NotNull BiFunction<A, A, A> aggregator,
             long index,

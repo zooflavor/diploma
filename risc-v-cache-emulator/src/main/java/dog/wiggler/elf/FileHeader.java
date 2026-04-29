@@ -8,6 +8,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+/**
+ * The first header of an ELF file.
+ */
 public record FileHeader(
         byte abiVersion,
         long entryPoint,

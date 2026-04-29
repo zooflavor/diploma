@@ -11,6 +11,8 @@ import java.util.Arrays;
  * Instruction decoding for risc-v.
  * The 7 least significant bits are the opcode.
  * @see <a href="https://docs.riscv.org/reference/isa/index.html">https://docs.riscv.org/reference/isa/index.html</a>
+ *
+ * This class delegates the instruction decoding to an {@link Instruction} depending on the opcode.
  */
 public class Instructions {
     public static class Builder {
@@ -44,6 +46,9 @@ public class Instructions {
         return new Builder();
     }
 
+    /**
+     * Executes instruction by delegating it based on the opcode.
+     */
     public void execute(
             @NotNull Hart hart,
             @NotNull HeapAndStack heapAndStack,

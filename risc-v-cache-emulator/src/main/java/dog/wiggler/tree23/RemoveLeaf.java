@@ -7,10 +7,25 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Utility class implementing the remove operation.
+ * It removes a given leaf from a tree.
+ * <br>
+ * The implementation is very standard.
+ * It starts from a leaf, removes it, and rebalances the tree as necessary ascending to the root.
+ */
 public class RemoveLeaf {
     private RemoveLeaf() {
     }
 
+    /**
+     * Removes leaf from the tree containing leaf.
+     * The old tree is destroyed.
+     *
+     * @param aggregator used to calculate aggregates in internal nodes
+     * @param leaf to be removed
+     * @return the new tree
+     */
     public static <A, L extends Leaf1<A, L>> @Nullable NormalizedTree<A, L> removeLeaf(
             @NotNull BiFunction<A, A, A> aggregator,
             @NotNull L leaf)

@@ -2,7 +2,13 @@ package dog.wiggler.tree23;
 
 import org.jetbrains.annotations.NotNull;
 
+/**
+ * An interface to visit the nodes of a path from a leaf to the root.
+ */
 public interface LeafPath<A, L extends Leaf1<A, L>> {
+    /**
+     * Computes the index of a leaf. The indices are defined in {@link InsertAtIndex}.
+     */
     class Index<A, L extends Leaf1<A, L>> implements LeafPath<A, L> {
         public long index;
 
@@ -30,6 +36,7 @@ public interface LeafPath<A, L extends Leaf1<A, L>> {
     }
 
     /**
+     * Computes the distance of a leaf from the left end of the tree.
      * The aggregate values are interpreted as intervals, as in Selector.intervalSelector.
      */
     class Interval<L extends Leaf1<@NotNull Long, L>> implements LeafPath<@NotNull Long, L> {
@@ -62,12 +69,24 @@ public interface LeafPath<A, L extends Leaf1<A, L>> {
         }
     }
 
+    /**
+     * Visits a branch node. The child is the other end of the current edge of path.
+     */
     void branch2(@NotNull Branch2<A, L> branch2Parent, @NotNull NormalizedTree<A, L> child) throws Throwable;
 
+    /**
+     * Visits a branch node. The child is the other end of the current edge of path.
+     */
     void branch3(@NotNull Branch3<A, L> branch3Parent, @NotNull NormalizedTree<A, L> child) throws Throwable;
 
+    /**
+     * Visits the leaf. This will be called once and first.
+     */
     void leaf1(@NotNull L leaf1) throws Throwable;
 
+    /**
+     * Visits the path from leaf to the root using path.
+     */
     static <A, L extends Leaf1<A, L>, P extends LeafPath<A, L>> @NotNull P leafPath(
             @NotNull L leaf,
             @NotNull P path)
